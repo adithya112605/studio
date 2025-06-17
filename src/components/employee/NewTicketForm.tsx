@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -10,11 +11,14 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { NewTicketFormData, TicketPriority } from '@/types';
+import type { NewTicketFormData, TicketPriority, Ticket, Employee } from '@/types'; // Added Ticket, Employee
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { mockTickets, mockProjects } from '@/data/mockData'; // Import mockTickets for simulation
+import { Controller } from 'react-hook-form';
+
 
 const newTicketSchema = z.object({
   query: z.string().min(10, "Query must be at least 10 characters long."),
@@ -25,6 +29,16 @@ const newTicketSchema = z.object({
   message: "Follow-up query cannot be empty if checked.",
   path: ["followUpQuery"],
 });
+
+// Function to generate new Ticket IDs in the format #TKXXXXXXX
+const generateTicketId = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 7; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `#TK${result}`;
+};
 
 export default function NewTicketForm() {
   const { user } = useAuth();
@@ -43,19 +57,47 @@ export default function NewTicketForm() {
   const hasFollowUp = watch('hasFollowUp');
 
   const onSubmit: SubmitHandler<NewTicketFormData> = async (data) => {
-    if (!user) {
-      toast({ title: "Error", description: "You must be logged in to submit a ticket.", variant: "destructive" });
+    if (!user || user.role !== 'Employee') { // Ensure user is an Employee
+      toast({ title: "Error", description: "You must be logged in as an Employee to submit a ticket.", variant: "destructive" });
       return;
     }
+    const employeeUser = user as Employee; // Cast user to Employee
+
     setIsLoading(true);
     // Simulate API call to create ticket
     await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("New Ticket Data:", { ...data, psn: user.psn, employeeName: user.name });
-    // In a real app, you would add the ticket to your mockTickets array or send to backend
-    // e.g., mockTickets.push({ id: `TKT${Math.random().toString(36).substr(2,3).toUpperCase()}`, ... })
+    
+    const newTicketId = generateTicketId();
+    const employeeProject = employeeUser.project || mockProjects[0].id; // Fallback project
+    
+    // Find HR for the project
+    const projectDetails = mockProjects.find(p => p.id === employeeProject);
+    let hrPsnAssigned: string | undefined = undefined;
+    if (projectDetails && projectDetails.assignedHRs.length > 0) {
+      hrPsnAssigned = projectDetails.assignedHRs[0]; // Assign first HR for simplicity
+    } else {
+      // Fallback to Head HR if project or specific HR not found
+      hrPsnAssigned = 'HR000000'; 
+    }
+
+    const newTicket: Ticket = {
+      id: newTicketId,
+      psn: employeeUser.psn,
+      employeeName: employeeUser.name,
+      query: data.query,
+      followUpQuery: data.hasFollowUp ? data.followUpQuery : undefined,
+      priority: data.priority,
+      dateOfQuery: new Date().toISOString(),
+      status: 'Open',
+      project: employeeProject,
+      hrPSNAssigned: hrPsnAssigned, // Assign HR based on project
+    };
+    
+    mockTickets.push(newTicket); // Add to mock data for simulation
+    console.log("New Ticket Data:", newTicket);
     
     setIsLoading(false);
-    toast({ title: "Ticket Submitted!", description: "Your ticket has been successfully raised." });
+    toast({ title: "Ticket Submitted!", description: `Your ticket ${newTicketId} has been successfully raised.` });
     router.push('/dashboard'); 
   };
 
@@ -125,5 +167,3 @@ export default function NewTicketForm() {
     </Card>
   );
 }
-// Need to import Controller from react-hook-form
-import { Controller } from 'react-hook-form';

@@ -1,9 +1,10 @@
+
 "use client";
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase } from 'lucide-react';
+import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog } from 'lucide-react';
 import Image from 'next/image';
 
 export default function HomePage() {
@@ -106,7 +107,7 @@ export default function HomePage() {
         </div>
       </section>
       
-      {/* Admin/HR Actions Section - Placeholder as per discussion */}
+      {/* Admin/HR Actions Section */}
       <section className="py-16 lg:py-24 w-full">
         <div className="container mx-auto text-center px-4">
             <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6">
@@ -115,9 +116,15 @@ export default function HomePage() {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
                 HR and Administrative staff can manage employee and HR records. Access requires authentication.
             </p>
-            <div className="space-x-4">
-                 <Button asChild size="lg" variant="outline" className="px-8 py-3 rounded-lg shadow-lg">
-                    <Link href="/auth/signin?role=hr">HR Portal</Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
+                    <Link href="/auth/signin?role=hr"><UserCog className="mr-2"/> HR Portal Login</Link>
+                </Button>
+                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
+                    <Link href="/admin/add-employee"><UserPlus className="mr-2"/> Add New Employee</Link>
+                </Button>
+                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
+                    <Link href="/admin/add-hr"><ShieldCheck className="mr-2"/> Add New HR Account</Link>
                 </Button>
             </div>
         </div>
