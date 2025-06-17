@@ -19,7 +19,7 @@ const signInSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-typeSignInFormValues = z.infer<typeof signInSchema>;
+type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignInForm() {
   const { login } = useAuth();
