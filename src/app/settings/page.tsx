@@ -6,19 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, KeyRound, Palette, BellDot, ShieldAlert, MonitorSmartphone } from "lucide-react";
+import { User, KeyRound, Palette, BellDot, ShieldAlert, MonitorSmartphone, Settings2, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle"; 
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { User as AuthUser } from "@/types";
 
 export default function SettingsPage() {
   return (
     <ProtectedPage>
-     {(user) => ( 
+     {(user: AuthUser) => ( 
         <div className="py-8 space-y-8">
-          <h1 className="font-headline text-3xl font-bold text-center">Account Settings</h1>
+          <h1 className="font-headline text-3xl font-bold text-center">Account & System Settings</h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Profile Information Card */}
             <Card className="shadow-lg">
               <CardHeader>
                 <div className="flex items-center space-x-3">
@@ -42,7 +44,7 @@ export default function SettingsPage() {
                   </div>
                   {user.project && (
                       <div className="space-y-1">
-                          <Label htmlFor="project-settings">Project</Label>
+                          <Label htmlFor="project-settings">Current Project ID</Label>
                           <Input id="project-settings" value={user.project} readOnly disabled />
                       </div>
                   )}
@@ -52,6 +54,7 @@ export default function SettingsPage() {
               </CardFooter>
             </Card>
 
+            {/* Account Security Card */}
             <Card className="shadow-lg">
               <CardHeader>
                 <div className="flex items-center space-x-3">
@@ -74,6 +77,15 @@ export default function SettingsPage() {
                   <Input id="confirm-new-password" type="password" placeholder="••••••••" disabled />
                 </div>
                  <Button disabled className="w-full">Update Password (Not Active)</Button>
+                <div className="pt-2">
+                    <p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p>
+                    <ul className="text-xs text-muted-foreground list-disc list-inside">
+                        <li>At least 8 characters</li>
+                        <li>Uppercase & lowercase letters</li>
+                        <li>At least one number</li>
+                        <li>At least one special character</li>
+                    </ul>
+                </div>
                 <div className="flex items-center justify-between pt-4">
                     <Label htmlFor="2fa-toggle" className="flex flex-col space-y-1">
                         <span>Two-Factor Authentication (2FA)</span>
@@ -86,6 +98,7 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
+            {/* Appearance Card */}
             <Card className="shadow-lg">
               <CardHeader>
                   <div className="flex items-center space-x-3">
@@ -100,22 +113,62 @@ export default function SettingsPage() {
                       <ThemeToggle />
                   </div>
                    <div className="space-y-2 pt-2">
-                    <Label htmlFor="font-select">Application Font (Placeholder)</Label>
+                    <Label htmlFor="font-select">Application Font</Label>
                     <Select disabled>
                         <SelectTrigger id="font-select">
-                            <SelectValue placeholder="Current Font (Lato/Merriweather)" />
+                            <SelectValue placeholder="Current (Lato/Merriweather)" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="system">System Default</SelectItem>
+                            <SelectItem value="system">Lato/Merriweather (Default)</SelectItem>
                             <SelectItem value="arial">Arial</SelectItem>
                             <SelectItem value="times">Times New Roman</SelectItem>
                         </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">User font selection is not yet implemented.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="language-select">Default Language</Label>
+                    <Select disabled>
+                        <SelectTrigger id="language-select">
+                            <SelectValue placeholder="English (US)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="en-us">English (US)</SelectItem>
+                            <SelectItem value="en-gb">English (UK)</SelectItem>
+                            <SelectItem value="hi-in">Hindi (India)</SelectItem>
+                            <SelectItem value="ta-in">Tamil (India)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone-select">Timezone</Label>
+                    <Select disabled>
+                        <SelectTrigger id="timezone-select">
+                            <SelectValue placeholder="Asia/Kolkata (IST)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ist">Asia/Kolkata (IST)</SelectItem>
+                            <SelectItem value="gmt">Greenwich Mean Time (GMT)</SelectItem>
+                            <SelectItem value="est">Eastern Standard Time (EST)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="dateformat-select">Date Format</Label>
+                    <Select disabled>
+                        <SelectTrigger id="dateformat-select">
+                            <SelectValue placeholder="DD/MM/YYYY" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ddmmyyyy">DD/MM/YYYY</SelectItem>
+                            <SelectItem value="mmddyyyy">MM/DD/YYYY</SelectItem>
+                            <SelectItem value="yyyymmdd">YYYY-MM-DD</SelectItem>
+                        </SelectContent>
+                    </Select>
                   </div>
               </CardContent>
             </Card>
             
+            {/* Notification Preferences Card */}
             <Card className="shadow-lg">
               <CardHeader>
                   <div className="flex items-center space-x-3">
@@ -132,6 +185,13 @@ export default function SettingsPage() {
                     </Label>
                     <Switch id="email-notif" defaultChecked disabled />
                 </div>
+                 <div className="flex items-center justify-between">
+                    <Label htmlFor="sms-notif" className="flex flex-col space-y-1">
+                        <span>SMS Notifications</span>
+                         <span className="font-normal leading-snug text-muted-foreground text-xs">Receive critical updates via SMS.</span>
+                    </Label>
+                    <Switch id="sms-notif" disabled />
+                </div>
                 <div className="flex items-center justify-between">
                     <Label htmlFor="inapp-notif" className="flex flex-col space-y-1">
                         <span>In-App Notifications</span>
@@ -139,14 +199,22 @@ export default function SettingsPage() {
                     </Label>
                     <Switch id="inapp-notif" defaultChecked disabled />
                 </div>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="summary-emails" className="flex flex-col space-y-1">
+                        <span>Digest Emails</span>
+                        <span className="font-normal leading-snug text-muted-foreground text-xs">Receive daily/weekly ticket summaries.</span>
+                    </Label>
+                    <Switch id="summary-emails" disabled />
+                </div>
                 <div className="space-y-2 pt-2">
-                    <Label htmlFor="notif-freq">Notification Frequency (Placeholder)</Label>
+                    <Label htmlFor="notif-freq">Notification Frequency</Label>
                     <Select disabled>
                         <SelectTrigger id="notif-freq">
                             <SelectValue placeholder="Immediately" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="immediate">Immediately</SelectItem>
+                            <SelectItem value="hourly">Hourly Digest</SelectItem>
                             <SelectItem value="daily">Daily Digest</SelectItem>
                             <SelectItem value="weekly">Weekly Digest</SelectItem>
                         </SelectContent>
@@ -157,7 +225,125 @@ export default function SettingsPage() {
                   <Button disabled className="w-full">Save Notification Preferences (Not Active)</Button>
               </CardFooter>
             </Card>
+
+             {/* Ticket System Settings Card (Potentially HR/Admin only) */}
+             {(user.role === 'HR' || user.role === 'Head HR') && (
+                <Card className="shadow-lg">
+                <CardHeader>
+                    <div className="flex items-center space-x-3">
+                        <Settings2 className="w-6 h-6 text-primary" />
+                        <CardTitle className="font-headline text-xl">Ticket System Settings</CardTitle>
+                    </div>
+                    <CardDescription>Configure ticket-related system parameters.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-1">
+                        <Label htmlFor="ticket-id-format">Ticket ID Format</Label>
+                        <Input id="ticket-id-format" value="#TKXXXXXXX (Alphanumeric)" readOnly disabled />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="default-priority">Default Ticket Priority</Label>
+                        <Select disabled>
+                            <SelectTrigger id="default-priority">
+                                <SelectValue placeholder="Medium" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="low">Low</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="high">High</SelectItem>
+                                <SelectItem value="urgent">Urgent</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="auto-close-days">Auto-close Resolved Tickets (Days)</Label>
+                        <Input id="auto-close-days" type="number" placeholder="e.g., 7" disabled />
+                        <p className="text-xs text-muted-foreground">Days after resolution to auto-close a ticket.</p>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button disabled className="w-full">Save Ticket Settings (Not Active)</Button>
+                </CardFooter>
+                </Card>
+            )}
+
+            {/* Administrative Settings Card (Potentially Head HR only) */}
+            {(user.role === 'Head HR') && (
+                <Card className="shadow-lg">
+                <CardHeader>
+                    <div className="flex items-center space-x-3">
+                        <ShieldAlert className="w-6 h-6 text-primary" />
+                        <CardTitle className="font-headline text-xl">Administrative Settings</CardTitle>
+                    </div>
+                    <CardDescription>Manage core system security and operations.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-1">
+                        <Label htmlFor="system-email">System Email Address</Label>
+                        <Input id="system-email" type="email" placeholder="notifications@lnthelpdesk.com" disabled />
+                        <p className="text-xs text-muted-foreground">Email for sending automated notifications.</p>
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="session-timeout">Session Timeout (Minutes)</Label>
+                        <Input id="session-timeout" type="number" placeholder="30" disabled />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="login-attempts">Login Attempt Lockout (Attempts)</Label>
+                        <Input id="login-attempts" type="number" placeholder="5" disabled />
+                    </div>
+                    <Button variant="outline" className="w-full" disabled>
+                        <Activity className="mr-2 h-4 w-4" /> View Audit Trail (Not Active)
+                    </Button>
+                </CardContent>
+                <CardFooter>
+                    <Button disabled className="w-full">Save Admin Settings (Not Active)</Button>
+                </CardFooter>
+                </Card>
+            )}
             
+            {/* Feedback & Satisfaction Card */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                  <div className="flex items-center space-x-3">
+                      <ThumbsUp className="w-6 h-6 text-primary" />
+                      <CardTitle className="font-headline text-xl">Feedback & Satisfaction</CardTitle>
+                  </div>
+                  <CardDescription>Manage feedback collection on ticket resolution.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="ticket-rating" className="flex flex-col space-y-1">
+                        <span>Enable Ticket Rating</span>
+                         <span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to rate resolved tickets.</span>
+                    </Label>
+                    <Switch id="ticket-rating" disabled />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="rating-scale">Rating Scale</Label>
+                    <Select disabled>
+                        <SelectTrigger id="rating-scale">
+                            <SelectValue placeholder="1-5 Stars" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="5star">1-5 Stars</SelectItem>
+                            <SelectItem value="10scale">1-10 Scale</SelectItem>
+                            <SelectItem value="thumbs">Thumbs Up/Down</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="flex items-center justify-between pt-2">
+                    <Label htmlFor="general-feedback" className="flex flex-col space-y-1">
+                        <span>General System Feedback</span>
+                         <span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to submit general feedback.</span>
+                    </Label>
+                    <Switch id="general-feedback" disabled />
+                </div>
+              </CardContent>
+               <CardFooter>
+                  <Button disabled className="w-full">Save Feedback Settings (Not Active)</Button>
+              </CardFooter>
+            </Card>
+
           </div>
         </div>
       )}
