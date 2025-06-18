@@ -25,6 +25,110 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
   }
 };
 
+interface SupervisorTicketsPageContentProps {
+  currentUser: Supervisor;
+  searchTerm: string;
+  statusFilter: Ticket['status'] | "all";
+  priorityFilter: Ticket['priority'] | "all";
+}
+
+const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> = ({
+  currentUser,
+  searchTerm,
+  statusFilter,
+  priorityFilter
+}) => {
+  const filteredTickets = useMemo(() => {
+    let tickets: Ticket[] = [];
+    if (currentUser.functionalRole === 'IC Head') {
+        tickets = mockTickets;
+    } else if (currentUser.functionalRole === 'DH') {
+        tickets = mockTickets.filter(ticket => 
+            ticket.currentAssigneePSN === currentUser.psn || 
+            (ticket.status === 'Escalated to DH' && mockEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn)
+        );
+    } else if (currentUser.functionalRole === 'NS') {
+        tickets = mockTickets.filter(ticket => 
+            ticket.currentAssigneePSN === currentUser.psn || 
+            (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn)
+        );
+    } else if (currentUser.functionalRole === 'IS') {
+         tickets = mockTickets.filter(ticket => 
+            ticket.currentAssigneePSN === currentUser.psn || 
+            (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
+        );
+    }
+    return tickets.filter(ticket => {
+        const searchMatch = ticket.query.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            ticket.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            ticket.psn.toString().includes(searchTerm);
+        const statusMatch = statusFilter === "all" || ticket.status === statusFilter;
+        const priorityMatch = priorityFilter === "all" || ticket.priority === priorityFilter;
+        return searchMatch && statusMatch && priorityMatch;
+    });
+  }, [currentUser, searchTerm, statusFilter, priorityFilter]);
+
+  return (
+    <>
+      {filteredTickets.length > 0 ? (
+        <Card className="shadow-lg mt-6">
+          <CardHeader>
+            <CardTitle>Ticket Queue ({filteredTickets.length})</CardTitle>
+            <CardDescription>A complete list of tickets relevant to your scope.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ticket ID</TableHead>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Query (Summary)</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date Raised</TableHead>
+                    <TableHead>Assigned To</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTickets.map(ticket => {
+                    const assignee = mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
+                    return (
+                      <TableRow key={ticket.id}>
+                        <TableCell className="font-medium">{ticket.id}</TableCell>
+                        <TableCell>{ticket.employeeName} ({ticket.psn})</TableCell>
+                        <TableCell>{ticket.query.substring(0, 40)}...</TableCell>
+                        <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
+                        <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
+                        <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
+                        <TableCell>{assignee ? `${assignee.name} (${assignee.title})` : 'Unassigned'}</TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/tickets/${ticket.id}`}>View / Manage</Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="text-center py-10 shadow-lg mt-6">
+          <CardContent>
+            <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No tickets found matching your criteria in your queue.</p>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+};
+
 export default function SupervisorTicketsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Ticket['status'] | "all">("all");
@@ -34,37 +138,6 @@ export default function SupervisorTicketsPage() {
     <ProtectedPage allowedRoles={['IS', 'NS', 'DH', 'IC Head']}>
       {(currentUser: User) => {
         const currentSupervisorUser = currentUser as Supervisor;
-
-        const filteredTickets = useMemo(() => {
-            let tickets: Ticket[] = [];
-            if (currentSupervisorUser.functionalRole === 'IC Head') {
-                tickets = mockTickets;
-            } else if (currentSupervisorUser.functionalRole === 'DH') {
-                tickets = mockTickets.filter(ticket => 
-                    ticket.currentAssigneePSN === currentSupervisorUser.psn || // Directly assigned to DH
-                    (ticket.status === 'Escalated to DH' && mockEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentSupervisorUser.psn) // Escalated to DH for their employee
-                );
-            } else if (currentSupervisorUser.functionalRole === 'NS') {
-                tickets = mockTickets.filter(ticket => 
-                    ticket.currentAssigneePSN === currentSupervisorUser.psn || // Directly assigned to NS
-                    (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn) // Escalated to NS for their employee
-                );
-            } else if (currentSupervisorUser.functionalRole === 'IS') {
-                 tickets = mockTickets.filter(ticket => 
-                    ticket.currentAssigneePSN === currentSupervisorUser.psn || // Directly assigned to IS (e.g. 'Open' tickets)
-                    (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) // New tickets for their employees
-                );
-            }
-            return tickets.filter(ticket => {
-                const searchMatch = ticket.query.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    ticket.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    ticket.psn.toString().includes(searchTerm);
-                const statusMatch = statusFilter === "all" || ticket.status === statusFilter;
-                const priorityMatch = priorityFilter === "all" || ticket.priority === priorityFilter;
-                return searchMatch && statusMatch && priorityMatch;
-            });
-        }, [currentSupervisorUser, searchTerm, statusFilter, priorityFilter]);
         
         return (
             <div className="space-y-6 py-6">
@@ -113,60 +186,12 @@ export default function SupervisorTicketsPage() {
                     </CardContent>
                 </Card>
 
-                {filteredTickets.length > 0 ? (
-                <Card className="shadow-lg">
-                    <CardHeader>
-                    <CardTitle>Ticket Queue ({filteredTickets.length})</CardTitle>
-                    <CardDescription>A complete list of tickets relevant to your scope.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                            <TableRow>
-                                <TableHead>Ticket ID</TableHead>
-                                <TableHead>Employee</TableHead>
-                                <TableHead>Query (Summary)</TableHead>
-                                <TableHead>Priority</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Date Raised</TableHead>
-                                <TableHead>Assigned To</TableHead>
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {filteredTickets.map(ticket => {
-                                const assignee = mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
-                                return (
-                                    <TableRow key={ticket.id}>
-                                    <TableCell className="font-medium">{ticket.id}</TableCell>
-                                    <TableCell>{ticket.employeeName} ({ticket.psn})</TableCell>
-                                    <TableCell>{ticket.query.substring(0, 40)}...</TableCell>
-                                    <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
-                                    <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
-                                    <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
-                                    <TableCell>{assignee ? `${assignee.name} (${assignee.title})` : 'Unassigned'}</TableCell>
-                                    <TableCell>
-                                        <Button variant="outline" size="sm" asChild>
-                                        <Link href={`/tickets/${ticket.id}`}>View / Manage</Link>
-                                        </Button>
-                                    </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                            </TableBody>
-                        </Table>
-                    </div>
-                    </CardContent>
-                </Card>
-                ) : (
-                <Card className="text-center py-10 shadow-lg">
-                    <CardContent>
-                        <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No tickets found matching your criteria in your queue.</p>
-                    </CardContent>
-                </Card>
-                )}
+                <SupervisorTicketsPageContent
+                    currentUser={currentSupervisorUser}
+                    searchTerm={searchTerm}
+                    statusFilter={statusFilter}
+                    priorityFilter={priorityFilter}
+                />
             </div>
         );
       }}
