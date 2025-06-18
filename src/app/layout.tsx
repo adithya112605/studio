@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
@@ -25,7 +26,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased flex flex-col min-h-screen"> {/* font-body will apply Lato via Tailwind */}
+      <body className="font-body antialiased flex flex-col min-h-screen" suppressHydrationWarning> {/* font-body will apply Lato via Tailwind */}
         <AuthProvider>
           <ThemeProvider
             attribute="class"
