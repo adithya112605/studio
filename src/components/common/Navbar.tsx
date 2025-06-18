@@ -34,7 +34,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    toggleMenu(); // Close mobile menu if open
+    setIsOpen(false); // Close mobile menu if open
     router.push('/'); // Redirect to homepage after logout
   };
 
@@ -109,8 +109,9 @@ const Navbar = () => {
             <span className="font-bold font-headline text-xl">L&T Helpdesk</span>
           </Link>
           <div className="flex items-center space-x-2">
-             <div className="w-8 h-8 bg-muted rounded-full animate-pulse"></div> 
-             <div className="w-8 h-8 bg-muted rounded-full animate-pulse md:hidden"></div> 
+             {/* Use non-theme-dependent neutral colors for placeholder */}
+             <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse"></div> 
+             <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse md:hidden"></div> 
           </div>
         </div>
       </header>
@@ -144,12 +145,12 @@ const Navbar = () => {
         <div className="flex items-center space-x-2">
           <ThemeToggle />
           {user ? (
-             <div className="hidden md:flex items-center space-x-2">
-              <Link href="/notifications" aria-label="Notifications">
+             <div className="flex items-center space-x-2"> {/* Container for both desktop and user menu */}
+              <Link href="/notifications" aria-label="Notifications" className="hidden md:inline-flex">
                 <Button variant="ghost" size="icon"><Bell className="w-5 h-5"/></Button>
               </Link>
               <DropdownMenuUser user={user} logout={handleLogout} navItemsForDropdown={navItemsToDisplay} />
-              <Button variant="outline" size="sm" onClick={handleLogout}>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="hidden md:inline-flex">
                 <LogOut className="mr-2 h-4 w-4" /> Logout
               </Button>
              </div>
@@ -226,23 +227,27 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
             </Link>
           </DropdownMenuItem>
         ))}
-        {/* Settings is usually always good in dropdown */}
-        <DropdownMenuItem asChild>
-             <Link href="/settings" className="flex items-center">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-            </Link>
-        </DropdownMenuItem>
+        {/* Settings is usually always good in dropdown, ensure it's not duplicated if it's in navItemsForDropdown and also not a mainDesktopLabel */}
+        {!navItemsForDropdown.some(item => item.label === 'Settings' && !mainDesktopLabels.includes(item.label)) && (
+            <DropdownMenuItem asChild>
+                <Link href="/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                </Link>
+            </DropdownMenuItem>
+        )}
         
-        {/* Logout is handled separately now for desktop, but good to keep in mobile-context dropdown or as alternative */}
-        {/* <DropdownMenuSeparator /> 
-        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive">
+        {/* Logout specific for desktop dropdown menu, if not covered by main button */}
+        <DropdownMenuSeparator className="md:hidden" /> 
+        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive md:hidden">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
-        </DropdownMenuItem> */}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
 }
 
 export default Navbar;
+
+    
