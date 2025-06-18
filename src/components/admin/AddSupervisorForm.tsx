@@ -52,8 +52,13 @@ export default function AddSupervisorForm() {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
 
+    const supervisorDataSubmit = { ...data };
+    if (supervisorDataSubmit.branchProject === "NO_PROJECT_SELECTED") {
+        supervisorDataSubmit.branchProject = undefined;
+    }
+
     const newSupervisor: Supervisor = {
-      ...data,
+      ...supervisorDataSubmit,
       dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
       role: data.functionalRole,
       ticketsResolved: 0,
@@ -174,7 +179,7 @@ export default function AddSupervisorForm() {
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger id="branchProject-supervisor"> <SelectValue placeholder="Select primary project if applicable" /> </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="NO_PROJECT_SELECTED">None</SelectItem>
                         {mockProjects.map(p => ( <SelectItem key={p.id} value={p.id}>{p.name} ({p.city})</SelectItem> ))}
                     </SelectContent>
                     </Select>
