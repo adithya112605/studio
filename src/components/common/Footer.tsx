@@ -86,7 +86,7 @@ const Footer = () => {
       </div>
       <div className="border-t border-slate-700">
         <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
-          <p>&copy; {currentYear || new Date().getFullYear()} Larsen & Toubro Limited. All rights reserved.</p>
+          <p>&copy; {currentYear ? currentYear : new Date().getFullYear()} Larsen &amp; Toubro Limited. All rights reserved.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link>
@@ -102,3 +102,4 @@ const Footer = () => {
 };
 
 export default Footer;
+
