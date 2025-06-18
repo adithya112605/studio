@@ -10,7 +10,7 @@ import { mockTickets } from "@/data/mockData";
 import { FileText, ArrowLeft, Filter } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
+// Removed: import { useAuth } from "@/contexts/AuthContext";
 
 // Duplicated from dashboard/page.tsx - consider moving to utils
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
@@ -25,30 +25,12 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
 };
 
 export default function HrTicketsPage() {
-  const { user } = useAuth();
-  const hrUser = user as HR | null;
-
-   if (!hrUser && !user) {
-    return (
-      <ProtectedPage allowedRoles={['HR', 'Head HR']}>
-        <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
-           <p>Loading user data...</p>
-        </div>
-      </ProtectedPage>
-    );
-  }
-
-  // Ensure user is loaded and is HR/Head HR before filtering
-  const relevantTickets = hrUser && (hrUser.role === 'HR' || hrUser.role === 'Head HR')
-    ? hrUser.role === 'Head HR'
-      ? mockTickets
-      : mockTickets.filter(ticket => hrUser.projectsHandled.some(p => p.id === ticket.project))
-    : [];
-
+  // Removed top-level useAuth and user-specific data derivation
 
   return (
     <ProtectedPage allowedRoles={['HR', 'Head HR']}>
       {(currentUser: User) => {
+        // currentUser is guaranteed by ProtectedPage to be HR or Head HR
         const currentHrUser = currentUser as HR;
         const currentRelevantTickets = currentHrUser.role === 'Head HR' 
             ? mockTickets 
@@ -58,7 +40,6 @@ export default function HrTicketsPage() {
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                 <h1 className="font-headline text-3xl font-bold">Manage All Tickets</h1>
-                {/* HRs typically don't raise tickets, but can filter/manage them */}
                 <Button variant="outline" asChild>
                     <Link href="/reports"><Filter className="mr-2 h-4 w-4" /> Go to Reports & Filters</Link>
                 </Button>

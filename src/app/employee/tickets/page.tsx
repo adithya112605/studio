@@ -10,7 +10,7 @@ import { mockTickets } from "@/data/mockData";
 import { FileText, PlusCircle, ArrowLeft } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
+// Removed: import { useAuth } from "@/contexts/AuthContext";
 
 // Duplicated from dashboard/page.tsx - consider moving to utils
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
@@ -25,29 +25,12 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
 };
 
 export default function EmployeeTicketsPage() {
-  const { user } = useAuth();
-  const employeeUser = user as Employee | null;
-
-  if (!employeeUser && !user) { // Check if user is also null to avoid premature rendering during auth loading
-    return (
-      <ProtectedPage allowedRoles={['Employee']}>
-        <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
-           <p>Loading user data...</p>
-        </div>
-      </ProtectedPage>
-    );
-  }
-  
-  // Ensure user is loaded and is an employee before filtering tickets
-  const userTickets = employeeUser && employeeUser.role === 'Employee' 
-    ? mockTickets.filter(ticket => ticket.psn === employeeUser.psn) 
-    : [];
+  // Removed top-level useAuth and user-specific data derivation
 
   return (
     <ProtectedPage allowedRoles={['Employee']}>
-      {/* Ensure the children of ProtectedPage is a function if user prop is needed */}
       {(currentUser: User) => {
-          // Re-derive employeeUser and tickets inside this scope to ensure correct user context
+          // currentUser is guaranteed by ProtectedPage to be an Employee
           const currentEmployeeUser = currentUser as Employee;
           const currentUserTickets = mockTickets.filter(ticket => ticket.psn === currentEmployeeUser.psn);
 
