@@ -8,24 +8,29 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { AddSupervisorFormData, Supervisor } from '@/types';
 import { mockProjects, mockCities, mockSupervisors } from '@/data/mockData';
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const addSupervisorSchema = z.object({
   psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length <= 8, { message: "PSN must be 1 to 8 digits." }),
   name: z.string().min(3, "Name must be at least 3 characters"),
   businessEmail: z.string().email("Invalid email address"),
+  dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(),
   title: z.string().min(3, "Title (e.g., Site Incharge, Cluster Head) is required"),
   functionalRole: z.enum(['IS', 'NS', 'DH', 'IC Head']),
   branchProject: z.string().optional(),
-  cityAccess: z.array(z.string()).optional(), // For DH/IC Head
-  projectsHandledIds: z.array(z.string()).optional(), // Optional, can be derived
+  cityAccess: z.array(z.string()).optional(),
+  projectsHandledIds: z.array(z.string()).optional(),
 });
 
 export default function AddSupervisorForm() {
@@ -49,13 +54,12 @@ export default function AddSupervisorForm() {
 
     const newSupervisor: Supervisor = {
       ...data,
-      role: data.functionalRole, // Set the base role from functionalRole
-      // ticketsResolved and ticketsPending will be dynamic, initialize if needed
+      dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
+      role: data.functionalRole,
       ticketsResolved: 0,
       ticketsPending: 0,
     };
 
-    // In a real app, save to DB. For mock:
     mockSupervisors.push(newSupervisor);
     console.log("New Supervisor Data:", newSupervisor);
     setIsLoading(false);
@@ -91,10 +95,47 @@ export default function AddSupervisorForm() {
               {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
           </div>
-           <div className="space-y-2">
-                <Label htmlFor="businessEmail-supervisor">Business Email</Label>
-                <Input id="businessEmail-supervisor" type="email" {...register("businessEmail")} placeholder="supervisor.name@lnt.co" />
-                {errors.businessEmail && <p className="text-sm text-destructive">{errors.businessEmail.message}</p>}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="businessEmail-supervisor">Business Email</Label>
+                    <Input id="businessEmail-supervisor" type="email" {...register("businessEmail")} placeholder="supervisor.name@lnt.co" />
+                    {errors.businessEmail && <p className="text-sm text-destructive">{errors.businessEmail.message}</p>}
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth-supervisor">Date of Birth</Label>
+                     <Controller
+                        name="dateOfBirth"
+                        control={control}
+                        render={({ field }) => (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                                captionLayout="dropdown-buttons"
+                                fromYear={1950}
+                                toYear={new Date().getFullYear() - 18}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      />
+                    {errors.dateOfBirth && <p className="text-sm text-destructive">{errors.dateOfBirth.message}</p>}
+                </div>
             </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -150,9 +191,9 @@ export default function AddSupervisorForm() {
                         <div key={c.name} className="flex items-center space-x-2">
                             <Checkbox
                             id={`city-${c.name}`}
-                            checked={getValues("cityAccess")?.includes(c.name)}
+                            checked={getValues("cityAccess")?.includes(c.name) || selectedFunctionalRole === 'IC Head'}
                             onCheckedChange={() => handleCityAccessSelection(c.name)}
-                            disabled={selectedFunctionalRole === 'IC Head'} // IC Head has all cities by default
+                            disabled={selectedFunctionalRole === 'IC Head'}
                             />
                             <Label htmlFor={`city-${c.name}`} className="font-normal cursor-pointer"> {c.name} </Label>
                         </div>

@@ -1,8 +1,8 @@
 
 "use client"
 
-import React, { useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import React, { useState, useRef } from 'react';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -11,16 +11,19 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { NewTicketFormData, TicketPriority, Ticket, Employee, TicketStatus } from '@/types';
+import type { NewTicketFormData, TicketPriority, Ticket, Employee, TicketStatus, TicketAttachment } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Paperclip } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { mockTickets, mockProjects, mockSupervisors } from '@/data/mockData';
-import { Controller } from 'react-hook-form';
+import { mockTickets, mockSupervisors } from '@/data/mockData';
+
+const MAX_QUERY_LENGTH = 1500;
 
 const newTicketSchema = z.object({
-  query: z.string().min(10, "Query must be at least 10 characters long."),
+  query: z.string()
+    .min(10, "Query must be at least 10 characters long.")
+    .max(MAX_QUERY_LENGTH, `Query must not exceed ${MAX_QUERY_LENGTH} characters.`),
   hasFollowUp: z.boolean().default(false),
   followUpQuery: z.string().optional(),
   priority: z.enum(['Low', 'Medium', 'High', 'Urgent']),
@@ -43,6 +46,10 @@ export default function NewTicketForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [queryCharCount, setQueryCharCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+
 
   const { register, handleSubmit, control, watch, formState: { errors } } = useForm<NewTicketFormData>({
     resolver: zodResolver(newTicketSchema),
@@ -53,6 +60,40 @@ export default function NewTicketForm() {
   });
 
   const hasFollowUp = watch('hasFollowUp');
+  const queryValue = watch('query');
+
+  React.useEffect(() => {
+    setQueryCharCount(queryValue?.length || 0);
+  }, [queryValue]);
+
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const newFiles = Array.from(event.target.files);
+      setAttachedFiles(prev => [...prev, ...newFiles]); // Allow multiple files
+      newFiles.forEach(file => {
+        toast({
+            title: "File Added (Mock)",
+            description: `"${file.name}" is ready to be attached.`,
+        });
+      });
+      // Reset file input to allow selecting the same file again if removed and re-added
+      if(fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+  
+  const removeAttachment = (fileName: string) => {
+    setAttachedFiles(prev => prev.filter(file => file.name !== fileName));
+    toast({
+        title: "File Removed",
+        description: `"${fileName}" has been removed from attachments.`,
+        variant: "default"
+    })
+  };
+
 
   const onSubmit: SubmitHandler<NewTicketFormData> = async (data) => {
     if (!user || user.role !== 'Employee') {
@@ -63,9 +104,20 @@ export default function NewTicketForm() {
 
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     const newTicketId = generateTicketId();
     
+    const ticketAttachments: TicketAttachment[] = attachedFiles.map((file, index) => ({
+        id: `${newTicketId}-att-${index}`,
+        fileName: file.name,
+        fileType: file.type.startsWith('image/') ? 'image' : 
+                    file.type.startsWith('video/') ? 'video' :
+                    file.type.startsWith('audio/') ? 'audio' : 'document',
+        urlOrContent: `mock/upload/path/${file.name}`, // Placeholder
+        uploadedAt: new Date().toISOString(),
+    }));
+
+
     const newTicket: Ticket = {
       id: newTicketId,
       psn: employeeUser.psn,
@@ -74,14 +126,15 @@ export default function NewTicketForm() {
       followUpQuery: data.hasFollowUp ? data.followUpQuery : undefined,
       priority: data.priority,
       dateOfQuery: new Date().toISOString(),
-      status: 'Open' as TicketStatus, // Initial status
+      status: 'Open' as TicketStatus,
       project: employeeUser.project,
-      currentAssigneePSN: employeeUser.isPSN, // Assign to IS initially
+      currentAssigneePSN: employeeUser.isPSN,
+      attachments: ticketAttachments,
     };
-    
+
     mockTickets.push(newTicket);
     console.log("New Ticket Data:", newTicket);
-    // TODO: Implement actual notification to IS
+
     if (employeeUser.isPSN) {
       const isSupervisor = mockSupervisors.find(s => s.psn === employeeUser.isPSN);
       if (isSupervisor) {
@@ -89,10 +142,10 @@ export default function NewTicketForm() {
         toast({ title: "IS Notified (Simulated)", description: `Supervisor ${isSupervisor.name} has been notified about your new ticket.`});
       }
     }
-    
+
     setIsLoading(false);
     toast({ title: "Ticket Submitted!", description: `Your ticket ${newTicketId} has been successfully raised.` });
-    router.push('/dashboard'); 
+    router.push('/dashboard');
   };
 
   return (
@@ -105,7 +158,16 @@ export default function NewTicketForm() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="query">Query / Issue Description</Label>
-            <Textarea id="query" {...register("query")} placeholder="Please describe your issue in detail..." rows={5} />
+            <Textarea
+              id="query"
+              {...register("query")}
+              placeholder="Please describe your issue in detail..."
+              rows={5}
+              maxLength={MAX_QUERY_LENGTH}
+            />
+            <div className="text-right text-xs text-muted-foreground">
+              {queryCharCount}/{MAX_QUERY_LENGTH}
+            </div>
             {errors.query && <p className="text-sm text-destructive">{errors.query.message}</p>}
           </div>
 
@@ -150,6 +212,36 @@ export default function NewTicketForm() {
               {errors.followUpQuery && <p className="text-sm text-destructive">{errors.followUpQuery.message}</p>}
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label htmlFor="attachments">Attachments (Optional)</Label>
+            <Button type="button" variant="outline" onClick={handleAttachmentClick} className="w-full justify-start text-left" data-ai-hint="file upload document image video audio link">
+                <Paperclip className="mr-2 h-4 w-4" /> Add Attachments
+            </Button>
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+                multiple
+                accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            />
+            {attachedFiles.length > 0 && (
+                <div className="mt-2 space-y-1 text-xs">
+                    <p className="font-medium text-muted-foreground">Selected files:</p>
+                    <ul className="list-disc list-inside pl-4">
+                        {attachedFiles.map(file => (
+                            <li key={file.name} className="flex items-center justify-between">
+                                <span>{file.name} ({(file.size / 1024).toFixed(2)} KB)</span>
+                                <Button type="button" variant="ghost" size="sm" className="text-destructive h-auto p-1" onClick={() => removeAttachment(file.name)}>Remove</Button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            <p className="text-xs text-muted-foreground">You can attach documents, images, videos, audio, or share links.</p>
+          </div>
+
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>

@@ -4,10 +4,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2 } from 'lucide-react';
+import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2, HomeIcon } from 'lucide-react';
 import Image from 'next/image';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 
 export default function HomePage() {
+  const { user } = useAuth(); // Get current user
+
   const features = [
     {
       icon: <MessageSquare className="w-10 h-10 text-primary mb-4" />,
@@ -36,20 +39,36 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="w-full py-20 lg:py-32 bg-gradient-to-br from-background to-primary/10 dark:from-background dark:to-primary/5">
         <div className="container mx-auto text-center px-4">
-          <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-            Welcome to <span className="text-primary">L&T Helpdesk</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Streamlining internal support for L&T employees. Get quick resolutions and manage your queries efficiently with hierarchical supervisor support.
-          </p>
-          <div className="space-x-4">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
-              <Link href="/auth/signin">Sign In</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
-              <Link href="/auth/signup">First Time User?</Link>
-            </Button>
-          </div>
+          {user ? (
+            <>
+              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                Welcome back, <span className="text-primary">{user.name}!</span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+                Access your dashboard, manage tickets, or explore system features.
+              </p>
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
+                <Link href="/dashboard"><HomeIcon className="mr-2"/> Go to Dashboard</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                Welcome to <span className="text-primary">L&T Helpdesk</span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+                Streamlining internal support for L&T employees. Get quick resolutions and manage your queries efficiently with hierarchical supervisor support.
+              </p>
+              <div className="space-x-4">
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
+                  <Link href="/auth/signin">Sign In</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
+                  <Link href="/auth/signup">First Time User?</Link>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -95,41 +114,42 @@ export default function HomePage() {
             </Button>
           </div>
           <div className="rounded-lg overflow-hidden shadow-2xl">
-            <Image 
-              src="https://placehold.co/600x400.png" 
-              alt="L&T Corporate Image" 
-              width={600} 
-              height={400} 
+            <Image
+              src="https://placehold.co/600x400.png"
+              alt="L&T Corporate Image"
+              width={600}
+              height={400}
               className="object-cover w-full h-full"
-              data-ai-hint="corporate building" 
+              data-ai-hint="corporate building"
             />
           </div>
         </div>
       </section>
-      
-      {/* Admin/Supervisor Actions Section */}
-      <section className="py-16 lg:py-24 w-full">
-        <div className="container mx-auto text-center px-4">
-            <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6">
-                Administrative & Supervisor Actions
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                Supervisors and Administrative staff can manage employee records and helpdesk operations. Access requires authentication.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                    <Link href="/auth/signin?role=supervisor"><UserCog className="mr-2"/> Supervisor Portal Login</Link>
-                </Button>
-                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                    <Link href="/admin/add-employee"><UserPlus className="mr-2"/> Add New Employee</Link>
-                </Button>
-                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                    <Link href="/admin/add-supervisor"><UserSquare2 className="mr-2"/> Add New Supervisor</Link>
-                </Button>
-            </div>
-        </div>
-      </section>
 
+      {/* Admin/Supervisor Actions Section - Conditionally render if user is not logged in */}
+      {!user && (
+        <section className="py-16 lg:py-24 w-full">
+          <div className="container mx-auto text-center px-4">
+              <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6">
+                  Administrative & Supervisor Actions
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+                  Supervisors and Administrative staff can manage employee records and helpdesk operations. Access requires authentication.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                   <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
+                      <Link href="/auth/signin?role=supervisor"><UserCog className="mr-2"/> Supervisor Portal Login</Link>
+                  </Button>
+                   <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
+                      <Link href="/admin/add-employee"><UserPlus className="mr-2"/> Add New Employee</Link>
+                  </Button>
+                   <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
+                      <Link href="/admin/add-supervisor"><UserSquare2 className="mr-2"/> Add New Supervisor</Link>
+                  </Button>
+              </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

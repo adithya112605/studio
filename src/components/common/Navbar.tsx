@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye, LogIn } from 'lucide-react';
+import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye, LogIn, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,7 +30,7 @@ const Navbar = () => {
   useEffect(() => {
     setIsMounted(true);
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20); // Make transition happen sooner
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -49,6 +49,7 @@ const Navbar = () => {
   const commonAuthenticatedNavItemsBase = [
     { href: '/', label: 'Home', icon: <Home className="w-4 h-4" /> },
     { href: '/dashboard', label: 'Dashboard', icon: <Briefcase className="w-4 h-4" /> },
+    { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="w-4 h-4" /> }, // Added My Profile
   ];
 
   const employeeNavItems = [
@@ -73,52 +74,50 @@ const Navbar = () => {
      { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserSquare2 className="w-4 h-4" /> },
   ];
 
-
   const unauthenticatedNavItems = [
-    { href: '/auth/signin', label: 'Sign In' }, 
-    { href: '/auth/signup', label: 'Sign Up' }, 
+    { href: '/auth/signin', label: 'Sign In' },
+    { href: '/auth/signup', label: 'Sign Up' },
   ];
 
-  let navItemsToDisplay = unauthenticatedNavItems; 
-  let desktopNavItemsToDisplay: Array<{href:string; label:string; icon?:React.ReactNode}> = []; 
+  let navItemsForMobile = unauthenticatedNavItems;
+  let desktopNavLinks: Array<{href:string; label:string; icon?:React.ReactNode}> = [];
 
   if (user) {
     if (user.role === 'Employee') {
-      navItemsToDisplay = employeeNavItems;
-      desktopNavItemsToDisplay = [
+      navItemsForMobile = employeeNavItems;
+      desktopNavLinks = [
         { href: '/dashboard', label: 'Dashboard'},
         { href: '/tickets/new', label: 'Create Ticket'},
         { href: '/employee/tickets', label: 'My Tickets'},
       ];
-    } else { 
+    } else {
       const supervisorUser = user as Supervisor;
-      navItemsToDisplay = [...supervisorBaseNavItems]; 
-      desktopNavItemsToDisplay = [ 
+      navItemsForMobile = [...supervisorBaseNavItems];
+      desktopNavLinks = [
         { href: '/dashboard', label: 'Dashboard'},
         { href: '/hr/tickets', label: 'Tickets'},
         { href: '/supervisor/employee-details', label: 'Employees'},
         { href: '/reports', label: 'Reports'},
       ];
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
-        navItemsToDisplay.push(...adminManagementNavItems); 
-        // Admin management links typically go into a user dropdown or a separate admin section
+        navItemsForMobile.push(...adminManagementNavItems);
       }
     }
   }
 
 
   if (!isMounted) {
-    // Skeleton loader for Navbar
     return (
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 bg-muted rounded-sm animate-pulse"></div>
-            <div className="w-32 h-6 bg-muted rounded animate-pulse"></div>
+            <div className="w-8 h-8 bg-muted rounded-sm animate-pulse"></div>
+            <div className="w-32 h-6 bg-muted rounded animate-pulse hidden sm:block"></div>
           </div>
           <div className="flex items-center space-x-2">
-             <div className="w-10 h-10 bg-muted rounded-md animate-pulse"></div> {/* Theme toggle */}
-             <div className="w-20 h-9 bg-muted rounded-md animate-pulse md:hidden"></div> {/* Hamburger or User icon */}
+             <div className="w-10 h-10 bg-muted rounded-md animate-pulse"></div>
+             <div className="w-10 h-10 bg-muted rounded-full animate-pulse md:hidden"></div>
+             <div className="w-20 h-9 bg-muted rounded-md animate-pulse hidden md:block"></div>
           </div>
         </div>
       </header>
@@ -128,50 +127,45 @@ const Navbar = () => {
   return (
     <header className={cn(
         "sticky top-0 z-50 w-full border-b transition-all duration-300",
-        isScrolled 
-          ? "border-border bg-background shadow-md" 
-          : "border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        isScrolled
+          ? "border-border bg-background shadow-md"
+          : "border-transparent bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       )}>
       <div className={cn(
           "container flex max-w-screen-2xl items-center transition-all duration-300",
           isScrolled ? "h-14" : "h-16"
         )}>
 
-        {/* Left Section: Logo & Title */}
-        <Link href="/" className="flex items-center space-x-2 mr-auto md:mr-6 shrink-0">
-          <LTLogo className="h-7 w-7 text-primary" />
+        <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
+          <LTLogo className="h-8 w-8 text-primary" />
           <span className="font-bold font-headline text-xl hidden sm:inline">L&T Helpdesk</span>
         </Link>
 
-        {/* Center Section (Desktop Nav Links for Authenticated Users) */}
         {user && (
-          <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 text-sm font-medium absolute left-1/2 transform -translate-x-1/2">
-            {desktopNavItemsToDisplay.map((item) => (
-              <Link key={item.href} href={item.href} className="transition-colors hover:text-primary px-1 py-1">
-                {item.label}
-              </Link>
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium mx-auto">
+            {desktopNavLinks.map((item) => (
+              <Button key={item.href} variant="ghost" asChild className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/5">
+                <Link href={item.href}>{item.label}</Link>
+              </Button>
             ))}
           </nav>
         )}
-        
+
         <div className="flex items-center space-x-2 md:space-x-3 ml-auto">
           <ThemeToggle />
           {user ? (
-             <div className="flex items-center space-x-2 md:space-x-3">
-              <Link href="/notifications" aria-label="Notifications" className="hidden md:inline-flex">
-                <Button variant="ghost" size="icon"><Bell className="w-5 h-5"/></Button>
-              </Link>
-              <DropdownMenuUser user={user} logout={handleLogout} navItemsForDropdown={navItemsToDisplay} adminManagementNavItems={adminManagementNavItems} />
-              <Button variant="outline" size="sm" onClick={handleLogout} className="hidden lg:inline-flex">
-                <LogOut className="mr-2 h-4 w-4" /> Logout
+             <div className="flex items-center space-x-1 md:space-x-2">
+              <Button variant="ghost" size="icon" asChild className="hidden md:inline-flex text-muted-foreground hover:text-primary hover:bg-primary/5">
+                <Link href="/notifications" aria-label="Notifications"><Bell className="w-5 h-5"/></Link>
               </Button>
+              <DropdownMenuUser user={user} logout={handleLogout} mobileNavItems={navItemsForMobile} adminManagementNavItems={adminManagementNavItems} />
              </div>
           ) : (
              <div className="hidden md:flex items-center space-x-2">
-              <Button asChild variant="default" size="default" className="font-semibold px-5 py-2.5 rounded-lg shadow-md hover:bg-primary/90 transition-all text-sm">
+              <Button asChild variant="default" size="sm" className="font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-primary/90 transition-all text-xs">
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
-              <Button asChild variant="outline" size="default" className="px-5 py-2.5 rounded-lg shadow-sm hover:bg-accent/50 transition-all text-sm">
+              <Button asChild variant="outline" size="sm" className="px-4 py-2 rounded-lg shadow-sm hover:bg-accent/50 transition-all text-xs">
                 <Link href="/auth/signup">Sign Up</Link>
               </Button>
             </div>
@@ -184,17 +178,16 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden fixed inset-x-0 top-14 sm:top-16 z-40 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t border-border/40 animate-in slide-in-from-top-full duration-300">
-          <nav className="flex flex-col space-y-2">
-            {navItemsToDisplay.map((item) => {
+        <div className="md:hidden fixed inset-x-0 top-14 sm:top-16 z-40 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t animate-in slide-in-from-top-full duration-300">
+          <nav className="flex flex-col space-y-1">
+            {navItemsForMobile.map((item) => {
               let iconToDisplay = item.icon ? React.cloneElement(item.icon, { className: "w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" }) : null;
-              if (!user) { 
+              if (!user) {
                 if (item.href === '/auth/signin') iconToDisplay = <LogIn className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" />;
                 if (item.href === '/auth/signup') iconToDisplay = <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" />;
               }
-              if (!iconToDisplay && user) iconToDisplay = <div className="w-5 h-5 shrink-0"></div>; 
+              if (!iconToDisplay && user) iconToDisplay = <div className="w-5 h-5 shrink-0"></div>;
 
               return (
                 <Link
@@ -208,7 +201,7 @@ const Navbar = () => {
                 </Link>
               );
             })}
-            {user && ( 
+            {user && (
               <Button
                 variant="ghost"
                 onClick={handleLogout}
@@ -226,31 +219,30 @@ const Navbar = () => {
 };
 
 
-const DropdownMenuUser = ({ user, logout, navItemsForDropdown, adminManagementNavItems }: { 
-    user: User; 
-    logout: () => void; 
-    navItemsForDropdown: Array<{href:string; label:string; icon?:React.ReactNode}>;
+const DropdownMenuUser = ({ user, logout, mobileNavItems, adminManagementNavItems }: {
+    user: User;
+    logout: () => void;
+    mobileNavItems: Array<{href:string; label:string; icon?:React.ReactNode}>;
     adminManagementNavItems: Array<{href:string; label:string; icon?:React.ReactNode}>;
 }) => {
-  const mainDesktopLabels = ['Home', 'Dashboard', 'Create Ticket', 'My Tickets', 'Tickets', 'Reports', 'Employees', 'Ticket Management', 'Employee Details'];
   const supervisorUser = user as Supervisor;
   const showAdminItems = supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head';
 
-  const dropdownSpecificItems = navItemsForDropdown.filter(item => 
-    !mainDesktopLabels.includes(item.label) && 
-    !mainDesktopLabels.includes(item.label.replace("Manage ","")) &&
-    (item.label === 'Settings' || item.label === 'Notifications') 
-  );
+  const commonDropdownItems = [
+    { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="mr-2 h-4 w-4 text-muted-foreground"/> },
+    { href: '/settings', label: 'Settings', icon: <Settings className="mr-2 h-4 w-4 text-muted-foreground"/> },
+    { href: '/notifications', label: 'Notifications', icon: <Bell className="mr-2 h-4 w-4 text-muted-foreground"/> }
+  ];
 
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full"> 
-          <UserCircle2 className="h-7 w-7 text-muted-foreground" /> 
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+          <UserCog className="h-6 w-6 text-muted-foreground hover:text-primary" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-60" align="end" forceMount> 
+      <DropdownMenuContent className="w-60" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1 py-1">
             <p className="text-sm font-semibold leading-none">{user.name}</p>
@@ -264,15 +256,15 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown, adminManagementNa
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {dropdownSpecificItems.map(item => (
+        {commonDropdownItems.map(item => (
           <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
             <Link href={item.href} className="flex items-center w-full">
-              {item.icon ? React.cloneElement(item.icon, {className: "mr-2 h-4 w-4 text-muted-foreground"}) : <div className="mr-2 h-4 w-4"></div>}
+              {item.icon}
               <span>{item.label}</span>
             </Link>
           </DropdownMenuItem>
         ))}
-        
+
         {showAdminItems && adminManagementNavItems.length > 0 && <DropdownMenuSeparator />}
         {showAdminItems && adminManagementNavItems.map(item => (
              <DropdownMenuItem key={item.href} asChild className="cursor-pointer">

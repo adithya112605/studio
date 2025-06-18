@@ -2,26 +2,29 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { Supervisor, User } from "@/types"; // Import Supervisor type
+import type { Supervisor, User, Ticket } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase } from "lucide-react";
+import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
-import { mockEmployees, mockSupervisors } from "@/data/mockData";
+import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from "@/data/mockData";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import type { ChartConfig } from "@/components/ui/chart";
 
 const filterOptions = [
-  { label: "Agent (Supervisor)", value: "agent", icon: <UserIcon className="mr-2 h-4 w-4" /> }, // Updated label
+  { label: "Agent (Supervisor)", value: "agent", icon: <UserIcon className="mr-2 h-4 w-4" /> },
   { label: "Assignment", value: "assignment", icon: <Users className="mr-2 h-4 w-4" /> },
   { label: "Attachments", value: "attachments", icon: <Paperclip className="mr-2 h-4 w-4" /> },
   { label: "Creation Date", value: "creationDate", icon: <CalendarDays className="mr-2 h-4 w-4" /> },
-  { label: "Employee", value: "employee", icon: <UserIcon className="mr-2 h-4 w-4" /> }, // New filter for employee
+  { label: "Employee", value: "employee", icon: <UserIcon className="mr-2 h-4 w-4" /> },
   { label: "Language", value: "language", icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg> },
   { label: "Last Activity", value: "lastActivity", icon: <BarChartHorizontal className="mr-2 h-4 w-4" /> },
   { label: "Last Message", value: "lastMessage", icon: <MessageSquare className="mr-2 h-4 w-4" /> },
@@ -34,36 +37,88 @@ const filterOptions = [
   { label: "Project", value: "project", icon: <Briefcase className="mr-2 h-4 w-4" /> },
 ];
 
+const ticketsByStatusChartConfig = {
+  tickets: { label: "Tickets" },
+  Open: { label: "Open", color: "hsl(var(--chart-1))" },
+  InProgress: { label: "In Progress", color: "hsl(var(--chart-2))" },
+  Pending: { label: "Pending", color: "hsl(var(--chart-3))" },
+  Resolved: { label: "Resolved", color: "hsl(var(--chart-4))" },
+  Closed: { label: "Closed", color: "hsl(var(--chart-5))" },
+  Escalated: { label: "Escalated", color: "hsl(var(--destructive))" },
+} satisfies ChartConfig;
+
+const ticketsByPriorityChartConfig = {
+  tickets: { label: "Tickets" },
+  Low: { label: "Low", color: "hsl(var(--chart-5))" },
+  Medium: { label: "Medium", color: "hsl(var(--chart-3))" },
+  High: { label: "High", color: "hsl(var(--chart-2))" },
+  Urgent: { label: "Urgent", color: "hsl(var(--chart-1))" },
+} satisfies ChartConfig;
+
+
 export default function ReportsPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [openFilterPopover, setOpenFilterPopover] = useState(false);
   const { toast } = useToast();
+  const [activeFilters, setActiveFilters] = useState({
+      status: 'all', priority: 'all', creationDate: date, supervisor: '', employee: '', project: ''
+  });
 
   const handleSelectFilter = (value: string) => {
     toast({
       title: "Filter Selected",
-      description: `Selected filter: ${value}. Further configuration would appear here.`,
+      description: `Selected filter: ${value}. Configure its value in the 'Applied Filters' section.`,
     });
     setOpenFilterPopover(false);
   };
 
   const handleApplyFilters = () => {
     toast({
-      title: "Action Triggered",
-      description: "Filters would be applied and report data refreshed (Feature not implemented).",
+      title: "Filters Applied",
+      description: "Report data would be refreshed based on the selected filters (Feature not implemented). Charts and preview will update.",
     });
+    // In a real app, you would refetch or re-filter data here
   };
-  
+
   const handleDownloadReport = (currentUser: Supervisor) => {
      let reportScope = "their resolved tickets";
      if (currentUser.functionalRole === 'DH') reportScope = "tickets for their assigned cities";
      if (currentUser.functionalRole === 'IC Head') reportScope = "all tickets across all cities";
 
+     const filterStatus = activeFilters.status !== 'all' ? ` Status: ${activeFilters.status}` : '';
+     const filterPriority = activeFilters.priority !== 'all' ? ` Priority: ${activeFilters.priority}` : '';
+     // Add more filter descriptions as needed
+
     toast({
-      title: "Action Triggered",
-      description: `Report download as .xlsx for ${reportScope} would start (Feature not implemented).`,
+      title: "Download Report Initiated",
+      description: `Report download as .xlsx for ${reportScope} would start. ${filterStatus}${filterPriority} (Filter consideration is mocked).`,
     });
   };
+  
+  const getFilteredTicketsForCharts = (currentUser: Supervisor) => {
+    // This function would ideally use the activeFilters state to filter mockTickets
+    // For now, it returns tickets based on supervisor role scope for chart demonstration
+    let tickets: Ticket[] = [];
+    if (currentUser.functionalRole === 'IC Head') {
+        tickets = mockTickets;
+    } else if (currentUser.functionalRole === 'DH') {
+        const dhProjects = mockProjects.filter(p => currentUser.cityAccess?.includes(p.city));
+        const dhProjectIds = dhProjects.map(p => p.id);
+        tickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
+    } else if (currentUser.functionalRole === 'NS') {
+        tickets = mockTickets.filter(ticket =>
+            (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn) ||
+            ticket.currentAssigneePSN === currentUser.psn
+        );
+    } else if (currentUser.functionalRole === 'IS') {
+         tickets = mockTickets.filter(ticket =>
+            (mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn) ||
+            ticket.currentAssigneePSN === currentUser.psn
+        );
+    }
+    return tickets;
+  };
+
 
   return (
     <ProtectedPage allowedRoles={['IS', 'NS', 'DH', 'IC Head']}>
@@ -72,142 +127,175 @@ export default function ReportsPage() {
         const canDownloadFullCityReport = currentSupervisorUser.functionalRole === 'DH';
         const canDownloadAllReports = currentSupervisorUser.functionalRole === 'IC Head';
         
+        const chartDataTickets = getFilteredTicketsForCharts(currentSupervisorUser);
+
+        const ticketsByStatusData = Object.entries(
+            chartDataTickets.reduce((acc, ticket) => {
+                const statusKey = ticket.status.startsWith('Escalated') ? 'Escalated' : ticket.status.replace(' ', '');
+                acc[statusKey] = (acc[statusKey] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>)
+        ).map(([name, value]) => ({ name, tickets: value, fill: `var(--color-${name})` }));
+        
+        const ticketsByPriorityData = Object.entries(
+            chartDataTickets.reduce((acc, ticket) => {
+                acc[ticket.priority] = (acc[ticket.priority] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>)
+        ).map(([name, value]) => ({ name, tickets: value, fill: `var(--color-${name})` }));
+
+
         return (
-            <div className="py-8">
-                <Card className="w-full max-w-4xl mx-auto shadow-xl">
+            <div className="py-8 space-y-8">
+                <Card className="w-full max-w-6xl mx-auto shadow-xl">
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Generate Reports</CardTitle>
+                    <CardTitle className="font-headline text-3xl">Reports & Analytics</CardTitle>
                     <CardDescription>
-                    Create and download reports based on ticket data. Your access level determines the scope of data you can report on.
+                    Generate and download reports. Visualize ticket data with interactive charts. Your access level determines the scope.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    
-                    <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                        <Filter className="h-5 w-5 text-primary" />
-                        <h3 className="font-semibold text-lg">Filters</h3>
+                <CardContent className="space-y-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card className="shadow-md">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-semibold flex items-center"><PieChart className="mr-2 h-5 w-5 text-primary"/>Tickets by Status</CardTitle>
+                                <CardDescription>Distribution of tickets based on their current status.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="h-[300px]">
+                                <ChartContainer config={ticketsByStatusChartConfig} className="w-full h-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                                            <Pie data={ticketsByStatusData} dataKey="tickets" nameKey="name" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}/>
+                                            <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </ChartContainer>
+                            </CardContent>
+                        </Card>
+                         <Card className="shadow-md">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-semibold flex items-center"><TrendingUp className="mr-2 h-5 w-5 text-primary"/>Tickets by Priority</CardTitle>
+                                <CardDescription>Breakdown of tickets by their assigned priority level.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="h-[300px]">
+                                <ChartContainer config={ticketsByPriorityChartConfig} className="w-full h-full">
+                                     <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={ticketsByPriorityData} layout="vertical" margin={{left:10, right:30}}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                            <XAxis type="number" />
+                                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} strokeWidth={0} width={80} />
+                                            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
+                                            <Bar dataKey="tickets" radius={5} background={{ fillOpacity: 0.1, radius: 5 }} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </ChartContainer>
+                            </CardContent>
+                        </Card>
                     </div>
-                    <Popover open={openFilterPopover} onOpenChange={setOpenFilterPopover}>
-                        <PopoverTrigger asChild>
-                        <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Filter</Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-60 p-0">
-                            <Command>
-                                <CommandInput placeholder="Search filters..." />
-                                <CommandList>
-                                    <CommandEmpty>No filter found.</CommandEmpty>
-                                    <CommandGroup>
-                                        {filterOptions.map((option) => (
-                                        <CommandItem
-                                            key={option.value}
-                                            value={option.value}
-                                            onSelect={() => handleSelectFilter(option.value)}
-                                            className="flex items-center cursor-pointer"
-                                        >
-                                            {option.icon}
-                                            <span>{option.label}</span>
-                                        </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
 
-                    <div className="space-y-3 mt-4 p-4 border rounded-md bg-muted/30">
-                        <h4 className="text-sm font-medium text-muted-foreground">Applied Filters: (Example Placeholders)</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            
-                            <div className="space-y-1">
-                                <Label htmlFor="filter-status" className="text-xs">Status</Label>
-                                <Select>
-                                    <SelectTrigger id="filter-status">
-                                        <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="open">Open</SelectItem>
-                                        <SelectItem value="in-progress">In Progress</SelectItem>
-                                        <SelectItem value="resolved">Resolved</SelectItem>
-                                        <SelectItem value="closed">Closed</SelectItem>
-                                        <SelectItem value="escalated-ns">Escalated to NS</SelectItem>
-                                        <SelectItem value="escalated-dh">Escalated to DH</SelectItem>
-                                        <SelectItem value="escalated-ic">Escalated to IC Head</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="filter-priority" className="text-xs">Priority</Label>
-                                <Select>
-                                    <SelectTrigger id="filter-priority">
-                                        <SelectValue placeholder="Select priority" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="low">Low</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            
-                            <div className="space-y-1">
-                                <Label htmlFor="filter-creation-date" className="text-xs">Creation Date</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                        variant={"outline"}
-                                        className="w-full justify-start text-left font-normal"
-                                        >
-                                        <CalendarDays className="mr-2 h-4 w-4" />
-                                        {date ? new Date(date).toLocaleDateString() : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={setDate}
-                                        initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="filter-supervisor" className="text-xs">Assigned Supervisor (PSN/Name)</Label>
-                                <Input id="filter-supervisor" placeholder="Enter Supervisor PSN or Name" 
-                                       disabled={!canDownloadFullCityReport && !canDownloadAllReports} />
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="filter-employee" className="text-xs">Employee (PSN/Name)</Label>
-                                <Input id="filter-employee" placeholder="Enter Employee PSN or Name" />
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="filter-project" className="text-xs">Project ID/Name</Label>
-                                <Input id="filter-project" placeholder="Enter Project ID or Name" />
-                            </div>
+                    <div className="space-y-4 pt-6 border-t">
+                        <div className="flex items-center space-x-2">
+                            <Filter className="h-5 w-5 text-primary" />
+                            <h3 className="font-semibold text-lg">Report Filters</h3>
                         </div>
-                        <Button className="mt-4" size="sm" variant="secondary" onClick={handleApplyFilters}>
-                            Apply Filters
-                        </Button>
+                        <Popover open={openFilterPopover} onOpenChange={setOpenFilterPopover}>
+                            <PopoverTrigger asChild>
+                            <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Filter Criteria</Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-60 p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search filters..." />
+                                    <CommandList>
+                                        <CommandEmpty>No filter found.</CommandEmpty>
+                                        <CommandGroup>
+                                            {filterOptions.map((option) => (
+                                            <CommandItem
+                                                key={option.value}
+                                                value={option.value}
+                                                onSelect={() => handleSelectFilter(option.value)}
+                                                className="flex items-center cursor-pointer"
+                                            >
+                                                {option.icon}
+                                                <span>{option.label}</span>
+                                            </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+
+                        <div className="space-y-3 mt-4 p-4 border rounded-md bg-muted/30">
+                            <h4 className="text-sm font-medium text-muted-foreground">Applied Filters:</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="space-y-1">
+                                    <Label htmlFor="filter-status" className="text-xs">Status</Label>
+                                    <Select value={activeFilters.status} onValueChange={(val) => setActiveFilters(prev => ({...prev, status: val}))}>
+                                        <SelectTrigger id="filter-status"><SelectValue placeholder="Select status" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Statuses</SelectItem>
+                                            {['Open', 'In Progress', 'Pending', 'Resolved', 'Closed', 'Escalated to NS', 'Escalated to DH', 'Escalated to IC Head'].map(s => (
+                                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="filter-priority" className="text-xs">Priority</Label>
+                                    <Select value={activeFilters.priority} onValueChange={(val) => setActiveFilters(prev => ({...prev, priority: val}))}>
+                                        <SelectTrigger id="filter-priority"><SelectValue placeholder="Select priority" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Priorities</SelectItem>
+                                            {['Low', 'Medium', 'High', 'Urgent'].map(p => ( <SelectItem key={p} value={p}>{p}</SelectItem> ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="filter-creation-date" className="text-xs">Creation Date</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+                                                <CalendarDays className="mr-2 h-4 w-4" />
+                                                {activeFilters.creationDate ? new Date(activeFilters.creationDate).toLocaleDateString() : <span>Pick a date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0">
+                                            <Calendar mode="single" selected={activeFilters.creationDate} onSelect={(dateVal) => setActiveFilters(prev => ({...prev, creationDate: dateVal}))} initialFocus />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="filter-supervisor" className="text-xs">Assigned Supervisor (PSN/Name)</Label>
+                                    <Input id="filter-supervisor" placeholder="Enter Supervisor PSN or Name" value={activeFilters.supervisor} onChange={(e) => setActiveFilters(prev => ({...prev, supervisor: e.target.value}))}
+                                           disabled={!canDownloadFullCityReport && !canDownloadAllReports} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="filter-employee" className="text-xs">Employee (PSN/Name)</Label>
+                                    <Input id="filter-employee" placeholder="Enter Employee PSN or Name" value={activeFilters.employee} onChange={(e) => setActiveFilters(prev => ({...prev, employee: e.target.value}))} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="filter-project" className="text-xs">Project ID/Name</Label>
+                                    <Input id="filter-project" placeholder="Enter Project ID or Name" value={activeFilters.project} onChange={(e) => setActiveFilters(prev => ({...prev, project: e.target.value}))} />
+                                </div>
+                            </div>
+                            <Button className="mt-4" size="sm" variant="secondary" onClick={handleApplyFilters}>Apply Filters & Refresh Charts</Button>
+                        </div>
                     </div>
-                    </div>
-                    
+
                     <div>
                         <h3 className="font-semibold mb-2 text-lg">Report Preview (Example Attributes)</h3>
                         <p className="text-sm text-muted-foreground mb-2">
                             Reports will include fields like: Ticket ID, Employee PSN, Employee Name, Query, Priority, Status, Date Raised, Project, Assigned Supervisor, Resolution Steps, etc.
                         </p>
                         <div className="border rounded-md p-4 bg-background h-48 overflow-auto">
-                            <p className="italic text-muted-foreground">Report data preview would appear here after applying filters...</p>
+                            <p className="italic text-muted-foreground">Filtered report data preview would appear here...</p>
                         </div>
                     </div>
 
                     <Button className="w-full" onClick={() => handleDownloadReport(currentSupervisorUser)}
                             disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || canDownloadFullCityReport || canDownloadAllReports)} >
-                    <Download className="mr-2 h-4 w-4" /> 
+                    <Download className="mr-2 h-4 w-4" />
                     Download Report (.xlsx)
                     {currentSupervisorUser.functionalRole === 'IS' && " (My Resolved)"}
                     {currentSupervisorUser.functionalRole === 'NS' && " (My Resolved)"}
@@ -222,5 +310,3 @@ export default function ReportsPage() {
     </ProtectedPage>
   );
 }
-
-    

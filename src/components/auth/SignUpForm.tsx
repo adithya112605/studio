@@ -14,7 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import PasswordStrength from './PasswordStrength';
 import type { PasswordStrengthResult } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const signUpStep1Schema = z.object({
@@ -38,8 +38,10 @@ export default function SignUpForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [psnForStep2, setPsnForStep2] = useState<number>(0); // Store validated PSN for step 2
+  const [psnForStep2, setPsnForStep2] = useState<number>(0);
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthResult | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const formStep1 = useForm<SignUpStep1Values>({
     resolver: zodResolver(signUpStep1Schema),
@@ -47,9 +49,9 @@ export default function SignUpForm() {
 
   const formStep2 = useForm<SignUpStep2Values>({
     resolver: zodResolver(signUpStep2Schema),
-    mode: "onChange" 
+    mode: "onChange"
   });
-  
+
   const watchedPassword = formStep2.watch("password");
 
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
@@ -117,13 +119,37 @@ export default function SignUpForm() {
           <form onSubmit={formStep2.handleSubmit(handlePasswordSubmit)} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="password-signup">New Password</Label>
-              <Input id="password-signup" type="password" {...formStep2.register("password")} placeholder="••••••••" />
+              <div className="relative">
+                <Input id="password-signup" type={showPassword ? "text" : "password"} {...formStep2.register("password")} placeholder="••••••••" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
               <PasswordStrength password={watchedPassword} onStrengthChange={setPasswordStrength} />
               {formStep2.formState.errors.password && <p className="text-sm text-destructive">{formStep2.formState.errors.password.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input id="confirmPassword" type="password" {...formStep2.register("confirmPassword")} placeholder="••••••••" />
+              <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
+              <div className="relative">
+                <Input id="confirmPassword-signup" type={showConfirmPassword ? "text" : "password"} {...formStep2.register("confirmPassword")} placeholder="••••••••" />
+                 <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
               {formStep2.formState.errors.confirmPassword && <p className="text-sm text-destructive">{formStep2.formState.errors.confirmPassword.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading || !passwordStrength?.isValid}>

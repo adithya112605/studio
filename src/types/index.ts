@@ -2,22 +2,22 @@
 export interface User {
   psn: number;
   name: string;
-  role: 'Employee' | 'IS' | 'NS' | 'DH' | 'IC Head'; // Updated roles
-  businessEmail?: string; // Added
-  // project field was general, specific project association is now mainly in Employee
+  role: 'Employee' | 'IS' | 'NS' | 'DH' | 'IC Head';
+  businessEmail?: string;
+  dateOfBirth?: string; // Added for My Profile and Employee details
 }
 
 export interface JobCode {
-  id: string; // e.g., JC001
-  code: string; // e.g., M1-A, GET
-  description: string; // e.g., Manager Grade 1A, Graduate Engineer Trainee
+  id: string;
+  code: string;
+  description: string;
 }
 
 export interface Employee extends User {
   role: 'Employee';
-  grade: string; // Kept for original structure, JobCode provides more detail
-  jobCodeId: string; // Link to JobCode table
-  project: string; // Project ID employee is assigned to
+  grade: string;
+  jobCodeId: string;
+  project: string;
   gender?: 'Male' | 'Female' | 'Other';
   isPSN?: number;
   isName?: string;
@@ -25,42 +25,49 @@ export interface Employee extends User {
   nsName?: string;
   dhPSN?: number;
   dhName?: string;
-  // Removed hrPSN, hrName
 }
 
 export interface Supervisor extends User {
   role: 'IS' | 'NS' | 'DH' | 'IC Head';
-  title: string; // e.g., Site Incharge, Project Manager, Cluster Head
-  branchProject?: string; // Primary project/department affiliation
-  projectsHandledIds?: string[]; // Project IDs they oversee (relevant for DH, IC Head primarily)
-  cityAccess?: string[]; // Cities a DH or IC Head has access to
-  ticketsResolved?: number; // Dynamic
-  ticketsPending?: number; // Dynamic
+  title: string;
+  branchProject?: string;
+  projectsHandledIds?: string[];
+  cityAccess?: string[];
+  ticketsResolved?: number;
+  ticketsPending?: number;
 }
 
 export type TicketStatus = 'Open' | 'Pending' | 'In Progress' | 'Resolved' | 'Closed' | 'Escalated to NS' | 'Escalated to DH' | 'Escalated to IC Head';
 export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
+export interface TicketAttachment {
+  id: string;
+  fileName: string;
+  fileType: 'document' | 'image' | 'video' | 'audio' | 'link';
+  urlOrContent: string; // For links, this is the URL. For files, might be a data URI or backend link.
+  uploadedAt: string;
+}
+
 export interface Ticket {
   id: string;
-  psn: number; // Employee's PS_No
+  psn: number;
   employeeName: string;
   query: string;
   followUpQuery?: string;
   priority: TicketPriority;
-  dateOfQuery: string; // ISO date string
+  dateOfQuery: string;
   actionPerformed?: string;
-  dateOfResponse?: string; // ISO date string
+  dateOfResponse?: string;
   status: TicketStatus;
-  currentAssigneePSN?: number; // PS_No of current supervisor (IS, NS, DH, IC Head) handling the ticket
-  project: string; // Project ID associated with the ticket
+  currentAssigneePSN?: number;
+  project: string;
+  attachments?: TicketAttachment[]; // Added for attachments
 }
 
 export interface Project {
-  id: string; // e.g., P001, P002
-  name: string; // e.g., Chennai Metro Phase 1A
-  city: string; // e.g., Chennai, Delhi
-  // removed assignedHRs, as supervisor logic is now different
+  id: string;
+  name: string;
+  city: string;
 }
 
 export interface City {
@@ -68,21 +75,22 @@ export interface City {
   projects: Project[];
 }
 
-// For form inputs
 export interface NewTicketFormData {
   query: string;
   hasFollowUp: boolean;
   followUpQuery?: string;
   priority: TicketPriority;
+  // attachments would be handled separately via state before adding to ticket object
 }
 
 export interface AddEmployeeFormData {
   psn: number;
   name: string;
   businessEmail: string;
-  project: string; // Project ID
-  jobCodeId: string; // JobCode ID
-  grade: string; // Kept for consistency, but jobCodeId is primary
+  dateOfBirth?: Date; // Changed to Date for react-day-picker
+  project: string;
+  jobCodeId: string;
+  grade: string;
   isPSN?: number;
   nsPSN?: number;
   dhPSN?: number;
@@ -92,10 +100,11 @@ export interface AddSupervisorFormData {
   psn: number;
   name: string;
   businessEmail: string;
+  dateOfBirth?: Date; // Changed to Date
   title: string;
   functionalRole: 'IS' | 'NS' | 'DH' | 'IC Head';
   branchProject?: string;
-  cityAccess?: string[]; // For DH/IC Head
+  cityAccess?: string[];
   projectsHandledIds?: string[];
 }
 

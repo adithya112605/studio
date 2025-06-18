@@ -13,16 +13,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import type { AddEmployeeFormData, Employee } from '@/types';
 import { mockProjects, mockJobCodes, mockSupervisors, mockEmployees } from '@/data/mockData';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
+import { Loader2, CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
 
 const addEmployeeSchema = z.object({
   psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length <= 8, { message: "PSN must be 1 to 8 digits." }),
   name: z.string().min(3, "Name must be at least 3 characters"),
   businessEmail: z.string().email("Invalid email address"),
+  dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(), // Making it optional for now, can be required
   project: z.string().min(1, "Project selection is required"),
   jobCodeId: z.string().min(1, "Job Code selection is required"),
-  grade: z.string().min(1, "Grade is required (e.g., E1, M2)"), // Retained, though jobCodeId is primary
+  grade: z.string().min(1, "Grade is required (e.g., E1, M2)"),
   isPSN: z.coerce.number().optional(),
   nsPSN: z.coerce.number().optional(),
   dhPSN: z.coerce.number().optional(),
@@ -43,19 +49,18 @@ export default function AddEmployeeForm() {
 
     const newEmployee: Employee = {
       ...data,
-      role: 'Employee', // Default role for new entries here
-      // Names for supervisors will be derived or looked up if needed, for now store PSNs
+      dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
+      role: 'Employee',
       isName: data.isPSN ? mockSupervisors.find(s => s.psn === data.isPSN)?.name : undefined,
       nsName: data.nsPSN ? mockSupervisors.find(s => s.psn === data.nsPSN)?.name : undefined,
       dhName: data.dhPSN ? mockSupervisors.find(s => s.psn === data.dhPSN)?.name : undefined,
     };
-    
-    // In a real app, save to DB. For mock:
-    mockEmployees.push(newEmployee); 
+
+    mockEmployees.push(newEmployee);
     console.log("New Employee Data:", newEmployee);
     setIsLoading(false);
     toast({ title: "Employee Added", description: `${newEmployee.name} (${newEmployee.psn}) has been added.` });
-    router.push('/dashboard'); 
+    router.push('/dashboard');
   };
 
   return (
@@ -78,12 +83,49 @@ export default function AddEmployeeForm() {
               {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
           </div>
-           <div className="space-y-2">
-              <Label htmlFor="businessEmail">Business Email</Label>
-              <Input id="businessEmail" type="email" {...register("businessEmail")} placeholder="employee.name@lnt.co" />
-              {errors.businessEmail && <p className="text-sm text-destructive">{errors.businessEmail.message}</p>}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+                <Label htmlFor="businessEmail">Business Email</Label>
+                <Input id="businessEmail" type="email" {...register("businessEmail")} placeholder="employee.name@lnt.co" />
+                {errors.businessEmail && <p className="text-sm text-destructive">{errors.businessEmail.message}</p>}
             </div>
-          
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Controller
+                name="dateOfBirth"
+                control={control}
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                        captionLayout="dropdown-buttons"
+                        fromYear={1950}
+                        toYear={new Date().getFullYear() - 18} // Min 18 years old
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              />
+              {errors.dateOfBirth && <p className="text-sm text-destructive">{errors.dateOfBirth.message}</p>}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="project">Project</Label>
@@ -118,7 +160,7 @@ export default function AddEmployeeForm() {
               {errors.jobCodeId && <p className="text-sm text-destructive">{errors.jobCodeId.message}</p>}
             </div>
           </div>
-          
+
           <div className="space-y-2">
               <Label htmlFor="grade">Grade (e.g., E1, M2)</Label>
               <Input id="grade" {...register("grade")} placeholder="Confirm grade based on Job Code" />
