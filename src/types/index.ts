@@ -1,5 +1,5 @@
 export interface User {
-  psn: string; // PS_No
+  psn: number; // PS_No changed to number
   name: string;
   role: 'Employee' | 'HR' | 'Head HR'; // Simplified role
   project?: string;
@@ -10,7 +10,7 @@ export interface Employee extends User {
   role: 'Employee';
   grade: string;
   gender?: 'Male' | 'Female' | 'Other';
-  hrPSN?: string; // HR_PS_No
+  hrPSN?: number; // HR_PS_No changed to number
   hrName?: string;
 }
 
@@ -27,7 +27,7 @@ export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
 export interface Ticket {
   id: string; // Ticket_ID
-  psn: string; // Employee's PS_No
+  psn: number; // Employee's PS_No changed to number
   employeeName: string; // EMP_NAME
   query: string;
   followUpQuery?: string;
@@ -36,8 +36,8 @@ export interface Ticket {
   actionPerformed?: string;
   dateOfResponse?: string; // ISO date string
   status: TicketStatus;
-  hrPSNAssigned?: string; // PS_No of HR assigned or who responded
-  escalatedToPSN?: string; // PS_No of Head HR if escalated
+  hrPSNAssigned?: number; // PS_No of HR assigned or who responded, changed to number
+  escalatedToPSN?: number; // PS_No of Head HR if escalated, changed to number
   project: string; // Project associated with the ticket (derived from employee)
 }
 
@@ -45,7 +45,7 @@ export interface Project {
   id: string;
   name: string;
   city: string; // City name like 'Chennai', 'Delhi'
-  assignedHRs: string[]; // Array of HR PS_Nos
+  assignedHRs: number[]; // Array of HR PS_Nos, changed to number[]
 }
 
 export interface City {
@@ -62,7 +62,7 @@ export interface NewTicketFormData {
 }
 
 export interface AddEmployeeFormData {
-  psn: string;
+  psn: number; // Changed to number
   name: string;
   project: string;
   role: string; // e.g., "Engineer", "Manager" - specific role, not "Employee"
@@ -70,7 +70,7 @@ export interface AddEmployeeFormData {
 }
 
 export interface AddHrFormData {
-  psn: string;
+  psn: number; // Changed to number
   name: string;
   projectsHandled: string[]; // Project IDs
   priority: 1 | 2 | 3;

@@ -10,17 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { AddEmployeeFormData } from '@/types';
-import { mockProjects } from '@/data/mockData'; // Assuming projects are available
+import { mockProjects } from '@/data/mockData';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 
 const addEmployeeSchema = z.object({
-  psn: z.string().length(8, "PSN must be exactly 8 characters (e.g., EMP0000X)"),
+  psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length > 0 && val.toString().length <= 8, { message: "PSN must be a number with 1 to 8 digits." }),
   name: z.string().min(3, "Name must be at least 3 characters"),
   project: z.string().min(1, "Project selection is required"),
-  role: z.string().min(2, "Role description is required (e.g., Engineer, Analyst)"),
+  role: z.string().min(2, "Role description is required (e.g., Engineer, Analyst)"), // This is designation
   grade: z.string().min(1, "Grade is required (e.g., E1, M2)"),
 });
 
@@ -39,7 +39,7 @@ export default function AddEmployeeForm() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     console.log("New Employee Data:", data);
     // In a real app, save to DB and update mockEmployees or refetch
-    // mockEmployees.push({ ...data, role: 'Employee', ...getHRForProject(data.project) });
+    // mockEmployees.push({ ...data, role: 'Employee', ...getHRForProject(data.project) }); // role 'Employee' is from User type
     setIsLoading(false);
     toast({ title: "Employee Added", description: `${data.name} (${data.psn}) has been added.` });
     router.push('/dashboard'); // Or an employee list page
@@ -55,8 +55,8 @@ export default function AddEmployeeForm() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="psn">PSN (8-digit ID)</Label>
-              <Input id="psn" {...register("psn")} placeholder="EMPXXXXX" />
+              <Label htmlFor="psn">PSN (up to 8 digits)</Label>
+              <Input id="psn" type="number" {...register("psn")} placeholder="e.g., 10000001" />
               {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
             </div>
             <div className="space-y-2">

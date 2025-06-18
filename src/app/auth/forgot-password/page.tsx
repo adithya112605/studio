@@ -17,8 +17,8 @@ export default function ForgotPasswordPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="psn-forgot">PSN (8-digit ID)</Label>
-            <Input id="psn-forgot" placeholder="E.g., EMP00001" />
+            <Label htmlFor="psn-forgot">PSN (up to 8 digits)</Label>
+            <Input id="psn-forgot" type="number" placeholder="e.g., 10000001" />
           </div>
           <Button className="w-full" disabled>Send Reset Instructions (Not Active)</Button>
         </CardContent>

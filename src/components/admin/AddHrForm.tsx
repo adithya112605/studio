@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const addHrSchema = z.object({
-  psn: z.string().length(8, "PSN must be exactly 8 characters (e.g., HR00000X)"),
+  psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length > 0 && val.toString().length <= 8, { message: "PSN must be a number with 1 to 8 digits." }),
   name: z.string().min(3, "Name must be at least 3 characters"),
   projectsHandled: z.array(z.string()).min(1, "At least one project must be selected"),
   priority: z.coerce.number().min(1).max(3).default(2), // 1-Head, 2-Second, 3-Third
@@ -69,8 +69,8 @@ export default function AddHrForm() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="psn-hr">PSN (8-digit ID)</Label>
-              <Input id="psn-hr" {...register("psn")} placeholder="HRXXXXXX" />
+              <Label htmlFor="psn-hr">PSN (up to 8 digits)</Label>
+              <Input id="psn-hr" type="number" {...register("psn")} placeholder="e.g., 20000001" />
               {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
             </div>
             <div className="space-y-2">

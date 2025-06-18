@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const signUpStep1Schema = z.object({
-  psn: z.string().length(8, "PSN must be exactly 8 characters"),
+  psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length > 0 && val.toString().length <= 8, { message: "PSN must be a number with 1 to 8 digits." }),
 });
 
 const signUpStep2Schema = z.object({
@@ -37,7 +37,7 @@ export default function SignUpForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [psn, setPsn] = useState("");
+  const [psnForStep2, setPsnForStep2] = useState<number>(0); // Store validated PSN for step 2
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthResult | null>(null);
 
   const formStep1 = useForm<SignUpStep1Values>({
@@ -56,7 +56,7 @@ export default function SignUpForm() {
     const exists = await checkPSNExists(data.psn);
     setIsLoading(false);
     if (exists) {
-      setPsn(data.psn);
+      setPsnForStep2(data.psn);
       setStep(2);
     } else {
       toast({
@@ -77,7 +77,7 @@ export default function SignUpForm() {
       return;
     }
     setIsLoading(true);
-    const result = await signup(psn, data.password);
+    const result = await signup(psnForStep2, data.password);
     setIsLoading(false);
     if (result.success) {
       toast({ title: "Account Created!", description: "You are now logged in. Redirecting to dashboard..."});
@@ -95,15 +95,15 @@ export default function SignUpForm() {
     <Card className="w-full max-w-md shadow-xl">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
-        {step === 1 && <CardDescription>Enter your 8-digit L&T PSN to begin.</CardDescription>}
-        {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psn}).</CardDescription>}
+        {step === 1 && <CardDescription>Enter your L&T PSN (up to 8 digits) to begin.</CardDescription>}
+        {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}).</CardDescription>}
       </CardHeader>
       <CardContent>
         {step === 1 && (
           <form onSubmit={formStep1.handleSubmit(handlePsnSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="psn-signup">PSN (8-digit ID)</Label>
-              <Input id="psn-signup" {...formStep1.register("psn")} placeholder="E.g., EMP00001" />
+              <Label htmlFor="psn-signup">PSN (up to 8 digits)</Label>
+              <Input id="psn-signup" type="number" {...formStep1.register("psn")} placeholder="e.g., 10000001" />
               {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

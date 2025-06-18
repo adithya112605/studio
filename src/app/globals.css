@@ -2,9 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-pt-sans), sans-serif;
-}
+/* 
+  The body font is now applied via the `font-body` class in src/app/layout.tsx, 
+  configured in tailwind.config.ts.
+  Headline fonts are applied via the `font-headline` class, also configured in tailwind.config.ts.
+  Explicit font-family rules here for body or .font-headline are removed to rely on Tailwind.
+*/
 
 @layer base {
   :root {
@@ -72,7 +75,7 @@ body {
   }
 }
 
-/* For Playfair Display font headline styling */
-.font-headline {
-  font-family: var(--font-playfair-display), serif;
-}
+/* 
+  The .font-headline class will automatically pick up the 'Merriweather' font 
+  from the tailwind.config.ts settings.
+*/

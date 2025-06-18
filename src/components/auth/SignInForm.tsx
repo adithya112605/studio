@@ -15,7 +15,7 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const signInSchema = z.object({
-  psn: z.string().length(8, "PSN must be exactly 8 characters"),
+  psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length > 0 && val.toString().length <= 8, { message: "PSN must be a number with 1 to 8 digits." }),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -63,8 +63,8 @@ export default function SignInForm() {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="psn">PSN (8-digit ID)</Label>
-            <Input id="psn" {...register("psn")} placeholder="E.g., EMP00001" />
+            <Label htmlFor="psn">PSN (up to 8 digits)</Label>
+            <Input id="psn" type="number" {...register("psn")} placeholder="e.g., 10000001" />
             {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
           </div>
           <div className="space-y-2">

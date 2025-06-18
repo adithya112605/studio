@@ -2,7 +2,8 @@
 
 import ProtectedPage from "@/components/common/ProtectedPage";
 import type { User, Ticket, Employee, HR, TicketStatus } from "@/types";
-import { mockTickets, mockEmployees, mockHRs } from "@/data/mockData";
+import { mockTickets, mockEmployees, mockHRs, mockProjects // Import mockProjects
+} from "@/data/mockData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
-  // ... (same as in dashboard)
    switch (status) {
     case 'Open': return 'destructive';
     case 'In Progress': return 'default'; 
@@ -30,7 +30,6 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
 
 const TicketDetailPage = ({ params }: { params: { id: string } }) => {
   const ticketId = params.id;
-  // In a real app, you'd fetch this ticket by ID
   const [ticket, setTicket] = useState<Ticket | undefined>(mockTickets.find(t => t.id === ticketId));
   const [hrResponse, setHrResponse] = useState("");
   const [newStatus, setNewStatus] = useState<TicketStatus | undefined>(ticket?.status);
@@ -58,7 +57,6 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
   const escalatedToHR = ticket.escalatedToPSN ? mockHRs.find(h => h.psn === ticket.escalatedToPSN) : null;
 
   const handleHRUpdate = () => {
-    // Simulate updating ticket
     if (!newStatus) {
         toast({title: "Error", description: "Please select a new status.", variant: "destructive"});
         return;
@@ -69,16 +67,15 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
       actionPerformed: hrResponse ? (ticket.actionPerformed ? `${ticket.actionPerformed}\n---\n${new Date().toLocaleString()}:\n${hrResponse}` : `${new Date().toLocaleString()}:\n${hrResponse}`) : ticket.actionPerformed,
       dateOfResponse: new Date().toISOString(),
     };
-    // Update mockTickets array (in real app, this is a backend call)
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
     if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicket;
-    setTicket(updatedTicket); // Update local state to re-render
+    setTicket(updatedTicket);
     setHrResponse("");
 
     toast({title: "Ticket Updated", description: `Status changed to ${newStatus}. Response added.`});
   };
   
-  const handleEscalate = (headHrPsn: string) => {
+  const handleEscalate = (headHrPsn: number) => { // headHrPsn changed to number
     if (!ticket) return;
     const updatedTicket = {
         ...ticket,
@@ -117,7 +114,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <p><strong>PSN:</strong> {ticket.psn}</p>
                   <p><strong>Name:</strong> {ticket.employeeName}</p>
-                  <p><strong>Project:</strong> {employee?.project || ticket.project}</p>
+                  <p><strong>Project:</strong> {mockProjects.find(p => p.id === ticket.project)?.name || ticket.project}</p>
                   <p><strong>Grade:</strong> {employee?.grade || 'N/A'}</p>
                 </div>
               </div>
@@ -193,7 +190,14 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                     <Send className="mr-2 h-4 w-4" /> Update Ticket
                   </Button>
                   {user.role === 'HR' && ticket.status !== 'Escalated' && (
-                     <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => handleEscalate('HR000000' /* Mock Head HR PSN */)}>
+                     <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => {
+                        const headHRAccount = mockHRs.find(hr => hr.role === 'Head HR');
+                        if (headHRAccount) {
+                            handleEscalate(headHRAccount.psn);
+                        } else {
+                            toast({title: "Error", description: "Head HR account not found for escalation.", variant: "destructive"});
+                        }
+                     }}>
                         <AlertTriangle className="mr-2 h-4 w-4"/> Escalate to Head HR
                     </Button>
                   )}
@@ -209,7 +213,6 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                    <CardDescription>If you have more details to add, please provide them here.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {/* Placeholder for employee adding more info */}
                     <Textarea placeholder="Type additional information or a follow-up here..." rows={3}/>
                 </CardContent>
                 <CardFooter>

@@ -2,16 +2,16 @@
 
 import type { User, Employee, HR } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { mockEmployees, mockHRs } from '@/data/mockData'; // Assuming mockData is created
+import { mockEmployees, mockHRs } from '@/data/mockData';
 
 interface AuthContextType {
   user: User | null;
-  login: (psn: string, password?: string) => Promise<boolean>; // Password optional for initial checks
-  signup: (psn: string, password?: string) // For completing signup with password
+  login: (psn: number, password?: string) => Promise<boolean>; // psn changed to number
+  signup: (psn: number, password?: string) // psn changed to number
     => Promise<{ success: boolean; message: string; user?: User }>;
   logout: () => void;
   loading: boolean;
-  checkPSNExists: (psn: string) => Promise<boolean>;
+  checkPSNExists: (psn: number) => Promise<boolean>; // psn changed to number
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Try to load user from localStorage (e.g., if page reloaded)
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -29,13 +28,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const login = async (psn: string, password?: string): Promise<boolean> => {
+  const login = async (psn: number, password?: string): Promise<boolean> => {
     setLoading(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // In a real app, you'd verify psn and password against a backend
-    // For mock: find user in employees or HRs
     const employeeUser = mockEmployees.find(e => e.psn === psn) as Employee | undefined;
     const hrUser = mockHRs.find(h => h.psn === psn) as HR | undefined;
     
@@ -47,8 +43,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (foundUser) {
-      // Mock: Assume password is correct for now if provided, or not needed for initial check
-      // In a real app: if (password && await verifyPassword(psn, password))
       setUser(foundUser);
       localStorage.setItem('currentUser', JSON.stringify(foundUser));
       setLoading(false);
@@ -58,14 +52,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  const checkPSNExists = async (psn: string): Promise<boolean> => {
-    // Check if PSN exists in employees or HRs (for signup)
+  const checkPSNExists = async (psn: number): Promise<boolean> => {
     const employeeExists = mockEmployees.some(e => e.psn === psn);
     const hrExists = mockHRs.some(h => h.psn === psn);
     return employeeExists || hrExists;
   };
 
-  const signup = async (psn: string, password?: string): Promise<{ success: boolean; message: string; user?: User }> => {
+  const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string; user?: User }> => {
     setLoading(true);
     const psnExists = await checkPSNExists(psn);
     if (!psnExists) {
@@ -73,8 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: "PSN not found in company records." };
     }
 
-    // Simulate account creation/password setting
-    // In a real app, this would involve a backend call to set/update password
     const employeeUser = mockEmployees.find(e => e.psn === psn) as Employee | undefined;
     const hrUser = mockHRs.find(h => h.psn === psn) as HR | undefined;
     let newUser: User | undefined;
@@ -82,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (employeeUser) newUser = { ...employeeUser, role: 'Employee' };
     else if (hrUser) newUser = { ...hrUser, role: hrUser.priority === 1 ? 'Head HR' : 'HR' };
     
-    if (newUser && password) { // Assume password setting is successful
+    if (newUser && password) { 
         setUser(newUser);
         localStorage.setItem('currentUser', JSON.stringify(newUser));
         setLoading(false);

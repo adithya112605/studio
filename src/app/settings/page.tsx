@@ -6,12 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, KeyRound, Palette } from "lucide-react";
-import { ThemeToggle } from "@/components/common/ThemeToggle"; // Assuming ThemeToggle is already created
+import { ThemeToggle } from "@/components/common/ThemeToggle"; 
 
 export default function SettingsPage() {
   return (
     <ProtectedPage>
-     {(user) => ( // Access the user object if needed
+     {(user) => ( 
         <div className="py-8 space-y-8">
           <h1 className="font-headline text-3xl font-bold text-center">Account Settings</h1>
           
@@ -26,7 +26,8 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
                 <div className="space-y-1">
                     <Label htmlFor="psn-settings">PSN</Label>
-                    <Input id="psn-settings" value={user.psn} readOnly disabled />
+                    {/* Display PSN as string, even if it's a number, for consistency */}
+                    <Input id="psn-settings" value={user.psn.toString()} readOnly disabled />
                 </div>
                  <div className="space-y-1">
                     <Label htmlFor="name-settings">Full Name</Label>
