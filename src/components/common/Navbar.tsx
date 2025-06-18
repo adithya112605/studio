@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3 } from 'lucide-react'; // Added BarChart3 for Reports
+import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3 } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,11 +16,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -28,6 +30,12 @@ const Navbar = () => {
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    toggleMenu(); // Close mobile menu if open
+    router.push('/'); // Redirect to homepage after logout
   };
 
   const commonAuthenticatedNavItemsBase = [
@@ -38,7 +46,7 @@ const Navbar = () => {
   const employeeNavItems = [
     ...commonAuthenticatedNavItemsBase,
     { href: '/tickets/new', label: 'Create Ticket', icon: <Ticket className="w-4 h-4" /> },
-    { href: '/dashboard', label: 'My Tickets', icon: <FileText className="w-4 h-4" /> }, // Links to dashboard as it shows user's tickets
+    { href: '/dashboard', label: 'My Tickets', icon: <FileText className="w-4 h-4" /> }, 
     { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
@@ -52,9 +60,8 @@ const Navbar = () => {
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
   
-  // Head HR gets all HR items plus potentially 'Add HR' if it's exclusive
   const headHrNavItems = [
-    ...hrNavItems, // Includes everything from HR
+    ...hrNavItems, 
     { href: '/admin/add-hr', label: 'Manage HR', icon: <ShieldCheck className="w-4 h-4" /> },
   ];
 
@@ -136,13 +143,21 @@ const Navbar = () => {
 
         <div className="flex items-center space-x-2">
           <ThemeToggle />
-          {user && (
+          {user ? (
              <div className="hidden md:flex items-center space-x-2">
               <Link href="/notifications" aria-label="Notifications">
                 <Button variant="ghost" size="icon"><Bell className="w-5 h-5"/></Button>
               </Link>
-              <DropdownMenuUser user={user} logout={logout} navItemsForDropdown={navItemsToDisplay} />
+              <DropdownMenuUser user={user} logout={handleLogout} navItemsForDropdown={navItemsToDisplay} />
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" /> Logout
+              </Button>
              </div>
+          ) : (
+             <div className="hidden md:flex items-center space-x-2">
+              <Button asChild variant="default" size="sm"><Link href="/auth/signin">Sign In</Link></Button>
+              <Button asChild variant="outline" size="sm"><Link href="/auth/signup">Sign Up</Link></Button>
+            </div>
           )}
           <div className="md:hidden">
             <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label="Open menu">
@@ -163,7 +178,7 @@ const Navbar = () => {
               </Link>
             ))}
             {user && (
-              <Button variant="ghost" onClick={() => { logout(); toggleMenu(); }} className="flex items-center space-x-2 p-2 rounded-md hover:bg-destructive hover:text-destructive-foreground w-full justify-start">
+              <Button variant="ghost" onClick={handleLogout} className="flex items-center space-x-2 p-2 rounded-md hover:bg-destructive hover:text-destructive-foreground w-full justify-start">
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
               </Button>
@@ -182,7 +197,7 @@ const Navbar = () => {
 
 
 const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; logout: () => void; navItemsForDropdown: Array<{href:string; label:string; icon?:React.ReactNode}> }) => {
-  const mainDesktopLabels = ['Home', 'Dashboard', 'Create Ticket', 'Reports']; // Items already likely in main desktop nav
+  const mainDesktopLabels = ['Home', 'Dashboard', 'Create Ticket', 'Reports']; 
 
   return (
     <DropdownMenu>
@@ -196,16 +211,14 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.psn.toString()} ({user.role}) {/* psn to string for display */}
+              {user.psn.toString()} ({user.role}) 
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {/* Dynamically add items relevant from navItems, avoiding duplicates if already in main nav */}
-        {navItemsForDropdown.filter(item => !mainDesktopLabels.includes(item.label)).map(item => (
-          // Special condition for reports if user is Employee (should not show up based on navItemsForDropdown logic already)
+        {navItemsForDropdown.filter(item => !mainDesktopLabels.includes(item.label) && item.label !== 'Home' && item.label !== 'Dashboard' ).map(item => (
           (item.label === 'Reports' && user.role === 'Employee') ? null : 
-          (item.label === 'Manage HR' && user.role !== 'Head HR') ? null : // Only Head HR sees Manage HR
+          (item.label === 'Manage HR' && user.role !== 'Head HR') ? null : 
           <DropdownMenuItem key={item.href} asChild>
             <Link href={item.href} className="flex items-center">
               {item.icon}
@@ -213,12 +226,20 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
             </Link>
           </DropdownMenuItem>
         ))}
+        {/* Settings is usually always good in dropdown */}
+        <DropdownMenuItem asChild>
+             <Link href="/settings" className="flex items-center">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+            </Link>
+        </DropdownMenuItem>
         
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer">
+        {/* Logout is handled separately now for desktop, but good to keep in mobile-context dropdown or as alternative */}
+        {/* <DropdownMenuSeparator /> 
+        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   )
