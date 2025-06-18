@@ -5,7 +5,7 @@ import ProtectedPage from "@/components/common/ProtectedPage";
 import type { Supervisor, User, Ticket } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart } from "lucide-react";
+import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,18 +55,18 @@ const ticketsByPriorityChartConfig = {
   Urgent: { label: "Urgent", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
+const initialFilterState = {
+  status: 'all', priority: 'all', creationDate: new Date(), supervisor: '', employee: '', project: ''
+};
 
 export default function ReportsPage() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [openFilterPopover, setOpenFilterPopover] = useState(false);
   const { toast } = useToast();
-  const [activeFilters, setActiveFilters] = useState({
-      status: 'all', priority: 'all', creationDate: date, supervisor: '', employee: '', project: ''
-  });
+  const [openFilterPopover, setOpenFilterPopover] = useState(false);
+  const [activeFilters, setActiveFilters] = useState(initialFilterState);
 
   const handleSelectFilter = (value: string) => {
     toast({
-      title: "Filter Selected",
+      title: "Filter Criteria Selected",
       description: `Selected filter: ${value}. Configure its value in the 'Applied Filters' section.`,
     });
     setOpenFilterPopover(false);
@@ -74,31 +74,44 @@ export default function ReportsPage() {
 
   const handleApplyFilters = () => {
     toast({
-      title: "Filters Applied",
-      description: "Report data would be refreshed based on the selected filters (Feature not implemented). Charts and preview will update.",
+      title: "Filters Applied (Mock)",
+      description: "Report data preview and charts would be refreshed based on the selected filters. Actual filtering logic for charts is simplified for this demo.",
     });
-    // In a real app, you would refetch or re-filter data here
+    // In a real app, you would refetch or re-filter data here and update charts
   };
 
-  const handleDownloadReport = (currentUser: Supervisor) => {
-     let reportScope = "their resolved tickets";
+  const handleClearFilters = () => {
+    setActiveFilters(initialFilterState);
+    toast({
+        title: "Filters Cleared",
+        description: "All filter criteria have been reset. Charts and preview will update.",
+    });
+  };
+
+  const handleDownloadReport = (currentUser: Supervisor, filtered: boolean) => {
+     let reportScope = "their resolved/assigned tickets";
      if (currentUser.functionalRole === 'DH') reportScope = "tickets for their assigned cities";
      if (currentUser.functionalRole === 'IC Head') reportScope = "all tickets across all cities";
 
-     const filterStatus = activeFilters.status !== 'all' ? ` Status: ${activeFilters.status}` : '';
-     const filterPriority = activeFilters.priority !== 'all' ? ` Priority: ${activeFilters.priority}` : '';
-     // Add more filter descriptions as needed
+     let filterDescription = "";
+     if (filtered) {
+         const applied = Object.entries(activeFilters)
+            .filter(([key, value]) => value !== 'all' && (key !== 'creationDate' || value !== initialFilterState.creationDate) && value !== '')
+            .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${key === 'creationDate' ? new Date(value as Date).toLocaleDateString() : value}`)
+            .join(', ');
+        filterDescription = applied ? ` (Filters: ${applied})` : " (No active filters)";
+     }
+
 
     toast({
-      title: "Download Report Initiated",
-      description: `Report download as .xlsx for ${reportScope} would start. ${filterStatus}${filterPriority} (Filter consideration is mocked).`,
+      title: "Download Report Initiated (Mock)",
+      description: `Report download as .xlsx for ${reportScope}${filterDescription} would start. The Excel file would notionally include relevant data and charts. Actual file generation is a backend feature.`,
     });
   };
   
   const getFilteredTicketsForCharts = (currentUser: Supervisor) => {
-    // This function would ideally use the activeFilters state to filter mockTickets
-    // For now, it returns tickets based on supervisor role scope for chart demonstration
     let tickets: Ticket[] = [];
+    // Simplified scope for chart demonstration, does not use activeFilters from state for complexity reasons
     if (currentUser.functionalRole === 'IC Head') {
         tickets = mockTickets;
     } else if (currentUser.functionalRole === 'DH') {
@@ -116,6 +129,11 @@ export default function ReportsPage() {
             ticket.currentAssigneePSN === currentUser.psn
         );
     }
+    
+    // Example of applying one filter (status) for charts, can be expanded
+    if (activeFilters.status !== 'all') {
+        return tickets.filter(t => t.status === activeFilters.status);
+    }
     return tickets;
   };
 
@@ -131,7 +149,7 @@ export default function ReportsPage() {
 
         const ticketsByStatusData = Object.entries(
             chartDataTickets.reduce((acc, ticket) => {
-                const statusKey = ticket.status.startsWith('Escalated') ? 'Escalated' : ticket.status.replace(' ', '');
+                const statusKey = ticket.status.replace(/\s+/g, '').replace('to', 'To'); // e.g. EscalatedToNS
                 acc[statusKey] = (acc[statusKey] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>)
@@ -151,7 +169,7 @@ export default function ReportsPage() {
                 <CardHeader>
                     <CardTitle className="font-headline text-3xl">Reports & Analytics</CardTitle>
                     <CardDescription>
-                    Generate and download reports. Visualize ticket data with interactive charts. Your access level determines the scope.
+                    Generate and download reports. Visualize ticket data with interactive charts. Your access level determines the data scope.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
@@ -162,6 +180,7 @@ export default function ReportsPage() {
                                 <CardDescription>Distribution of tickets based on their current status.</CardDescription>
                             </CardHeader>
                             <CardContent className="h-[300px]">
+                                {ticketsByStatusData.length > 0 ? (
                                 <ChartContainer config={ticketsByStatusChartConfig} className="w-full h-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
@@ -171,6 +190,7 @@ export default function ReportsPage() {
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </ChartContainer>
+                                ) : <p className="text-muted-foreground text-center pt-10">No data to display for current filters.</p>}
                             </CardContent>
                         </Card>
                          <Card className="shadow-md">
@@ -179,6 +199,7 @@ export default function ReportsPage() {
                                 <CardDescription>Breakdown of tickets by their assigned priority level.</CardDescription>
                             </CardHeader>
                             <CardContent className="h-[300px]">
+                                {ticketsByPriorityData.length > 0 ? (
                                 <ChartContainer config={ticketsByPriorityChartConfig} className="w-full h-full">
                                      <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={ticketsByPriorityData} layout="vertical" margin={{left:10, right:30}}>
@@ -190,18 +211,24 @@ export default function ReportsPage() {
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </ChartContainer>
+                                ) : <p className="text-muted-foreground text-center pt-10">No data to display for current filters.</p>}
                             </CardContent>
                         </Card>
                     </div>
 
                     <div className="space-y-4 pt-6 border-t">
-                        <div className="flex items-center space-x-2">
-                            <Filter className="h-5 w-5 text-primary" />
-                            <h3 className="font-semibold text-lg">Report Filters</h3>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <Filter className="h-5 w-5 text-primary" />
+                                <h3 className="font-semibold text-lg">Report Filters</h3>
+                            </div>
+                             <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-muted-foreground hover:text-primary">
+                                <XCircle className="mr-2 h-4 w-4" /> Clear All Filters
+                            </Button>
                         </div>
                         <Popover open={openFilterPopover} onOpenChange={setOpenFilterPopover}>
                             <PopoverTrigger asChild>
-                            <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Filter Criteria</Button>
+                            <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Filter Criteria (Select to enable fields)</Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-60 p-0">
                                 <Command>
@@ -261,7 +288,7 @@ export default function ReportsPage() {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0">
-                                            <Calendar mode="single" selected={activeFilters.creationDate} onSelect={(dateVal) => setActiveFilters(prev => ({...prev, creationDate: dateVal}))} initialFocus />
+                                            <Calendar mode="single" selected={activeFilters.creationDate} onSelect={(dateVal) => setActiveFilters(prev => ({...prev, creationDate: dateVal || new Date()}))} initialFocus />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -286,22 +313,30 @@ export default function ReportsPage() {
                     <div>
                         <h3 className="font-semibold mb-2 text-lg">Report Preview (Example Attributes)</h3>
                         <p className="text-sm text-muted-foreground mb-2">
-                            Reports will include fields like: Ticket ID, Employee PSN, Employee Name, Query, Priority, Status, Date Raised, Project, Assigned Supervisor, Resolution Steps, etc.
+                            Reports would include fields like: Ticket ID, Employee PSN, Employee Name, Query, Priority, Status, Date Raised, Project, Assigned Supervisor, Resolution Steps, etc. Actual file generation is mocked.
                         </p>
                         <div className="border rounded-md p-4 bg-background h-48 overflow-auto">
-                            <p className="italic text-muted-foreground">Filtered report data preview would appear here...</p>
+                            <p className="italic text-muted-foreground">Filtered report data preview would appear here based on mock logic...</p>
                         </div>
                     </div>
 
-                    <Button className="w-full" onClick={() => handleDownloadReport(currentSupervisorUser)}
-                            disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || canDownloadFullCityReport || canDownloadAllReports)} >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Report (.xlsx)
-                    {currentSupervisorUser.functionalRole === 'IS' && " (My Resolved)"}
-                    {currentSupervisorUser.functionalRole === 'NS' && " (My Resolved)"}
-                    {canDownloadFullCityReport && !canDownloadAllReports && " (My City/Cities)"}
-                    {canDownloadAllReports && " (All Tickets)"}
-                    </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                        <Button className="w-full" onClick={() => handleDownloadReport(currentSupervisorUser, false)}
+                                disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || canDownloadFullCityReport || canDownloadAllReports)} >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Full Report (.xlsx)
+                        {currentSupervisorUser.functionalRole === 'IS' && " (My Resolved/Assigned)"}
+                        {currentSupervisorUser.functionalRole === 'NS' && " (My Resolved/Assigned)"}
+                        {canDownloadFullCityReport && !canDownloadAllReports && " (My City/Cities Scope)"}
+                        {canDownloadAllReports && " (All Tickets Scope)"}
+                        </Button>
+                         <Button className="w-full" variant="outline" onClick={() => handleDownloadReport(currentSupervisorUser, true)}
+                                disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || canDownloadFullCityReport || canDownloadAllReports)} >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Filtered Report (.xlsx)
+                        </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Note: Excel generation with embedded charts is a backend feature and is only mocked here. Downloads will trigger a notification.</p>
                 </CardContent>
                 </Card>
             </div>

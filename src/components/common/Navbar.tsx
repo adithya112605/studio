@@ -30,7 +30,7 @@ const Navbar = () => {
   useEffect(() => {
     setIsMounted(true);
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 10); // Adjusted threshold for quicker transition
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -101,14 +101,12 @@ const Navbar = () => {
       ];
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
         navItemsForMobile.push(...adminManagementNavItems);
-        // Add "Manage" links for desktop if they are DH or IC Head
-        // desktopNavLinks.push(...adminManagementNavItems.map(item => ({href: item.href, label: item.label.replace("Manage ","")})));
       }
     }
   }
 
 
-  if (!isMounted) {
+  if (!isMounted) { // Skeleton loader for Navbar
     return (
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
@@ -128,14 +126,14 @@ const Navbar = () => {
 
   return (
     <header className={cn(
-        "sticky top-0 z-50 w-full border-b transition-all duration-300",
+        "sticky top-0 z-50 w-full border-b transition-all duration-300 ease-in-out",
         isScrolled
-          ? "border-border bg-background shadow-md"
-          : "border-transparent bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+          ? "border-border bg-background shadow-lg" // More pronounced shadow
+          : "border-transparent bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60"
       )}>
       <div className={cn(
-          "container flex max-w-screen-2xl items-center transition-all duration-300",
-          isScrolled ? "h-14" : "h-16"
+          "container flex max-w-screen-2xl items-center transition-all duration-300 ease-in-out",
+          isScrolled ? "h-14" : "h-16" // Slight height change
         )}>
 
         <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
@@ -143,7 +141,6 @@ const Navbar = () => {
           <span className="font-bold font-headline text-xl hidden sm:inline">L&T Helpdesk</span>
         </Link>
 
-        {/* Centered Navigation for Authenticated Users */}
         {user && (
           <nav className="hidden md:flex flex-grow items-center justify-center space-x-1 lg:space-x-2 text-sm font-medium">
             {desktopNavLinks.map((item) => (
@@ -153,11 +150,8 @@ const Navbar = () => {
             ))}
           </nav>
         )}
-         {/* Placeholder for unauthenticated users to maintain balance if needed, or can be removed if logo + right-aligned items are enough */}
         {!user && <div className="flex-grow hidden md:block"></div>}
 
-
-        {/* Right-aligned items */}
         <div className="flex items-center space-x-2 md:space-x-3 ml-auto shrink-0">
           <ThemeToggle />
           {user ? (
@@ -185,7 +179,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden fixed inset-x-0 top-14 sm:top-16 z-40 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t animate-in slide-in-from-top-full duration-300">
           <nav className="flex flex-col space-y-1">
