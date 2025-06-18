@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
+import LTLogo from './LTLogo'; // Import the new LTLogo component
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -105,11 +106,10 @@ const Navbar = () => {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <Briefcase className="h-6 w-6 text-primary" />
+            <div className="w-6 h-6 bg-neutral-200 dark:bg-neutral-700 rounded-sm animate-pulse"></div> {/* Placeholder for logo */}
             <span className="font-bold font-headline text-xl">L&T Helpdesk</span>
           </Link>
           <div className="flex items-center space-x-2">
-             {/* Use non-theme-dependent neutral colors for placeholder */}
              <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse"></div> 
              <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse md:hidden"></div> 
           </div>
@@ -122,7 +122,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <Briefcase className="h-6 w-6 text-primary" />
+          <LTLogo className="h-7 w-7 text-primary" /> {/* Using the new LTLogo component */}
           <span className="font-bold font-headline text-xl">L&T Helpdesk</span>
         </Link>
 
@@ -145,7 +145,7 @@ const Navbar = () => {
         <div className="flex items-center space-x-2">
           <ThemeToggle />
           {user ? (
-             <div className="flex items-center space-x-2"> {/* Container for both desktop and user menu */}
+             <div className="flex items-center space-x-2">
               <Link href="/notifications" aria-label="Notifications" className="hidden md:inline-flex">
                 <Button variant="ghost" size="icon"><Bell className="w-5 h-5"/></Button>
               </Link>
@@ -249,5 +249,3 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
 }
 
 export default Navbar;
-
-    
