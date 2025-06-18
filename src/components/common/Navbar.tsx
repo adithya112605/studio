@@ -30,7 +30,7 @@ const Navbar = () => {
   useEffect(() => {
     setIsMounted(true);
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20); // Make transition happen sooner
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -49,7 +49,7 @@ const Navbar = () => {
   const commonAuthenticatedNavItemsBase = [
     { href: '/', label: 'Home', icon: <Home className="w-4 h-4" /> },
     { href: '/dashboard', label: 'Dashboard', icon: <Briefcase className="w-4 h-4" /> },
-    { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="w-4 h-4" /> }, // Added My Profile
+    { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="w-4 h-4" /> },
   ];
 
   const employeeNavItems = [
@@ -75,8 +75,8 @@ const Navbar = () => {
   ];
 
   const unauthenticatedNavItems = [
-    { href: '/auth/signin', label: 'Sign In' },
-    { href: '/auth/signup', label: 'Sign Up' },
+    { href: '/auth/signin', label: 'Sign In', icon: <LogIn className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" /> },
+    { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" /> },
   ];
 
   let navItemsForMobile = unauthenticatedNavItems;
@@ -90,7 +90,7 @@ const Navbar = () => {
         { href: '/tickets/new', label: 'Create Ticket'},
         { href: '/employee/tickets', label: 'My Tickets'},
       ];
-    } else {
+    } else { // Supervisor roles
       const supervisorUser = user as Supervisor;
       navItemsForMobile = [...supervisorBaseNavItems];
       desktopNavLinks = [
@@ -101,6 +101,8 @@ const Navbar = () => {
       ];
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
         navItemsForMobile.push(...adminManagementNavItems);
+        // Add "Manage" links for desktop if they are DH or IC Head
+        // desktopNavLinks.push(...adminManagementNavItems.map(item => ({href: item.href, label: item.label.replace("Manage ","")})));
       }
     }
   }
@@ -141,8 +143,9 @@ const Navbar = () => {
           <span className="font-bold font-headline text-xl hidden sm:inline">L&T Helpdesk</span>
         </Link>
 
+        {/* Centered Navigation for Authenticated Users */}
         {user && (
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium mx-auto">
+          <nav className="hidden md:flex flex-grow items-center justify-center space-x-1 lg:space-x-2 text-sm font-medium">
             {desktopNavLinks.map((item) => (
               <Button key={item.href} variant="ghost" asChild className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/5">
                 <Link href={item.href}>{item.label}</Link>
@@ -150,15 +153,19 @@ const Navbar = () => {
             ))}
           </nav>
         )}
+         {/* Placeholder for unauthenticated users to maintain balance if needed, or can be removed if logo + right-aligned items are enough */}
+        {!user && <div className="flex-grow hidden md:block"></div>}
 
-        <div className="flex items-center space-x-2 md:space-x-3 ml-auto">
+
+        {/* Right-aligned items */}
+        <div className="flex items-center space-x-2 md:space-x-3 ml-auto shrink-0">
           <ThemeToggle />
           {user ? (
              <div className="flex items-center space-x-1 md:space-x-2">
               <Button variant="ghost" size="icon" asChild className="hidden md:inline-flex text-muted-foreground hover:text-primary hover:bg-primary/5">
                 <Link href="/notifications" aria-label="Notifications"><Bell className="w-5 h-5"/></Link>
               </Button>
-              <DropdownMenuUser user={user} logout={handleLogout} mobileNavItems={navItemsForMobile} adminManagementNavItems={adminManagementNavItems} />
+              <DropdownMenuUser user={user} logout={handleLogout} adminManagementNavItems={adminManagementNavItems} />
              </div>
           ) : (
              <div className="hidden md:flex items-center space-x-2">
@@ -178,36 +185,28 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden fixed inset-x-0 top-14 sm:top-16 z-40 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t animate-in slide-in-from-top-full duration-300">
           <nav className="flex flex-col space-y-1">
-            {navItemsForMobile.map((item) => {
-              let iconToDisplay = item.icon ? React.cloneElement(item.icon, { className: "w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" }) : null;
-              if (!user) {
-                if (item.href === '/auth/signin') iconToDisplay = <LogIn className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" />;
-                if (item.href === '/auth/signup') iconToDisplay = <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" />;
-              }
-              if (!iconToDisplay && user) iconToDisplay = <div className="w-5 h-5 shrink-0"></div>;
-
-              return (
+            {navItemsForMobile.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className="group flex items-center space-x-3 p-3 rounded-lg hover:bg-accent hover:text-accent-foreground text-base font-medium transition-colors"
                   onClick={toggleMenu}
                 >
-                  {iconToDisplay}
+                  {item.icon ? React.cloneElement(item.icon, { className: "w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" }) : <div className="w-5 h-5 shrink-0"></div>}
                   <span>{item.label}</span>
                 </Link>
-              );
-            })}
+              ))}
             {user && (
               <Button
                 variant="ghost"
                 onClick={handleLogout}
-                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-base font-medium transition-colors mt-4"
+                className="group flex items-center space-x-3 p-3 rounded-lg hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-base font-medium transition-colors mt-4"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive-foreground" />
                 <span>Logout</span>
               </Button>
             )}
@@ -219,10 +218,9 @@ const Navbar = () => {
 };
 
 
-const DropdownMenuUser = ({ user, logout, mobileNavItems, adminManagementNavItems }: {
+const DropdownMenuUser = ({ user, logout, adminManagementNavItems }: {
     user: User;
     logout: () => void;
-    mobileNavItems: Array<{href:string; label:string; icon?:React.ReactNode}>;
     adminManagementNavItems: Array<{href:string; label:string; icon?:React.ReactNode}>;
 }) => {
   const supervisorUser = user as Supervisor;
