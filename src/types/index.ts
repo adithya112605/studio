@@ -15,7 +15,7 @@ export interface JobCode {
 
 export interface Employee extends User {
   role: 'Employee';
-  grade: string;
+  grade: string; // This will now use values from mockGrades
   jobCodeId: string;
   project: string;
   gender?: 'Male' | 'Female' | 'Other';
@@ -62,7 +62,7 @@ export interface Ticket {
   currentAssigneePSN?: number;
   project: string;
   attachments?: TicketAttachment[];
-  lastStatusUpdateDate: string; // Added for tracking when ticket entered current actionable state
+  lastStatusUpdateDate: string;
 }
 
 export interface Project {
@@ -90,7 +90,7 @@ export interface AddEmployeeFormData {
   dateOfBirth?: Date; 
   project: string;
   jobCodeId: string;
-  grade: string;
+  grade: string; // Will now be a value from the predefined list
   isPSN?: number;
   nsPSN?: number;
   dhPSN?: number;

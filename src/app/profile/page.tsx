@@ -6,8 +6,8 @@ import type { User, Employee, Supervisor, JobCode, Project as ProjectType } from
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserCircle, Mail, Briefcase, Building, Users, CalendarDays, Edit, ShieldCheck, BarChart3, Activity } from "lucide-react";
-import { mockJobCodes, mockProjects, mockSupervisors } from "@/data/mockData"; // Ensure mockSupervisors is exported if needed for supervisor chain display for supervisors
+import { Mail, Briefcase, Building, Users, CalendarDays, Edit, ShieldCheck, BarChart3, Activity, BadgePercent } from "lucide-react";
+import { mockJobCodes, mockProjects, mockSupervisors } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,6 @@ export default function MyProfilePage() {
           if (supervisorUser.branchProject) {
             projectInfo = mockProjects.find(p => p.id === supervisorUser.branchProject);
           }
-          // Potentially find supervisor's own supervisors if that data exists and is needed
         }
 
         const supervisorRoleTitle = supervisorUser ? `${supervisorUser.title} (${supervisorUser.functionalRole})` : '';
@@ -63,7 +62,7 @@ export default function MyProfilePage() {
             <Card className="w-full max-w-3xl mx-auto shadow-xl overflow-hidden">
               <CardHeader className="text-center bg-muted/30 p-6">
                 <Avatar className="w-24 h-24 mx-auto mb-4 border-2 border-primary shadow-lg">
-                  <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(currentUser.name)}`} alt={currentUser.name} data-ai-hint="profile avatar" />
+                  <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(currentUser.name)}`} alt={currentUser.name} data-ai-hint="profile avatar"/>
                   <AvatarFallback className="text-3xl">{getInitials(currentUser.name)}</AvatarFallback>
                 </Avatar>
                 <CardTitle className="font-headline text-3xl">{currentUser.name}</CardTitle>
@@ -91,7 +90,7 @@ export default function MyProfilePage() {
                         <h3 className="text-xl font-semibold text-primary border-b pb-2 mb-4 mt-6">Work Details</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                             <div className="flex items-center">
-                                <Briefcase className="w-5 h-5 mr-3 text-primary shrink-0" />
+                                <BadgePercent className="w-5 h-5 mr-3 text-primary shrink-0" />
                                 <div><strong>Grade:</strong> {employeeUser.grade}</div>
                             </div>
                             {jobCodeInfo && (

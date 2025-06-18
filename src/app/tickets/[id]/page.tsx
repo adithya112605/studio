@@ -12,11 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TicketResolutionSuggestions from "@/components/hr/TicketResolutionSuggestions";
 import Link from "next/link";
-import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock } from "lucide-react";
+import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock, BadgePercent } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
@@ -233,8 +233,8 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
     if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicket;
     setTicket(updatedTicket);
-    setNewStatus(nextStatus); // Keep UI in sync
-    setCurrentAssignee(mockSupervisors.find(s => s.psn === nextAssigneePSN)); // Update displayed assignee
+    setNewStatus(nextStatus); 
+    setCurrentAssignee(mockSupervisors.find(s => s.psn === nextAssigneePSN)); 
     toast({ title: "Ticket Escalated", description: `Ticket ${ticketId} has been escalated to ${nextStatus.replace('Escalated to ', '')}.` });
   };
 
@@ -252,7 +252,6 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
       followUpQuery: employeeFollowUp.trim() ? `${ticket.followUpQuery || ''}\n---\nEmployee (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.followUpQuery,
       actionPerformed: employeeFollowUp.trim() ? `${ticket.actionPerformed || ''}\n---\nEmployee Follow-up (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.actionPerformed,
       attachments: [...(ticket.attachments || []), ...newTicketAttachments],
-      // Employee follow-up might not change lastStatusUpdateDate unless it prompts supervisor action or reopens
     };
 
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
@@ -319,8 +318,8 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                   <p><strong>Business Email:</strong> {employeeDetails.businessEmail || 'N/A'}</p>
                    <p><strong>Date of Birth:</strong> {employeeDetails.dateOfBirth ? new Date(employeeDetails.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
                   <p><strong>Project:</strong> {mockProjects.find(p => p.id === employeeDetails.project)?.name || employeeDetails.project}</p>
+                  <p><strong>Grade:</strong> <BadgePercent className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {employeeDetails.grade}</p>
                   <p><strong>Job Code:</strong> {jobCodeDetails?.code} ({jobCodeDetails?.description})</p>
-                  <p><strong>Grade:</strong> {employeeDetails.grade}</p>
                   <p><strong>IS:</strong> {employeeDetails.isName} ({employeeDetails.isPSN})</p>
                   <p><strong>NS:</strong> {employeeDetails.nsName} ({employeeDetails.nsPSN})</p>
                   <p><strong>DH:</strong> {employeeDetails.dhName} ({employeeDetails.dhPSN})</p>

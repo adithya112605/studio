@@ -2,12 +2,12 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Supervisor, Employee, JobCode, Project as ProjectType } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import type { User, Supervisor, Employee } from "@/types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { mockEmployees, mockSupervisors, mockJobCodes, mockProjects } from "@/data/mockData";
-import { Users, ArrowLeft, Filter, Search } from "lucide-react";
+import { mockEmployees, mockJobCodes, mockProjects, mockGrades } from "@/data/mockData";
+import { Users, ArrowLeft } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
@@ -18,6 +18,7 @@ export default function SupervisorEmployeeDetailsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState<string | "all">("all");
   const [selectedJobCode, setSelectedJobCode] = useState<string | "all">("all");
+  const [selectedGrade, setSelectedGrade] = useState<string | "all">("all");
 
 
   return (
@@ -26,7 +27,6 @@ export default function SupervisorEmployeeDetailsPage() {
         const currentSupervisorUser = currentUser as Supervisor;
 
         const managedEmployeesForFiltering = useMemo(() => {
-          // This list is for populating filter options based on the supervisor's actual scope
           let employees: Employee[] = [];
           if (currentSupervisorUser.functionalRole === 'IC Head') {
             employees = mockEmployees;
@@ -49,18 +49,24 @@ export default function SupervisorEmployeeDetailsPage() {
             const emailMatch = emp.businessEmail?.toLowerCase().includes(searchTerm.toLowerCase());
             const projectMatch = selectedProject === "all" || emp.project === selectedProject;
             const jobCodeMatch = selectedJobCode === "all" || emp.jobCodeId === selectedJobCode;
-            return (nameMatch || psnMatch || !!emailMatch) && projectMatch && jobCodeMatch;
+            const gradeMatch = selectedGrade === "all" || emp.grade === selectedGrade;
+            return (nameMatch || psnMatch || !!emailMatch) && projectMatch && jobCodeMatch && gradeMatch;
           });
-        }, [managedEmployeesForFiltering, searchTerm, selectedProject, selectedJobCode]);
+        }, [managedEmployeesForFiltering, searchTerm, selectedProject, selectedJobCode, selectedGrade]);
         
         const availableProjects = useMemo(() => {
             const projectIds = new Set(managedEmployeesForFiltering.map(emp => emp.project));
-            return mockProjects.filter(p => projectIds.has(p.id));
+            return mockProjects.filter(p => projectIds.has(p.id)).sort((a,b) => a.name.localeCompare(b.name));
         }, [managedEmployeesForFiltering]);
 
         const availableJobCodes = useMemo(() => {
             const jobCodeIds = new Set(managedEmployeesForFiltering.map(emp => emp.jobCodeId));
-            return mockJobCodes.filter(jc => jobCodeIds.has(jc.id));
+            return mockJobCodes.filter(jc => jobCodeIds.has(jc.id)).sort((a,b) => a.code.localeCompare(b.code));
+        }, [managedEmployeesForFiltering]);
+
+        const availableGrades = useMemo(() => {
+            const gradesInUse = new Set(managedEmployeesForFiltering.map(emp => emp.grade));
+            return mockGrades.filter(g => gradesInUse.has(g)); // Already sorted in mockData
         }, [managedEmployeesForFiltering]);
 
 
@@ -76,9 +82,9 @@ export default function SupervisorEmployeeDetailsPage() {
                 <Card className="shadow-md">
                     <CardHeader>
                         <CardTitle>Filter Employees</CardTitle>
-                        <CardDescription>Search by name/PSN/email or filter by project/job code.</CardDescription>
+                        <CardDescription>Search by name/PSN/email or filter by project, job code, or grade.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <Input 
                             placeholder="Search Name, PSN, Email..."
                             value={searchTerm}
@@ -103,6 +109,15 @@ export default function SupervisorEmployeeDetailsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                            <SelectTrigger><SelectValue placeholder="Filter by Grade" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Grades</SelectItem>
+                                {availableGrades.map(g => (
+                                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </CardContent>
                 </Card>
 
@@ -122,6 +137,7 @@ export default function SupervisorEmployeeDetailsPage() {
                                 <TableHead>Name</TableHead>
                                 <TableHead className="hidden md:table-cell">Email</TableHead>
                                 <TableHead>Project</TableHead>
+                                <TableHead>Grade</TableHead>
                                 <TableHead className="hidden sm:table-cell">Job Code</TableHead>
                                 <TableHead className="hidden lg:table-cell">IS</TableHead>
                                 <TableHead className="hidden lg:table-cell">NS</TableHead>
@@ -138,6 +154,7 @@ export default function SupervisorEmployeeDetailsPage() {
                                         <TableCell>{emp.name}</TableCell>
                                         <TableCell className="hidden md:table-cell">{emp.businessEmail || 'N/A'}</TableCell>
                                         <TableCell>{project?.name || emp.project}</TableCell>
+                                        <TableCell>{emp.grade}</TableCell>
                                         <TableCell className="hidden sm:table-cell">{jobCode?.code || 'N/A'}</TableCell>
                                         <TableCell className="hidden lg:table-cell">{emp.isName || 'N/A'} ({emp.isPSN || 'N/A'})</TableCell>
                                         <TableCell className="hidden lg:table-cell">{emp.nsName || 'N/A'} ({emp.nsPSN || 'N/A'})</TableCell>
@@ -164,5 +181,3 @@ export default function SupervisorEmployeeDetailsPage() {
     </ProtectedPage>
   );
 }
-
-    

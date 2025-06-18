@@ -8,25 +8,36 @@ function parseAndFormatDate(dateStr?: string): string | undefined {
     const parts = dateStr.replace(/-/g, '/').split('/');
     let month, day, year;
     
-    // Common formats: MM/DD/YYYY or MM-DD-YYYY
+    // Common formats: MM/DD/YYYY or MM-DD-YYYY or DD-MM-YYYY
+    // Try to infer based on parts
     if (parts.length === 3) {
-      month = parts[0].padStart(2, '0');
-      day = parts[1].padStart(2, '0');
-      year = parts[2];
-      
-      if (year && year.length === 4 && month && day && 
-          parseInt(month, 10) > 0 && parseInt(month, 10) <= 12 &&
-          parseInt(day, 10) > 0 && parseInt(day, 10) <= 31) {
+        // Assuming MM/DD/YYYY if month part <= 12 and day part <=31
+        if (parseInt(parts[0], 10) <= 12 && parseInt(parts[1], 10) <= 31) {
+            month = parts[0].padStart(2, '0');
+            day = parts[1].padStart(2, '0');
+            year = parts[2];
+        } 
+        // Assuming DD/MM/YYYY if day part <= 31 and month part <= 12
+        else if (parseInt(parts[0], 10) <= 31 && parseInt(parts[1], 10) <= 12) {
+            day = parts[0].padStart(2, '0');
+            month = parts[1].padStart(2, '0');
+            year = parts[2];
+        }
+
+        if (year && year.length === 4 && month && day &&
+            parseInt(month, 10) > 0 && parseInt(month, 10) <= 12 &&
+            parseInt(day, 10) > 0 && parseInt(day, 10) <= 31) {
         return `${year}-${month}-${day}`;
-      }
+        }
     }
   } catch (e) {
     // console.warn(`Could not parse date: ${dateStr}`, e);
     return undefined;
   }
-  // console.warn(`Could not parse date, returning undefined: ${dateStr}`);
+  // console.warn(`Could not parse date, returning undefined for: ${dateStr}`);
   return undefined; // Fallback
 }
+
 
 const providedDOBsRaw = [
   "05-01-1989", "10/26/1986", "05/14/1984", "07-07-1984", "10/29/1983",
@@ -60,6 +71,15 @@ const supervisorPSNs = {
   kavitaSen: 20004001,
   vikasSharma: 20005001,
 };
+
+// --- GRADES ---
+export const mockGrades: string[] = [
+  "CA1", "CMA", "DET", "ET - Graduate", "Expat", "FLS - Trainee", "FTC", "GCT", "GET", "GST", 
+  "ITI TRAINEE", "M1-A", "M1-B", "M1-C", "M2-A", "M2-B", "M2-C", "M3-A", "M3-B", "M3-C",
+  "M4-A", "M4-B", "M4-C", "MT", "O1", "O2", "O3", "PGET", "PGET-NICMAR", "PGT", 
+  "Retainer", "S1", "S2", "TC2", "TC3", "TC4", "TC5", "TC6", "TC7", "TC8", "TC9"
+].sort();
+
 
 // --- JOB CODES ---
 export const mockJobCodes: JobCode[] = [
@@ -127,12 +147,12 @@ export const mockSupervisors: Supervisor[] = [
 // --- EMPLOYEES ---
 export const mockEmployees: Employee[] = [
   {
-    psn: employeePSNs.nagarajanS, name: 'Nagarajan S', role: 'Employee', grade: 'E1', jobCodeId: 'JC003', project: 'P001',
+    psn: employeePSNs.nagarajanS, name: 'Nagarajan S', role: 'Employee', grade: 'M1-A', jobCodeId: 'JC003', project: 'P001',
     businessEmail: 'nagarajan.s@lnt.co', dateOfBirth: formattedDOBs[0],
     isPSN: supervisorPSNs.rameshSubramanian, nsPSN: supervisorPSNs.ganapathyRaman, dhPSN: supervisorPSNs.ganapathyRaman,
   },
   {
-    psn: employeePSNs.priyaRavi, name: 'Priya Ravichandran', role: 'Employee', grade: 'E2', jobCodeId: 'JC004', project: 'P002',
+    psn: employeePSNs.priyaRavi, name: 'Priya Ravichandran', role: 'Employee', grade: 'M2-A', jobCodeId: 'JC004', project: 'P002',
     businessEmail: 'priya.ravi@lnt.co', dateOfBirth: formattedDOBs[1],
     isPSN: supervisorPSNs.rameshSubramanian, nsPSN: supervisorPSNs.ganapathyRaman, dhPSN: supervisorPSNs.ganapathyRaman,
   },
@@ -147,7 +167,7 @@ export const mockEmployees: Employee[] = [
     isPSN: supervisorPSNs.arvindGupta, nsPSN: supervisorPSNs.dhineshKathiravan, dhPSN: supervisorPSNs.dhineshKathiravan,
   },
   {
-    psn: employeePSNs.deepakPatil, name: 'Deepak Patil', role: 'Employee', grade: 'E1', jobCodeId: 'JC003', project: 'P007',
+    psn: employeePSNs.deepakPatil, name: 'Deepak Patil', role: 'Employee', grade: 'M1-B', jobCodeId: 'JC003', project: 'P007',
     businessEmail: 'deepak.patil@lnt.co', dateOfBirth: formattedDOBs[4],
     isPSN: supervisorPSNs.sunilDesai, nsPSN: supervisorPSNs.payalRao, dhPSN: supervisorPSNs.payalRao,
   },
@@ -224,23 +244,21 @@ export const mockTickets: Ticket[] = [
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.anitaDas)?.isPSN, project: 'P013',
     lastStatusUpdateDate: '2024-05-06T10:00:00Z',
   },
-  // Add a ticket that should be overdue for an IS
   {
     id: generateTicketIdForMock(), psn: employeePSNs.sureshK, employeeName: 'Suresh K',
     query: 'Need access to specific training materials for CMRL P1 TBM UG01. Not found in portal.',
-    priority: 'Medium', dateOfQuery: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    priority: 'Medium', dateOfQuery: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), 
     status: 'Open' as TicketStatus,
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.sureshK)?.isPSN, project: 'P003',
     lastStatusUpdateDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
   },
-  // Add a ticket that should be overdue for NS (escalated 2 days ago)
    {
     id: generateTicketIdForMock(), psn: employeePSNs.nagarajanS, employeeName: 'Nagarajan S',
     query: 'Follow up: Still no access to project documents. This is blocking my work.',
     priority: 'Urgent', dateOfQuery: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), 
     status: 'Escalated to NS' as TicketStatus,
     actionPerformed: 'IS escalated due to no resolution.',
-    dateOfResponse: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Escalated 2 days ago
+    dateOfResponse: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), 
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.nagarajanS)?.nsPSN, project: 'P001',
     lastStatusUpdateDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { AddEmployeeFormData, Employee } from '@/types';
-import { mockProjects, mockJobCodes, mockSupervisors, mockEmployees } from '@/data/mockData';
+import { mockProjects, mockJobCodes, mockSupervisors, mockEmployees, mockGrades } from '@/data/mockData';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -25,10 +25,10 @@ const addEmployeeSchema = z.object({
   psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length <= 8, { message: "PSN must be 1 to 8 digits." }),
   name: z.string().min(3, "Name must be at least 3 characters"),
   businessEmail: z.string().email("Invalid email address"),
-  dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(), // Making it optional for now, can be required
+  dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(),
   project: z.string().min(1, "Project selection is required"),
   jobCodeId: z.string().min(1, "Job Code selection is required"),
-  grade: z.string().min(1, "Grade is required (e.g., E1, M2)"),
+  grade: z.string().min(1, "Grade is required."),
   isPSN: z.coerce.number().optional(),
   nsPSN: z.coerce.number().optional(),
   dhPSN: z.coerce.number().optional(),
@@ -116,7 +116,7 @@ export default function AddEmployeeForm() {
                         initialFocus
                         captionLayout="dropdown-buttons"
                         fromYear={1950}
-                        toYear={new Date().getFullYear() - 18} // Min 18 years old
+                        toYear={new Date().getFullYear() - 18} 
                       />
                     </PopoverContent>
                   </Popover>
@@ -162,8 +162,19 @@ export default function AddEmployeeForm() {
           </div>
 
           <div className="space-y-2">
-              <Label htmlFor="grade">Grade (e.g., E1, M2)</Label>
-              <Input id="grade" {...register("grade")} placeholder="Confirm grade based on Job Code" />
+              <Label htmlFor="grade">Grade</Label>
+              <Controller
+                name="grade"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger id="grade"><SelectValue placeholder="Select grade" /></SelectTrigger>
+                    <SelectContent>
+                      {mockGrades.map(g => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.grade && <p className="text-sm text-destructive">{errors.grade.message}</p>}
           </div>
 
