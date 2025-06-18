@@ -130,6 +130,7 @@ const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> 
 };
 
 export default function SupervisorTicketsPage() {
+  // Moved useState hooks to the top level of SupervisorTicketsPage
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Ticket['status'] | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<Ticket['priority'] | "all">("all");
@@ -161,8 +162,8 @@ export default function SupervisorTicketsPage() {
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <Input 
                             placeholder="Search by Ticket ID, PSN, Name, Query..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={searchTerm} // Use state from SupervisorTicketsPage
+                            onChange={(e) => setSearchTerm(e.target.value)} // Use setter from SupervisorTicketsPage
                             className="md:col-span-1"
                         />
                         <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as Ticket['status'] | "all")}>
@@ -198,3 +199,4 @@ export default function SupervisorTicketsPage() {
     </ProtectedPage>
   );
 }
+
