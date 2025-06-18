@@ -1,17 +1,18 @@
+
 "use client"
 
-import type { User, Employee, HR } from '@/types';
+import type { User, Employee, Supervisor } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { mockEmployees, mockHRs } from '@/data/mockData';
+import { mockEmployees, mockSupervisors } from '@/data/mockData';
 
 interface AuthContextType {
-  user: User | null;
-  login: (psn: number, password?: string) => Promise<boolean>; // psn changed to number
-  signup: (psn: number, password?: string) // psn changed to number
+  user: User | null; // User can be Employee or Supervisor
+  login: (psn: number, password?: string) => Promise<boolean>;
+  signup: (psn: number, password?: string)
     => Promise<{ success: boolean; message: string; user?: User }>;
   logout: () => void;
   loading: boolean;
-  checkPSNExists: (psn: number) => Promise<boolean>; // psn changed to number
+  checkPSNExists: (psn: number) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,67 +24,79 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Basic validation of stored user structure
+        if (parsedUser && parsedUser.psn && parsedUser.name && parsedUser.role) {
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('currentUser'); // Clear invalid stored user
+        }
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+        localStorage.removeItem('currentUser');
+      }
     }
     setLoading(false);
   }, []);
 
   const login = async (psn: number, password?: string): Promise<boolean> => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
     
-    const employeeUser = mockEmployees.find(e => e.psn === psn) as Employee | undefined;
-    const hrUser = mockHRs.find(h => h.psn === psn) as HR | undefined;
-    
-    let foundUser: User | null = null;
+    // Check if it's an employee
+    const employeeUser = mockEmployees.find(e => e.psn === psn);
     if (employeeUser) {
-      foundUser = { ...employeeUser, role: 'Employee' };
-    } else if (hrUser) {
-      foundUser = { ...hrUser, role: hrUser.priority === 1 ? 'Head HR' : 'HR' };
-    }
-
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
+      const loggedInUser: Employee = { ...employeeUser }; // Role is already 'Employee'
+      setUser(loggedInUser);
+      localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
       setLoading(false);
       return true;
     }
+
+    // Check if it's a supervisor
+    const supervisorUser = mockSupervisors.find(s => s.psn === psn);
+    if (supervisorUser) {
+      const loggedInUser: Supervisor = { ...supervisorUser }; // Role is IS, NS, DH, or IC Head
+      setUser(loggedInUser);
+      localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
+      setLoading(false);
+      return true;
+    }
+
     setLoading(false);
     return false;
   };
 
   const checkPSNExists = async (psn: number): Promise<boolean> => {
     const employeeExists = mockEmployees.some(e => e.psn === psn);
-    const hrExists = mockHRs.some(h => h.psn === psn);
-    return employeeExists || hrExists;
+    const supervisorExists = mockSupervisors.some(s => s.psn === psn);
+    return employeeExists || supervisorExists;
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string; user?: User }> => {
     setLoading(true);
-    const psnExists = await checkPSNExists(psn);
-    if (!psnExists) {
+    // Signup is primarily for employees to set their password for a pre-existing record.
+    // Supervisors are assumed to be added by an admin.
+    const employeeRecord = mockEmployees.find(e => e.psn === psn);
+
+    if (!employeeRecord) {
       setLoading(false);
-      return { success: false, message: "PSN not found in company records." };
+      return { success: false, message: "PSN not found in employee records. Please contact Admin." };
     }
-
-    const employeeUser = mockEmployees.find(e => e.psn === psn) as Employee | undefined;
-    const hrUser = mockHRs.find(h => h.psn === psn) as HR | undefined;
-    let newUser: User | undefined;
-
-    if (employeeUser) newUser = { ...employeeUser, role: 'Employee' };
-    else if (hrUser) newUser = { ...hrUser, role: hrUser.priority === 1 ? 'Head HR' : 'HR' };
     
-    if (newUser && password) { 
-        setUser(newUser);
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
+    // Simulate password setting - in real app, hash and store password
+    if (password) {
+        const signedUpUser: Employee = { ...employeeRecord };
+        setUser(signedUpUser);
+        localStorage.setItem('currentUser', JSON.stringify(signedUpUser));
         setLoading(false);
-        return { success: true, message: "Account created successfully!", user: newUser };
+        return { success: true, message: "Account password set successfully! You are now logged in.", user: signedUpUser };
     }
     
     setLoading(false);
-    return { success: false, message: "Failed to create account. Please try again." };
-};
-
+    return { success: false, message: "Failed to set password. Please try again." };
+  };
 
   const logout = () => {
     setUser(null);

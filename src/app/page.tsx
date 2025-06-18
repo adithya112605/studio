@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog } from 'lucide-react';
+import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function HomePage() {
@@ -21,13 +21,13 @@ export default function HomePage() {
     },
     {
       icon: <Users className="w-10 h-10 text-primary mb-4" />,
-      title: "Role-Based Access",
-      description: "Dedicated interfaces for Employees, HR, and Head HR with tailored functionalities.",
+      title: "Hierarchical Support",
+      description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with tailored functionalities.",
     },
     {
       icon: <Briefcase className="w-10 h-10 text-primary mb-4" />,
       title: "AI-Powered Suggestions",
-      description: "HR professionals receive AI-driven resolution suggestions to expedite ticket handling.",
+      description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling.",
     },
   ];
 
@@ -40,11 +40,11 @@ export default function HomePage() {
             Welcome to <span className="text-primary">L&T Helpdesk</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Streamlining internal support for L&T employees. Get quick resolutions and manage your queries efficiently.
+            Streamlining internal support for L&T employees. Get quick resolutions and manage your queries efficiently with hierarchical supervisor support.
           </p>
           <div className="space-x-4">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
-              <Link href="/auth/signin">Employee Sign In</Link>
+              <Link href="/auth/signin">Sign In</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
               <Link href="/auth/signup">First Time User?</Link>
@@ -107,24 +107,24 @@ export default function HomePage() {
         </div>
       </section>
       
-      {/* Admin/HR Actions Section */}
+      {/* Admin/Supervisor Actions Section */}
       <section className="py-16 lg:py-24 w-full">
         <div className="container mx-auto text-center px-4">
             <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6">
-                Administrative Actions
+                Administrative & Supervisor Actions
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                HR and Administrative staff can manage employee and HR records. Access requires authentication.
+                Supervisors and Administrative staff can manage employee records and helpdesk operations. Access requires authentication.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
                  <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                    <Link href="/auth/signin?role=hr"><UserCog className="mr-2"/> HR Portal Login</Link>
+                    <Link href="/auth/signin?role=supervisor"><UserCog className="mr-2"/> Supervisor Portal Login</Link>
                 </Button>
                  <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
                     <Link href="/admin/add-employee"><UserPlus className="mr-2"/> Add New Employee</Link>
                 </Button>
                  <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                    <Link href="/admin/add-hr"><ShieldCheck className="mr-2"/> Add New HR Account</Link>
+                    <Link href="/admin/add-supervisor"><UserSquare2 className="mr-2"/> Add New Supervisor</Link>
                 </Button>
             </div>
         </div>

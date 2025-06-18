@@ -2,11 +2,10 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import AddSupervisorForm from "@/components/admin/AddSupervisorForm"; // Renamed component
+import AddSupervisorForm from "@/components/admin/AddSupervisorForm";
 
-export default function AddSupervisorPage() { // Renamed page function
+export default function AddSupervisorPage() {
   return (
-    // Access typically restricted to IC Head or high-level admin
     <ProtectedPage allowedRoles={['IC Head']}> 
       <div className="py-8">
         <AddSupervisorForm />

@@ -2,19 +2,18 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Ticket, Employee, HR, TicketStatus } from "@/types";
-import { mockTickets, mockEmployees, mockHRs, mockProjects 
-} from "@/data/mockData";
+import type { User, Ticket, Employee, Supervisor, TicketStatus, JobCode } from "@/types";
+import { mockTickets, mockEmployees, mockSupervisors, mockProjects, mockJobCodes } from "@/data/mockData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import TicketResolutionSuggestions from "@/components/hr/TicketResolutionSuggestions";
+import TicketResolutionSuggestions from "@/components/hr/TicketResolutionSuggestions"; // Will rename this folder later if needed
 import Link from "next/link";
-import { ArrowLeft, Edit3, Send, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Edit3, Send, AlertTriangle, ShieldAlert } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -24,28 +23,45 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
     case 'In Progress': return 'default'; 
     case 'Pending': return 'outline'; 
     case 'Resolved': case 'Closed': return 'secondary';
-    case 'Escalated': return 'default'; 
+    case 'Escalated to NS': case 'Escalated to DH': case 'Escalated to IC Head': return 'default'; 
     default: return 'outline';
   }
 };
 
 const TicketDetailPage = ({ params }: { params: { id: string } }) => {
   const ticketId = params.id;
-  const [ticket, setTicket] = useState<Ticket | undefined>(mockTickets.find(t => t.id === ticketId));
-  const [hrResponse, setHrResponse] = useState("");
-  const [newStatus, setNewStatus] = useState<TicketStatus | undefined>(ticket?.status);
-  const [employeeFollowUp, setEmployeeFollowUp] = useState("");
   const { toast } = useToast();
   const router = useRouter();
+  
+  const [ticket, setTicket] = useState<Ticket | undefined>(() => mockTickets.find(t => t.id === ticketId));
+  const [employeeDetails, setEmployeeDetails] = useState<Employee | undefined>(undefined);
+  const [jobCodeDetails, setJobCodeDetails] = useState<JobCode | undefined>(undefined);
+  const [currentAssignee, setCurrentAssignee] = useState<Supervisor | undefined>(undefined);
+
+  const [supervisorResponse, setSupervisorResponse] = useState("");
+  const [newStatus, setNewStatus] = useState<TicketStatus | undefined>(ticket?.status);
+  const [employeeFollowUp, setEmployeeFollowUp] = useState("");
+
+  useEffect(() => {
+    if (ticket) {
+      const emp = mockEmployees.find(e => e.psn === ticket.psn);
+      setEmployeeDetails(emp);
+      if (emp) {
+        setJobCodeDetails(mockJobCodes.find(jc => jc.id === emp.jobCodeId));
+      }
+      setCurrentAssignee(mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN));
+      setNewStatus(ticket.status); // Initialize newStatus with ticket's current status
+    }
+  }, [ticket]);
 
 
-  if (!ticket) {
+  if (!ticket || !employeeDetails) {
     return (
       <ProtectedPage>
         <div className="text-center py-10">
           <AlertTriangle className="mx-auto h-12 w-12 text-destructive mb-4" />
           <h1 className="text-2xl font-bold">Ticket Not Found</h1>
-          <p className="text-muted-foreground">The ticket ID <span className="font-mono">{ticketId}</span> does not exist or you may not have permission to view it.</p>
+          <p className="text-muted-foreground">The ticket ID <span className="font-mono">{ticketId}</span> does not exist or essential details are missing.</p>
           <Button asChild className="mt-6">
             <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard</Link>
           </Button>
@@ -54,12 +70,8 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
     );
   }
 
-  const employee = mockEmployees.find(e => e.psn === ticket.psn);
-  const assignedHR = mockHRs.find(h => h.psn === ticket.hrPSNAssigned);
-  const escalatedToHR = ticket.escalatedToPSN ? mockHRs.find(h => h.psn === ticket.escalatedToPSN) : null;
-
-  const handleHRUpdate = () => {
-    if (!newStatus && !hrResponse) {
+  const handleSupervisorUpdate = () => {
+    if (!newStatus && !supervisorResponse) {
         toast({title: "No Changes", description: "Please provide a response or select a new status.", variant: "default"});
         return;
     }
@@ -68,37 +80,75 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
     const updatedTicketData = {
       ...ticket,
       status: newStatus || ticket.status,
-      actionPerformed: hrResponse 
-        ? `${ticket.actionPerformed || ''}\n---\nHR (${new Date().toLocaleString()}):\n${hrResponse}`.trim() 
+      actionPerformed: supervisorResponse
+        ? `${ticket.actionPerformed || ''}\n---\nSupervisor (${new Date().toLocaleString()}):\n${supervisorResponse}`.trim()
         : ticket.actionPerformed,
-      dateOfResponse: hrResponse || newStatus ? new Date().toISOString() : ticket.dateOfResponse,
+      dateOfResponse: supervisorResponse || newStatus ? new Date().toISOString() : ticket.dateOfResponse,
     };
     
-    // Update mock data (client-side)
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
-    if (ticketIndex > -1) {
-      mockTickets[ticketIndex] = updatedTicketData;
-    }
+    if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicketData;
     setTicket(updatedTicketData);
-    setHrResponse("");
-    if (newStatus) setNewStatus(newStatus); // Keep newStatus if it was set
+    setSupervisorResponse("");
+    // setNewStatus(updatedTicketData.status); // Keep newStatus if it was set, or update from ticket
 
     toast({title: "Ticket Updated", description: `Status changed to ${updatedTicketData.status}. Response added.`});
   };
   
-  const handleEscalate = (headHrPsn: number) => { 
-    if (!ticket) return;
+  const handleEscalate = (currentUser: Supervisor) => {
+    if (!ticket || !employeeDetails) return;
+    let nextAssigneePSN: number | undefined;
+    let nextStatus: TicketStatus | undefined;
+
+    switch (currentUser.functionalRole) {
+      case 'IS':
+        nextAssigneePSN = employeeDetails.nsPSN;
+        nextStatus = 'Escalated to NS';
+        if (!nextAssigneePSN) { // If no NS, escalate to DH
+          nextAssigneePSN = employeeDetails.dhPSN;
+          nextStatus = 'Escalated to DH';
+        }
+        if (!nextAssigneePSN) { // If no DH, escalate to IC Head
+             const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
+             nextAssigneePSN = icHead?.psn;
+             nextStatus = 'Escalated to IC Head';
+        }
+        break;
+      case 'NS':
+        nextAssigneePSN = employeeDetails.dhPSN;
+        nextStatus = 'Escalated to DH';
+         if (!nextAssigneePSN) { // If no DH, escalate to IC Head
+             const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
+             nextAssigneePSN = icHead?.psn;
+             nextStatus = 'Escalated to IC Head';
+        }
+        break;
+      case 'DH':
+        const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
+        nextAssigneePSN = icHead?.psn;
+        nextStatus = 'Escalated to IC Head';
+        break;
+      default:
+        toast({title: "Escalation Error", description: "Cannot escalate further from this role.", variant: "destructive"});
+        return;
+    }
+
+    if (!nextAssigneePSN || !nextStatus) {
+      toast({title: "Escalation Error", description: "Next supervisor level not found.", variant: "destructive"});
+      return;
+    }
+
     const updatedTicket = {
         ...ticket,
-        status: 'Escalated' as TicketStatus,
-        escalatedToPSN: headHrPsn,
-        actionPerformed: `${ticket.actionPerformed || ''}\n---\n${new Date().toLocaleString()}: Escalated to Head HR (${headHrPsn}).`.trim(),
+        status: nextStatus,
+        currentAssigneePSN: nextAssigneePSN,
+        actionPerformed: `${ticket.actionPerformed || ''}\n---\n${new Date().toLocaleString()}: Escalated by ${currentUser.name} (${currentUser.psn}) to next level.`.trim(),
     };
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
     if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicket;
     setTicket(updatedTicket);
-    setNewStatus('Escalated');
-    toast({ title: "Ticket Escalated", description: `Ticket ${ticketId} has been escalated.` });
+    setNewStatus(nextStatus);
+    toast({ title: "Ticket Escalated", description: `Ticket ${ticketId} has been escalated to ${nextStatus.replace('Escalated to ', '')}.` });
   };
 
   const handleAddEmployeeFollowUp = () => {
@@ -115,9 +165,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
     };
 
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
-    if (ticketIndex > -1) {
-      mockTickets[ticketIndex] = updatedTicketData;
-    }
+    if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicketData;
     setTicket(updatedTicketData);
     setEmployeeFollowUp("");
     toast({ title: "Information Added", description: "Your follow-up has been added to the ticket." });
@@ -146,10 +194,15 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
               <div>
                 <h3 className="font-semibold text-lg mb-2">Employee Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <p><strong>PSN:</strong> {ticket.psn}</p>
-                  <p><strong>Name:</strong> {ticket.employeeName}</p>
-                  <p><strong>Project:</strong> {mockProjects.find(p => p.id === ticket.project)?.name || ticket.project}</p>
-                  <p><strong>Grade:</strong> {employee?.grade || 'N/A'}</p>
+                  <p><strong>PSN:</strong> {employeeDetails.psn}</p>
+                  <p><strong>Name:</strong> {employeeDetails.name}</p>
+                  <p><strong>Business Email:</strong> {employeeDetails.businessEmail || 'N/A'}</p>
+                  <p><strong>Project:</strong> {mockProjects.find(p => p.id === employeeDetails.project)?.name || employeeDetails.project}</p>
+                  <p><strong>Job Code:</strong> {jobCodeDetails?.code} ({jobCodeDetails?.description})</p>
+                  <p><strong>Grade:</strong> {employeeDetails.grade}</p>
+                  <p><strong>IS:</strong> {employeeDetails.isName} ({employeeDetails.isPSN})</p>
+                  <p><strong>NS:</strong> {employeeDetails.nsName} ({employeeDetails.nsPSN})</p>
+                  <p><strong>DH:</strong> {employeeDetails.dhName} ({employeeDetails.dhPSN})</p>
                 </div>
               </div>
               <hr/>
@@ -170,22 +223,19 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
               )}
               {ticket.dateOfResponse && <p className="text-sm text-muted-foreground"><strong>Last Response Date:</strong> {new Date(ticket.dateOfResponse).toLocaleString()}</p>}
              
-              {assignedHR && (
+              {currentAssignee && (
                 <div>
-                    <p className="text-sm text-muted-foreground"><strong>Assigned HR:</strong> {assignedHR.name} ({assignedHR.psn})</p>
+                    <p className="text-sm text-muted-foreground"><strong>Currently Assigned Supervisor:</strong> {currentAssignee.name} ({currentAssignee.psn}) - {currentAssignee.title}</p>
                 </div>
               )}
-               {escalatedToHR && (
-                <div>
-                    <p className="text-sm text-destructive font-semibold"><strong>Escalated To:</strong> {escalatedToHR.name} ({escalatedToHR.psn})</p>
-                </div>
-              )}
-
 
             </CardContent>
           </Card>
 
-          {(user.role === 'HR' || user.role === 'Head HR') && (
+          {(user.role === 'IS' || user.role === 'NS' || user.role === 'DH' || user.role === 'IC Head') && 
+           (user.psn === ticket.currentAssigneePSN || (user as Supervisor).functionalRole === 'IC Head' || ((user as Supervisor).functionalRole === 'DH' && employeeDetails?.dhPSN === user.psn && ticket.status.startsWith('Escalated to DH')) ) &&
+           !['Resolved', 'Closed'].includes(ticket.status) &&
+           (
             <>
               <TicketResolutionSuggestions ticketQuery={ticket.query} />
 
@@ -196,11 +246,11 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="hrResponse">Your Response / Action Taken</Label>
+                    <Label htmlFor="supervisorResponse">Your Response / Action Taken</Label>
                     <Textarea 
-                      id="hrResponse" 
-                      value={hrResponse}
-                      onChange={(e) => setHrResponse(e.target.value)}
+                      id="supervisorResponse" 
+                      value={supervisorResponse}
+                      onChange={(e) => setSupervisorResponse(e.target.value)}
                       placeholder="Enter your response or actions taken..." 
                       rows={4}
                     />
@@ -220,19 +270,12 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button onClick={handleHRUpdate}>
+                  <Button onClick={handleSupervisorUpdate}>
                     <Send className="mr-2 h-4 w-4" /> Update Ticket
                   </Button>
-                  {user.role === 'HR' && ticket.status !== 'Escalated' && (
-                     <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => {
-                        const headHRAccount = mockHRs.find(hr => hr.role === 'Head HR');
-                        if (headHRAccount) {
-                            handleEscalate(headHRAccount.psn);
-                        } else {
-                            toast({title: "Error", description: "Head HR account not found for escalation.", variant: "destructive"});
-                        }
-                     }}>
-                        <AlertTriangle className="mr-2 h-4 w-4"/> Escalate to Head HR
+                  { (user as Supervisor).functionalRole !== 'IC Head' && !ticket.status.startsWith('Escalated to IC Head') && (
+                     <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => handleEscalate(user as Supervisor)}>
+                        <ShieldAlert className="mr-2 h-4 w-4"/> Escalate
                     </Button>
                   )}
                 </CardFooter>
@@ -240,7 +283,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
             </>
           )}
 
-          {user.role === 'Employee' && ticket.status !== 'Resolved' && ticket.status !== 'Closed' && (
+          {user.role === 'Employee' && !['Resolved', 'Closed'].includes(ticket.status) && (
              <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="font-headline text-xl">Add Follow-up Information</CardTitle>

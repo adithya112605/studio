@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { AddSupervisorFormData, Supervisor } from '@/types';
-import { mockProjects, mockCities, mockSupervisors } from '@/data/mockData'; 
+import { mockProjects, mockCities, mockSupervisors } from '@/data/mockData';
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
@@ -54,7 +54,7 @@ export default function AddSupervisorForm() {
       ticketsResolved: 0,
       ticketsPending: 0,
     };
-    
+
     // In a real app, save to DB. For mock:
     mockSupervisors.push(newSupervisor);
     console.log("New Supervisor Data:", newSupervisor);
@@ -62,7 +62,7 @@ export default function AddSupervisorForm() {
     toast({ title: "Supervisor Added", description: `${newSupervisor.name} (${newSupervisor.psn}) has been added as ${newSupervisor.title}.` });
     router.push('/dashboard');
   };
-  
+
   const handleCityAccessSelection = (cityName: string) => {
     const currentCities = getValues("cityAccess") || [];
     const newCities = currentCities.includes(cityName)
@@ -123,7 +123,7 @@ export default function AddSupervisorForm() {
                 {errors.functionalRole && <p className="text-sm text-destructive">{errors.functionalRole.message}</p>}
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="branchProject-supervisor">Branch / Primary Project Affiliation (Optional)</Label>
             <Controller

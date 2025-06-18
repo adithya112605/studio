@@ -11,14 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { NewTicketFormData, TicketPriority, Ticket, Employee } from '@/types'; // Added Ticket, Employee
+import type { NewTicketFormData, TicketPriority, Ticket, Employee, TicketStatus } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { mockTickets, mockProjects } from '@/data/mockData'; // Import mockTickets for simulation
+import { mockTickets, mockProjects, mockSupervisors } from '@/data/mockData';
 import { Controller } from 'react-hook-form';
-
 
 const newTicketSchema = z.object({
   query: z.string().min(10, "Query must be at least 10 characters long."),
@@ -30,7 +29,6 @@ const newTicketSchema = z.object({
   path: ["followUpQuery"],
 });
 
-// Function to generate new Ticket IDs in the format #TKXXXXXXX
 const generateTicketId = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -57,29 +55,17 @@ export default function NewTicketForm() {
   const hasFollowUp = watch('hasFollowUp');
 
   const onSubmit: SubmitHandler<NewTicketFormData> = async (data) => {
-    if (!user || user.role !== 'Employee') { // Ensure user is an Employee
+    if (!user || user.role !== 'Employee') {
       toast({ title: "Error", description: "You must be logged in as an Employee to submit a ticket.", variant: "destructive" });
       return;
     }
-    const employeeUser = user as Employee; // Cast user to Employee
+    const employeeUser = user as Employee;
 
     setIsLoading(true);
-    // Simulate API call to create ticket
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const newTicketId = generateTicketId();
-    const employeeProject = employeeUser.project || mockProjects[0].id; // Fallback project
     
-    // Find HR for the project
-    const projectDetails = mockProjects.find(p => p.id === employeeProject);
-    let hrPsnAssigned: string | undefined = undefined;
-    if (projectDetails && projectDetails.assignedHRs.length > 0) {
-      hrPsnAssigned = projectDetails.assignedHRs[0]; // Assign first HR for simplicity
-    } else {
-      // Fallback to Head HR if project or specific HR not found
-      hrPsnAssigned = 'HR000000'; 
-    }
-
     const newTicket: Ticket = {
       id: newTicketId,
       psn: employeeUser.psn,
@@ -88,13 +74,21 @@ export default function NewTicketForm() {
       followUpQuery: data.hasFollowUp ? data.followUpQuery : undefined,
       priority: data.priority,
       dateOfQuery: new Date().toISOString(),
-      status: 'Open',
-      project: employeeProject,
-      hrPSNAssigned: hrPsnAssigned, // Assign HR based on project
+      status: 'Open' as TicketStatus, // Initial status
+      project: employeeUser.project,
+      currentAssigneePSN: employeeUser.isPSN, // Assign to IS initially
     };
     
-    mockTickets.push(newTicket); // Add to mock data for simulation
+    mockTickets.push(newTicket);
     console.log("New Ticket Data:", newTicket);
+    // TODO: Implement actual notification to IS
+    if (employeeUser.isPSN) {
+      const isSupervisor = mockSupervisors.find(s => s.psn === employeeUser.isPSN);
+      if (isSupervisor) {
+        console.log(`Notification: New ticket ${newTicketId} assigned to IS ${isSupervisor.name}`);
+        toast({ title: "IS Notified (Simulated)", description: `Supervisor ${isSupervisor.name} has been notified about your new ticket.`});
+      }
+    }
     
     setIsLoading(false);
     toast({ title: "Ticket Submitted!", description: `Your ticket ${newTicketId} has been successfully raised.` });
@@ -105,7 +99,7 @@ export default function NewTicketForm() {
     <Card className="w-full max-w-2xl mx-auto shadow-xl">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Raise a New Ticket</CardTitle>
-        <CardDescription>Describe your issue or request below. Our HR team will get back to you shortly.</CardDescription>
+        <CardDescription>Describe your issue or request below. Your Immediate Supervisor (IS) will be notified.</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-6">

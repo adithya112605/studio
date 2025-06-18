@@ -2,44 +2,58 @@
 "use client";
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Ticket, HR } from "@/types";
+import type { User, Ticket, Supervisor, Employee } from "@/types"; // Supervisor instead of HR
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { mockTickets } from "@/data/mockData";
+import { mockTickets, mockEmployees, mockProjects } from "@/data/mockData";
 import { FileText, ArrowLeft, Filter } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-// Removed: import { useAuth } from "@/contexts/AuthContext";
 
-// Duplicated from dashboard/page.tsx - consider moving to utils
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case 'Open': return 'destructive';
-    case 'In Progress': return 'default'; // primary
+    case 'In Progress': return 'default'; 
     case 'Pending': return 'outline'; 
     case 'Resolved': case 'Closed': return 'secondary';
-    case 'Escalated': return 'default'; 
+    case 'Escalated to NS': case 'Escalated to DH': case 'Escalated to IC Head': return 'default'; 
     default: return 'outline';
   }
 };
 
-export default function HrTicketsPage() {
-  // Removed top-level useAuth and user-specific data derivation
-
+// Renamed from HrTicketsPage to SupervisorTicketsPage
+export default function SupervisorTicketsPage() {
   return (
-    <ProtectedPage allowedRoles={['HR', 'Head HR']}>
+    <ProtectedPage allowedRoles={['IS', 'NS', 'DH', 'IC Head']}>
       {(currentUser: User) => {
-        // currentUser is guaranteed by ProtectedPage to be HR or Head HR
-        const currentHrUser = currentUser as HR;
-        const currentRelevantTickets = currentHrUser.role === 'Head HR' 
-            ? mockTickets 
-            : mockTickets.filter(ticket => currentHrUser.projectsHandled.some(p => p.id === ticket.project));
+        const currentSupervisorUser = currentUser as Supervisor;
+        let currentRelevantTickets: Ticket[] = [];
+
+        if (currentSupervisorUser.functionalRole === 'IC Head') {
+            currentRelevantTickets = mockTickets;
+        } else if (currentSupervisorUser.functionalRole === 'DH') {
+            const dhProjects = mockProjects.filter(p => currentSupervisorUser.cityAccess?.includes(p.city));
+            const dhProjectIds = dhProjects.map(p => p.id);
+            currentRelevantTickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
+        } else if (currentSupervisorUser.functionalRole === 'NS') {
+            currentRelevantTickets = mockTickets.filter(ticket => 
+                (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn) || 
+                ticket.currentAssigneePSN === currentSupervisorUser.psn ||
+                (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn)
+            );
+        } else if (currentSupervisorUser.functionalRole === 'IS') {
+             currentRelevantTickets = mockTickets.filter(ticket => 
+                (mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) ||
+                ticket.currentAssigneePSN === currentSupervisorUser.psn || // Tickets directly assigned
+                (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) // New tickets for their employees
+            );
+        }
         
         return (
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                <h1 className="font-headline text-3xl font-bold">Manage All Tickets</h1>
+                <h1 className="font-headline text-3xl font-bold">Manage All Tickets ({currentSupervisorUser.title})</h1>
                 <Button variant="outline" asChild>
                     <Link href="/reports"><Filter className="mr-2 h-4 w-4" /> Go to Reports & Filters</Link>
                 </Button>
@@ -66,25 +80,30 @@ export default function HrTicketsPage() {
                             <TableHead>Priority</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Date Raised</TableHead>
+                            <TableHead>Assigned To</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {currentRelevantTickets.map(ticket => (
-                            <TableRow key={ticket.id}>
-                            <TableCell className="font-medium">{ticket.id}</TableCell>
-                            <TableCell>{ticket.employeeName} ({ticket.psn})</TableCell>
-                            <TableCell>{ticket.query.substring(0, 50)}...</TableCell>
-                            <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
-                            <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
-                            <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                                <Button variant="outline" size="sm" asChild>
-                                <Link href={`/tickets/${ticket.id}`}>View / Manage</Link>
-                                </Button>
-                            </TableCell>
-                            </TableRow>
-                        ))}
+                        {currentRelevantTickets.map(ticket => {
+                            const assignee = mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
+                            return (
+                                <TableRow key={ticket.id}>
+                                <TableCell className="font-medium">{ticket.id}</TableCell>
+                                <TableCell>{ticket.employeeName} ({ticket.psn})</TableCell>
+                                <TableCell>{ticket.query.substring(0, 50)}...</TableCell>
+                                <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
+                                <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
+                                <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
+                                <TableCell>{assignee ? `${assignee.name} (${assignee.title})` : 'Unassigned'}</TableCell>
+                                <TableCell>
+                                    <Button variant="outline" size="sm" asChild>
+                                    <Link href={`/tickets/${ticket.id}`}>View / Manage</Link>
+                                    </Button>
+                                </TableCell>
+                                </TableRow>
+                            );
+                        })}
                         </TableBody>
                     </Table>
                     </CardContent>

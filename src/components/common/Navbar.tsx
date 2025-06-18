@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3 } from 'lucide-react'; 
+import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
-import type { User } from '@/types'; 
+import type { User, Supervisor } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
-import LTLogo from './LTLogo'; // Import the new LTLogo component
+import LTLogo from './LTLogo';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,8 +35,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    setIsOpen(false); // Close mobile menu if open
-    router.push('/'); // Redirect to homepage after logout
+    setIsOpen(false);
+    router.push('/');
   };
 
   const commonAuthenticatedNavItemsBase = [
@@ -47,23 +47,24 @@ const Navbar = () => {
   const employeeNavItems = [
     ...commonAuthenticatedNavItemsBase,
     { href: '/tickets/new', label: 'Create Ticket', icon: <Ticket className="w-4 h-4" /> },
-    { href: '/dashboard', label: 'My Tickets', icon: <FileText className="w-4 h-4" /> }, 
+    { href: '/employee/tickets', label: 'My Tickets', icon: <FileText className="w-4 h-4" /> },
     { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 
-  const hrNavItems = [
+  // Base for all supervisors
+  const supervisorBaseNavItems = [
     ...commonAuthenticatedNavItemsBase,
-    { href: '/admin/add-employee', label: 'Manage Employee', icon: <Users className="w-4 h-4" /> },
-    { href: '/dashboard', label: 'Ticket Management', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { href: '/supervisor/tickets', label: 'Ticket Management', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/reports', label: 'Reports', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
-  
-  const headHrNavItems = [
-    ...hrNavItems, 
-    { href: '/admin/add-hr', label: 'Manage HR', icon: <ShieldCheck className="w-4 h-4" /> },
+
+  // Specific to DH and IC Head
+  const adminManagementNavItems = [
+     { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="w-4 h-4" /> },
+     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserSquare2 className="w-4 h-4" /> },
   ];
 
 
@@ -82,36 +83,36 @@ const Navbar = () => {
         { href: '/', label: 'Home'},
         { href: '/dashboard', label: 'Dashboard'},
         { href: '/tickets/new', label: 'Create Ticket'},
+        { href: '/employee/tickets', label: 'My Tickets'},
       ];
-    } else if (user.role === 'HR') {
-      navItemsToDisplay = hrNavItems;
+    } else { // IS, NS, DH, IC Head
+      const supervisorUser = user as Supervisor;
+      navItemsToDisplay = [...supervisorBaseNavItems];
       desktopNavItemsToDisplay = [
         { href: '/', label: 'Home'},
         { href: '/dashboard', label: 'Dashboard'},
+        { href: '/supervisor/tickets', label: 'Tickets'},
         { href: '/reports', label: 'Reports'},
       ];
-    } else if (user.role === 'Head HR') {
-      navItemsToDisplay = headHrNavItems;
-      desktopNavItemsToDisplay = [
-        { href: '/', label: 'Home'},
-        { href: '/dashboard', label: 'Dashboard'},
-        { href: '/reports', label: 'Reports'},
-      ];
+      if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
+        navItemsToDisplay.push(...adminManagementNavItems);
+        desktopNavItemsToDisplay.push(...adminManagementNavItems.map(item => ({href: item.href, label: item.label.replace("Manage ", "")})));
+      }
     }
   }
 
 
   if (!isMounted) {
-    return ( 
+    return (
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-neutral-200 dark:bg-neutral-700 rounded-sm animate-pulse"></div> {/* Placeholder for logo */}
+            <div className="w-7 h-7 bg-neutral-200 dark:bg-neutral-700 rounded-sm animate-pulse"></div>
             <span className="font-bold font-headline text-xl">L&T Helpdesk</span>
           </Link>
           <div className="flex items-center space-x-2">
-             <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse"></div> 
-             <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse md:hidden"></div> 
+             <div className="w-10 h-10 bg-neutral-200 dark:bg-neutral-700 rounded-md animate-pulse"></div>
+             <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse md:hidden"></div>
           </div>
         </div>
       </header>
@@ -122,7 +123,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <LTLogo className="h-7 w-7 text-primary" /> {/* Using the new LTLogo component */}
+          <LTLogo className="h-7 w-7 text-primary" />
           <span className="font-bold font-headline text-xl">L&T Helpdesk</span>
         </Link>
 
@@ -198,7 +199,8 @@ const Navbar = () => {
 
 
 const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; logout: () => void; navItemsForDropdown: Array<{href:string; label:string; icon?:React.ReactNode}> }) => {
-  const mainDesktopLabels = ['Home', 'Dashboard', 'Create Ticket', 'Reports']; 
+  const mainDesktopLabels = ['Home', 'Dashboard', 'Create Ticket', 'My Tickets', 'Tickets', 'Reports', 'Employees', 'Supervisors'];
+  const supervisorUser = user as Supervisor;
 
   return (
     <DropdownMenu>
@@ -212,14 +214,12 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.psn.toString()} ({user.role}) 
+              {user.psn.toString()} ({user.role === 'Employee' ? 'Employee' : `${supervisorUser.title} - ${supervisorUser.functionalRole}`})
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {navItemsForDropdown.filter(item => !mainDesktopLabels.includes(item.label) && item.label !== 'Home' && item.label !== 'Dashboard' ).map(item => (
-          (item.label === 'Reports' && user.role === 'Employee') ? null : 
-          (item.label === 'Manage HR' && user.role !== 'Head HR') ? null : 
+        {navItemsForDropdown.filter(item => !mainDesktopLabels.includes(item.label) && !mainDesktopLabels.includes(item.label.replace("Manage ",""))).map(item => (
           <DropdownMenuItem key={item.href} asChild>
             <Link href={item.href} className="flex items-center">
               {item.icon}
@@ -227,18 +227,8 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
             </Link>
           </DropdownMenuItem>
         ))}
-        {/* Settings is usually always good in dropdown, ensure it's not duplicated if it's in navItemsForDropdown and also not a mainDesktopLabel */}
-        {!navItemsForDropdown.some(item => item.label === 'Settings' && !mainDesktopLabels.includes(item.label)) && (
-            <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                </Link>
-            </DropdownMenuItem>
-        )}
-        
-        {/* Logout specific for desktop dropdown menu, if not covered by main button */}
-        <DropdownMenuSeparator className="md:hidden" /> 
+
+        <DropdownMenuSeparator className="md:hidden" />
         <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive md:hidden">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
