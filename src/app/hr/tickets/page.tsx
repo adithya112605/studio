@@ -2,14 +2,17 @@
 "use client";
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Ticket, Supervisor, Employee } from "@/types"; // Supervisor instead of HR
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { User, Ticket, Supervisor, Employee } from "@/types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { mockTickets, mockEmployees, mockProjects } from "@/data/mockData";
-import { FileText, ArrowLeft, Filter } from "lucide-react";
+import { mockTickets, mockEmployees, mockProjects, mockSupervisors } from "@/data/mockData";
+import { FileText, ArrowLeft, Filter, Search, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useState, useMemo } from "react";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
@@ -22,97 +25,146 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
   }
 };
 
-// Renamed from HrTicketsPage to SupervisorTicketsPage
 export default function SupervisorTicketsPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Ticket['status'] | "all">("all");
+  const [priorityFilter, setPriorityFilter] = useState<Ticket['priority'] | "all">("all");
+
   return (
     <ProtectedPage allowedRoles={['IS', 'NS', 'DH', 'IC Head']}>
       {(currentUser: User) => {
         const currentSupervisorUser = currentUser as Supervisor;
-        let currentRelevantTickets: Ticket[] = [];
 
-        if (currentSupervisorUser.functionalRole === 'IC Head') {
-            currentRelevantTickets = mockTickets;
-        } else if (currentSupervisorUser.functionalRole === 'DH') {
-            const dhProjects = mockProjects.filter(p => currentSupervisorUser.cityAccess?.includes(p.city));
-            const dhProjectIds = dhProjects.map(p => p.id);
-            currentRelevantTickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
-        } else if (currentSupervisorUser.functionalRole === 'NS') {
-            currentRelevantTickets = mockTickets.filter(ticket => 
-                (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn) || 
-                ticket.currentAssigneePSN === currentSupervisorUser.psn ||
-                (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn)
-            );
-        } else if (currentSupervisorUser.functionalRole === 'IS') {
-             currentRelevantTickets = mockTickets.filter(ticket => 
-                (mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) ||
-                ticket.currentAssigneePSN === currentSupervisorUser.psn || // Tickets directly assigned
-                (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) // New tickets for their employees
-            );
-        }
+        const filteredTickets = useMemo(() => {
+            let tickets: Ticket[] = [];
+            if (currentSupervisorUser.functionalRole === 'IC Head') {
+                tickets = mockTickets;
+            } else if (currentSupervisorUser.functionalRole === 'DH') {
+                const dhProjects = mockProjects.filter(p => currentSupervisorUser.cityAccess?.includes(p.city));
+                const dhProjectIds = dhProjects.map(p => p.id);
+                tickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
+            } else if (currentSupervisorUser.functionalRole === 'NS') {
+                tickets = mockTickets.filter(ticket => 
+                    (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn) || 
+                    ticket.currentAssigneePSN === currentSupervisorUser.psn ||
+                    (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn)
+                );
+            } else if (currentSupervisorUser.functionalRole === 'IS') {
+                 tickets = mockTickets.filter(ticket => 
+                    (mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) ||
+                    ticket.currentAssigneePSN === currentSupervisorUser.psn || 
+                    (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn)
+                );
+            }
+            return tickets.filter(ticket => {
+                const searchMatch = ticket.query.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    ticket.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    ticket.psn.toString().includes(searchTerm);
+                const statusMatch = statusFilter === "all" || ticket.status === statusFilter;
+                const priorityMatch = priorityFilter === "all" || ticket.priority === priorityFilter;
+                return searchMatch && statusMatch && priorityMatch;
+            });
+        }, [currentSupervisorUser, searchTerm, statusFilter, priorityFilter]);
         
         return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                <h1 className="font-headline text-3xl font-bold">Manage All Tickets ({currentSupervisorUser.title})</h1>
-                <Button variant="outline" asChild>
-                    <Link href="/reports"><Filter className="mr-2 h-4 w-4" /> Go to Reports & Filters</Link>
-                </Button>
-                </div>
-                 <div className="mb-4">
+            <div className="space-y-6 py-6">
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                  <h1 className="font-headline text-2xl md:text-3xl font-bold">Manage Tickets ({currentSupervisorUser.title})</h1>
+                  <div className="flex gap-2">
                     <Button variant="outline" asChild>
                         <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4"/> Back to Dashboard</Link>
                     </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/reports"><Filter className="mr-2 h-4 w-4" /> Go to Reports</Link>
+                    </Button>
+                  </div>
                 </div>
 
-                {currentRelevantTickets.length > 0 ? (
                 <Card className="shadow-lg">
                     <CardHeader>
-                    <CardTitle>Ticket Queue</CardTitle>
+                        <CardTitle>Filter Tickets</CardTitle>
+                        <CardDescription>Search by keyword or filter by status/priority.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <Input 
+                            placeholder="Search by Ticket ID, PSN, Name, Query..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="md:col-span-1"
+                        />
+                        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as Ticket['status'] | "all")}>
+                            <SelectTrigger><SelectValue placeholder="Filter by Status" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                {['Open', 'In Progress', 'Pending', 'Resolved', 'Closed', 'Escalated to NS', 'Escalated to DH', 'Escalated to IC Head'].map(s => (
+                                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Ticket['priority'] | "all")}>
+                            <SelectTrigger><SelectValue placeholder="Filter by Priority" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Priorities</SelectItem>
+                                {['Low', 'Medium', 'High', 'Urgent'].map(p => (
+                                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+
+                {filteredTickets.length > 0 ? (
+                <Card className="shadow-lg">
+                    <CardHeader>
+                    <CardTitle>Ticket Queue ({filteredTickets.length})</CardTitle>
                     <CardDescription>A complete list of tickets relevant to your scope.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Ticket ID</TableHead>
-                            <TableHead>Employee</TableHead>
-                            <TableHead>Query (Summary)</TableHead>
-                            <TableHead>Priority</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Date Raised</TableHead>
-                            <TableHead>Assigned To</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {currentRelevantTickets.map(ticket => {
-                            const assignee = mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
-                            return (
-                                <TableRow key={ticket.id}>
-                                <TableCell className="font-medium">{ticket.id}</TableCell>
-                                <TableCell>{ticket.employeeName} ({ticket.psn})</TableCell>
-                                <TableCell>{ticket.query.substring(0, 50)}...</TableCell>
-                                <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
-                                <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
-                                <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
-                                <TableCell>{assignee ? `${assignee.name} (${assignee.title})` : 'Unassigned'}</TableCell>
-                                <TableCell>
-                                    <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/tickets/${ticket.id}`}>View / Manage</Link>
-                                    </Button>
-                                </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                        </TableBody>
-                    </Table>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead>Ticket ID</TableHead>
+                                <TableHead>Employee</TableHead>
+                                <TableHead>Query (Summary)</TableHead>
+                                <TableHead>Priority</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Date Raised</TableHead>
+                                <TableHead>Assigned To</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {filteredTickets.map(ticket => {
+                                const assignee = mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
+                                return (
+                                    <TableRow key={ticket.id}>
+                                    <TableCell className="font-medium">{ticket.id}</TableCell>
+                                    <TableCell>{ticket.employeeName} ({ticket.psn})</TableCell>
+                                    <TableCell>{ticket.query.substring(0, 40)}...</TableCell>
+                                    <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
+                                    <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
+                                    <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
+                                    <TableCell>{assignee ? `${assignee.name} (${assignee.title})` : 'Unassigned'}</TableCell>
+                                    <TableCell>
+                                        <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/tickets/${ticket.id}`}>View / Manage</Link>
+                                        </Button>
+                                    </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            </TableBody>
+                        </Table>
+                    </div>
                     </CardContent>
                 </Card>
                 ) : (
-                <Card className="text-center py-8 shadow-lg">
+                <Card className="text-center py-10 shadow-lg">
                     <CardContent>
                         <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No tickets found in your queue.</p>
+                        <p className="text-muted-foreground">No tickets found matching your criteria in your queue.</p>
                     </CardContent>
                 </Card>
                 )}
@@ -122,3 +174,5 @@ export default function SupervisorTicketsPage() {
     </ProtectedPage>
   );
 }
+
+    

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2 } from 'lucide-react';
+import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,16 +52,15 @@ const Navbar = () => {
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 
-  // Base for all supervisors
   const supervisorBaseNavItems = [
     ...commonAuthenticatedNavItemsBase,
-    { href: '/supervisor/tickets', label: 'Ticket Management', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { href: '/hr/tickets', label: 'Ticket Management', icon: <FileSpreadsheet className="w-4 h-4" /> }, // Path updated to /hr/tickets for supervisors
+    { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Eye className="w-4 h-4" /> },
     { href: '/reports', label: 'Reports', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 
-  // Specific to DH and IC Head
   const adminManagementNavItems = [
      { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="w-4 h-4" /> },
      { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserSquare2 className="w-4 h-4" /> },
@@ -85,17 +84,19 @@ const Navbar = () => {
         { href: '/tickets/new', label: 'Create Ticket'},
         { href: '/employee/tickets', label: 'My Tickets'},
       ];
-    } else { // IS, NS, DH, IC Head
+    } else { 
       const supervisorUser = user as Supervisor;
       navItemsToDisplay = [...supervisorBaseNavItems];
       desktopNavItemsToDisplay = [
         { href: '/', label: 'Home'},
         { href: '/dashboard', label: 'Dashboard'},
-        { href: '/supervisor/tickets', label: 'Tickets'},
+        { href: '/hr/tickets', label: 'Tickets'}, // Path updated to /hr/tickets for supervisors
+        { href: '/supervisor/employee-details', label: 'Employees'},
         { href: '/reports', label: 'Reports'},
       ];
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
         navItemsToDisplay.push(...adminManagementNavItems);
+        // Corrected mapping logic for desktop items
         desktopNavItemsToDisplay.push(...adminManagementNavItems.map(item => ({href: item.href, label: item.label.replace("Manage ", "")})));
       }
     }
@@ -199,7 +200,7 @@ const Navbar = () => {
 
 
 const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; logout: () => void; navItemsForDropdown: Array<{href:string; label:string; icon?:React.ReactNode}> }) => {
-  const mainDesktopLabels = ['Home', 'Dashboard', 'Create Ticket', 'My Tickets', 'Tickets', 'Reports', 'Employees', 'Supervisors'];
+  const mainDesktopLabels = ['Home', 'Dashboard', 'Create Ticket', 'My Tickets', 'Tickets', 'Reports', 'Employees', 'Supervisors', 'Ticket Management', 'Employee Details']; // Added more for comprehensive filtering
   const supervisorUser = user as Supervisor;
 
   return (
@@ -214,7 +215,7 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.psn.toString()} ({user.role === 'Employee' ? 'Employee' : `${supervisorUser.title} - ${supervisorUser.functionalRole}`})
+              {user.psn.toString()} ({user.role === 'Employee' ? 'Employee' : `${supervisorUser.title} (${supervisorUser.functionalRole})`})
             </p>
           </div>
         </DropdownMenuLabel>
@@ -239,3 +240,5 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown }: { user: User; l
 }
 
 export default Navbar;
+
+    

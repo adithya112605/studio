@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { mockTickets, mockEmployees, mockSupervisors, mockJobCodes, mockProjects } from "@/data/mockData";
-import { FileText, PlusCircle, Users, BarChart2, CheckCircle, UserSquare2, Eye } from "lucide-react";
+import { FileText, PlusCircle, Users, BarChart2, CheckCircle, UserSquare2, Eye, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
@@ -59,38 +59,40 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
             <CardDescription>Here's a list of tickets you've raised.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ticket ID</TableHead>
-                  <TableHead>Query (Summary)</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date Raised</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {userTickets.slice(0, 5).map(ticket => (
-                  <TableRow key={ticket.id}>
-                    <TableCell className="font-medium">{ticket.id}</TableCell>
-                    <TableCell>{ticket.query.substring(0, 50)}...</TableCell>
-                    <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
-                    <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
-                    <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/tickets/${ticket.id}`}>View</Link>
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ticket ID</TableHead>
+                    <TableHead>Query (Summary)</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date Raised</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {userTickets.slice(0, 5).map(ticket => (
+                    <TableRow key={ticket.id}>
+                      <TableCell className="font-medium">{ticket.id}</TableCell>
+                      <TableCell>{ticket.query.substring(0, 50)}...</TableCell>
+                      <TableCell><Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></TableCell>
+                      <TableCell><Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge></TableCell>
+                      <TableCell>{new Date(ticket.dateOfQuery).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/tickets/${ticket.id}`}>View</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
            {userTickets.length > 5 && (
             <CardFooter>
-                <Button variant="link" asChild><Link href="/employee/tickets">View All My Tickets</Link></Button>
+                <Button variant="link" asChild><Link href="/employee/tickets">View All My Tickets <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             </CardFooter>
            )}
         </Card>
@@ -122,8 +124,6 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
     relevantTickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
     managedEmployees = mockEmployees.filter(emp => emp.dhPSN === user.psn || (emp.project && dhProjectIds.includes(emp.project)));
   } else if (user.functionalRole === 'NS') {
-    // NS sees tickets of employees whose NS is them, or whose IS reports to them (complex, simplify for now)
-    // Also tickets escalated to them
     relevantTickets = mockTickets.filter(ticket => 
         (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === user.psn) || ticket.currentAssigneePSN === user.psn
     );
@@ -142,7 +142,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
     <div className="space-y-8">
       <h1 className="font-headline text-3xl font-bold">{user.title} Dashboard</h1>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Tickets</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -152,7 +152,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
             <p className="text-xs text-muted-foreground">Tickets requiring attention</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Resolved Today</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -162,7 +162,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
             <p className="text-xs text-muted-foreground">Tickets closed today</p>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -175,43 +175,43 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-         <Card>
-            <CardHeader> <CardTitle>Quick Actions</CardTitle> </CardHeader>
-            <CardContent className="space-y-2">
+         <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader> <CardTitle className="font-headline text-xl">Quick Actions</CardTitle> </CardHeader>
+            <CardContent className="space-y-3">
                 {(user.functionalRole === 'DH' || user.functionalRole === 'IC Head') && (
                   <>
-                    <Button className="w-full justify-start" variant="outline" asChild><Link href="/admin/add-employee"><PlusCircle className="mr-2 h-4 w-4" /> Add New Employee</Link></Button>
-                    <Button className="w-full justify-start" variant="outline" asChild><Link href="/admin/add-supervisor"><UserSquare2 className="mr-2 h-4 w-4" /> Add New Supervisor</Link></Button>
+                    <Button className="w-full justify-start text-left" variant="outline" asChild><Link href="/admin/add-employee"><PlusCircle className="mr-2 h-5 w-5" /> Add New Employee</Link></Button>
+                    <Button className="w-full justify-start text-left" variant="outline" asChild><Link href="/admin/add-supervisor"><UserSquare2 className="mr-2 h-5 w-5" /> Add New Supervisor</Link></Button>
                   </>
                 )}
-                <Button className="w-full justify-start" variant="outline" asChild><Link href="/reports"><BarChart2 className="mr-2 h-4 w-4" /> Generate Reports</Link></Button>
-                <Button className="w-full justify-start" variant="outline" asChild><Link href="/supervisor/employee-details"><Eye className="mr-2 h-4 w-4" /> View Employee Details</Link></Button>
+                <Button className="w-full justify-start text-left" variant="outline" asChild><Link href="/supervisor/employee-details"><Eye className="mr-2 h-5 w-5" /> View Employee Details</Link></Button>
+                <Button className="w-full justify-start text-left" variant="outline" asChild><Link href="/reports"><BarChart2 className="mr-2 h-5 w-5" /> Generate Reports</Link></Button>
             </CardContent>
          </Card>
-         <Card>
+         <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader>
-                <CardTitle>Recent High Priority Tickets</CardTitle>
+                <CardTitle className="font-headline text-xl">Recent High Priority Tickets</CardTitle>
                 <CardDescription>Top open tickets needing urgent attention.</CardDescription>
             </CardHeader>
             <CardContent>
                 {relevantTickets.filter(t => (t.priority === 'Urgent' || t.priority === 'High') && !['Resolved', 'Closed'].includes(t.status)).slice(0,3).map(ticket => (
-                    <div key={ticket.id} className="mb-3 pb-3 border-b last:border-b-0">
-                        <div className="flex justify-between items-start">
+                    <div key={ticket.id} className="mb-4 pb-4 border-b last:border-b-0 last:pb-0 last:mb-0">
+                        <div className="flex justify-between items-start mb-1">
                            <h4 className="font-semibold">{ticket.query.substring(0,40)}...</h4>
                            <Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">ID: {ticket.id} | Raised by: {ticket.employeeName} ({ticket.psn})</p>
-                        <Button variant="link" size="sm" className="p-0 h-auto mt-1" asChild>
+                        <Button variant="link" size="sm" className="p-0 h-auto mt-1 text-primary hover:underline" asChild>
                             <Link href={`/tickets/${ticket.id}`}>View Details</Link>
                         </Button>
                     </div>
                 ))}
                 {relevantTickets.filter(t => (t.priority === 'Urgent' || t.priority === 'High') && !['Resolved', 'Closed'].includes(t.status)).length === 0 && (
-                    <p className="text-sm text-muted-foreground">No high priority tickets currently open.</p>
+                    <p className="text-sm text-muted-foreground py-4 text-center">No high priority tickets currently open.</p>
                 )}
             </CardContent>
              <CardFooter>
-                <Button variant="outline" className="w-full" asChild><Link href="/supervisor/tickets">View All Tickets</Link></Button>
+                <Button variant="outline" className="w-full" asChild><Link href="/hr/tickets">View All Tickets <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             </CardFooter>
          </Card>
       </div>
@@ -223,7 +223,7 @@ export default function DashboardPage() {
   return (
     <ProtectedPage>
       {(user: User) => (
-        <div>
+        <div className="py-6">
           {user.role === 'Employee' && <EmployeeDashboard user={user as Employee} />}
           {(user.role === 'IS' || user.role === 'NS' || user.role === 'DH' || user.role === 'IC Head') && <SupervisorDashboard user={user as Supervisor} />}
         </div>
@@ -231,3 +231,5 @@ export default function DashboardPage() {
     </ProtectedPage>
   );
 }
+
+    

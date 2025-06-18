@@ -25,7 +25,8 @@ export default function SupervisorEmployeeDetailsPage() {
       {(currentUser: User) => {
         const currentSupervisorUser = currentUser as Supervisor;
 
-        const managedEmployees = useMemo(() => {
+        const managedEmployeesForFiltering = useMemo(() => {
+          // This list is for populating filter options based on the supervisor's actual scope
           let employees: Employee[] = [];
           if (currentSupervisorUser.functionalRole === 'IC Head') {
             employees = mockEmployees;
@@ -38,44 +39,48 @@ export default function SupervisorEmployeeDetailsPage() {
           } else if (currentSupervisorUser.functionalRole === 'IS') {
             employees = mockEmployees.filter(emp => emp.isPSN === currentSupervisorUser.psn);
           }
-
-          return employees.filter(emp => {
+          return employees;
+        }, [currentSupervisorUser]);
+        
+        const filteredAndSearchedEmployees = useMemo(() => {
+          return managedEmployeesForFiltering.filter(emp => {
             const nameMatch = emp.name.toLowerCase().includes(searchTerm.toLowerCase());
             const psnMatch = emp.psn.toString().includes(searchTerm);
+            const emailMatch = emp.businessEmail?.toLowerCase().includes(searchTerm.toLowerCase());
             const projectMatch = selectedProject === "all" || emp.project === selectedProject;
             const jobCodeMatch = selectedJobCode === "all" || emp.jobCodeId === selectedJobCode;
-            return (nameMatch || psnMatch) && projectMatch && jobCodeMatch;
+            return (nameMatch || psnMatch || !!emailMatch) && projectMatch && jobCodeMatch;
           });
-        }, [currentSupervisorUser, searchTerm, selectedProject, selectedJobCode]);
+        }, [managedEmployeesForFiltering, searchTerm, selectedProject, selectedJobCode]);
         
         const availableProjects = useMemo(() => {
-            const projectIds = new Set(managedEmployees.map(emp => emp.project));
+            const projectIds = new Set(managedEmployeesForFiltering.map(emp => emp.project));
             return mockProjects.filter(p => projectIds.has(p.id));
-        }, [managedEmployees]);
+        }, [managedEmployeesForFiltering]);
 
         const availableJobCodes = useMemo(() => {
-            const jobCodeIds = new Set(managedEmployees.map(emp => emp.jobCodeId));
+            const jobCodeIds = new Set(managedEmployeesForFiltering.map(emp => emp.jobCodeId));
             return mockJobCodes.filter(jc => jobCodeIds.has(jc.id));
-        }, [managedEmployees]);
+        }, [managedEmployeesForFiltering]);
 
 
         return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="font-headline text-3xl font-bold">View Employee Details</h1>
+            <div className="space-y-6 py-6">
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <h1 className="font-headline text-2xl md:text-3xl font-bold">View Employee Details</h1>
                      <Button variant="outline" asChild>
                         <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4"/> Back to Dashboard</Link>
                     </Button>
                 </div>
 
-                <Card>
+                <Card className="shadow-md">
                     <CardHeader>
                         <CardTitle>Filter Employees</CardTitle>
-                        <CardDescription>Search by name/PSN or filter by project/job code.</CardDescription>
+                        <CardDescription>Search by name/PSN/email or filter by project/job code.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <Input 
-                            placeholder="Search by Name or PSN..."
+                            placeholder="Search Name, PSN, Email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="md:col-span-1"
@@ -102,49 +107,51 @@ export default function SupervisorEmployeeDetailsPage() {
                 </Card>
 
 
-                {managedEmployees.length > 0 ? (
+                {filteredAndSearchedEmployees.length > 0 ? (
                 <Card className="shadow-lg">
                     <CardHeader>
-                    <CardTitle>Employee List</CardTitle>
-                    <CardDescription>Details of employees under your purview.</CardDescription>
+                    <CardTitle>Employee List ({filteredAndSearchedEmployees.length})</CardTitle>
+                    <CardDescription>Details of employees under your purview matching the criteria.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>PSN</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Project</TableHead>
-                            <TableHead>Job Code</TableHead>
-                            <TableHead>IS</TableHead>
-                            <TableHead>NS</TableHead>
-                            <TableHead>DH</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {managedEmployees.map(emp => {
-                            const project = mockProjects.find(p => p.id === emp.project);
-                            const jobCode = mockJobCodes.find(jc => jc.id === emp.jobCodeId);
-                            return (
-                                <TableRow key={emp.psn}>
-                                    <TableCell className="font-medium">{emp.psn}</TableCell>
-                                    <TableCell>{emp.name}</TableCell>
-                                    <TableCell>{emp.businessEmail || 'N/A'}</TableCell>
-                                    <TableCell>{project?.name || emp.project}</TableCell>
-                                    <TableCell>{jobCode?.code || 'N/A'}</TableCell>
-                                    <TableCell>{emp.isName || 'N/A'} ({emp.isPSN || 'N/A'})</TableCell>
-                                    <TableCell>{emp.nsName || 'N/A'} ({emp.nsPSN || 'N/A'})</TableCell>
-                                    <TableCell>{emp.dhName || 'N/A'} ({emp.dhPSN || 'N/A'})</TableCell>
-                                </TableRow>
-                            );
-                        })}
-                        </TableBody>
-                    </Table>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead>PSN</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead className="hidden md:table-cell">Email</TableHead>
+                                <TableHead>Project</TableHead>
+                                <TableHead className="hidden sm:table-cell">Job Code</TableHead>
+                                <TableHead className="hidden lg:table-cell">IS</TableHead>
+                                <TableHead className="hidden lg:table-cell">NS</TableHead>
+                                <TableHead className="hidden lg:table-cell">DH</TableHead>
+                            </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {filteredAndSearchedEmployees.map(emp => {
+                                const project = mockProjects.find(p => p.id === emp.project);
+                                const jobCode = mockJobCodes.find(jc => jc.id === emp.jobCodeId);
+                                return (
+                                    <TableRow key={emp.psn}>
+                                        <TableCell className="font-medium">{emp.psn}</TableCell>
+                                        <TableCell>{emp.name}</TableCell>
+                                        <TableCell className="hidden md:table-cell">{emp.businessEmail || 'N/A'}</TableCell>
+                                        <TableCell>{project?.name || emp.project}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{jobCode?.code || 'N/A'}</TableCell>
+                                        <TableCell className="hidden lg:table-cell">{emp.isName || 'N/A'} ({emp.isPSN || 'N/A'})</TableCell>
+                                        <TableCell className="hidden lg:table-cell">{emp.nsName || 'N/A'} ({emp.nsPSN || 'N/A'})</TableCell>
+                                        <TableCell className="hidden lg:table-cell">{emp.dhName || 'N/A'} ({emp.dhPSN || 'N/A'})</TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            </TableBody>
+                        </Table>
+                    </div>
                     </CardContent>
                 </Card>
                 ) : (
-                <Card className="text-center py-8 shadow-lg">
+                <Card className="text-center py-10 shadow-lg">
                     <CardContent>
                         <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">No employees found matching your criteria or under your direct supervision.</p>
@@ -158,3 +165,4 @@ export default function SupervisorEmployeeDetailsPage() {
   );
 }
 
+    
