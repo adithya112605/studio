@@ -4,7 +4,7 @@ export interface User {
   name: string;
   role: 'Employee' | 'IS' | 'NS' | 'DH' | 'IC Head';
   businessEmail?: string;
-  dateOfBirth?: string; // Added for My Profile and Employee details
+  dateOfBirth?: string; 
 }
 
 export interface JobCode {
@@ -44,7 +44,7 @@ export interface TicketAttachment {
   id: string;
   fileName: string;
   fileType: 'document' | 'image' | 'video' | 'audio' | 'link';
-  urlOrContent: string; // For links, this is the URL. For files, might be a data URI or backend link.
+  urlOrContent: string; 
   uploadedAt: string;
 }
 
@@ -61,7 +61,8 @@ export interface Ticket {
   status: TicketStatus;
   currentAssigneePSN?: number;
   project: string;
-  attachments?: TicketAttachment[]; // Added for attachments
+  attachments?: TicketAttachment[];
+  lastStatusUpdateDate: string; // Added for tracking when ticket entered current actionable state
 }
 
 export interface Project {
@@ -80,14 +81,13 @@ export interface NewTicketFormData {
   hasFollowUp: boolean;
   followUpQuery?: string;
   priority: TicketPriority;
-  // attachments would be handled separately via state before adding to ticket object
 }
 
 export interface AddEmployeeFormData {
   psn: number;
   name: string;
   businessEmail: string;
-  dateOfBirth?: Date; // Changed to Date for react-day-picker
+  dateOfBirth?: Date; 
   project: string;
   jobCodeId: string;
   grade: string;
@@ -100,7 +100,7 @@ export interface AddSupervisorFormData {
   psn: number;
   name: string;
   businessEmail: string;
-  dateOfBirth?: Date; // Changed to Date
+  dateOfBirth?: Date; 
   title: string;
   functionalRole: 'IS' | 'NS' | 'DH' | 'IC Head';
   branchProject?: string;

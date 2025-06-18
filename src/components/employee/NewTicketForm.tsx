@@ -73,14 +73,13 @@ export default function NewTicketForm() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
-      setAttachedFiles(prev => [...prev, ...newFiles]); // Allow multiple files
+      setAttachedFiles(prev => [...prev, ...newFiles]); 
       newFiles.forEach(file => {
         toast({
             title: "File Added (Mock)",
             description: `"${file.name}" is ready to be attached.`,
         });
       });
-      // Reset file input to allow selecting the same file again if removed and re-added
       if(fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -106,6 +105,7 @@ export default function NewTicketForm() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     const newTicketId = generateTicketId();
+    const currentDate = new Date().toISOString();
     
     const ticketAttachments: TicketAttachment[] = attachedFiles.map((file, index) => ({
         id: `${newTicketId}-att-${index}`,
@@ -113,8 +113,8 @@ export default function NewTicketForm() {
         fileType: file.type.startsWith('image/') ? 'image' : 
                     file.type.startsWith('video/') ? 'video' :
                     file.type.startsWith('audio/') ? 'audio' : 'document',
-        urlOrContent: `mock/upload/path/${file.name}`, // Placeholder
-        uploadedAt: new Date().toISOString(),
+        urlOrContent: `mock/upload/path/${file.name}`, 
+        uploadedAt: currentDate,
     }));
 
 
@@ -125,11 +125,12 @@ export default function NewTicketForm() {
       query: data.query,
       followUpQuery: data.hasFollowUp ? data.followUpQuery : undefined,
       priority: data.priority,
-      dateOfQuery: new Date().toISOString(),
+      dateOfQuery: currentDate,
       status: 'Open' as TicketStatus,
       project: employeeUser.project,
       currentAssigneePSN: employeeUser.isPSN,
       attachments: ticketAttachments,
+      lastStatusUpdateDate: currentDate, // Set initial status update date
     };
 
     mockTickets.push(newTicket);

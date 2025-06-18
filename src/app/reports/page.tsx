@@ -15,7 +15,7 @@ import React, { useState, useMemo } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from "@/data/mockData";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie } from 'recharts';
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer, PieChart as RechartsPieChart, Pie } from 'recharts'; // Renamed imports
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 
@@ -44,7 +44,9 @@ const ticketsByStatusChartConfig = {
   Pending: { label: "Pending", color: "hsl(var(--chart-3))" },
   Resolved: { label: "Resolved", color: "hsl(var(--chart-4))" },
   Closed: { label: "Closed", color: "hsl(var(--chart-5))" },
-  Escalated: { label: "Escalated", color: "hsl(var(--destructive))" },
+  EscalatedToNS: {label: "Esc. to NS", color: "hsl(var(--destructive))"},
+  EscalatedToDH: {label: "Esc. to DH", color: "hsl(var(--destructive))"},
+  EscalatedToICHead: {label: "Esc. to IC Head", color: "hsl(var(--destructive))"},
 } satisfies ChartConfig;
 
 const ticketsByPriorityChartConfig = {
@@ -77,7 +79,6 @@ export default function ReportsPage() {
       title: "Filters Applied (Mock)",
       description: "Report data preview and charts would be refreshed based on the selected filters. Actual filtering logic for charts is simplified for this demo.",
     });
-    // In a real app, you would refetch or re-filter data here and update charts
   };
 
   const handleClearFilters = () => {
@@ -90,7 +91,7 @@ export default function ReportsPage() {
 
   const handleDownloadReport = (currentUser: Supervisor, filtered: boolean) => {
      let reportScope = "their resolved/assigned tickets";
-     if (currentUser.functionalRole === 'DH') reportScope = "tickets for their assigned cities";
+     if (currentUser.functionalRole === 'DH') reportScope = "tickets for their assigned cities/department";
      if (currentUser.functionalRole === 'IC Head') reportScope = "all tickets across all cities";
 
      let filterDescription = "";
@@ -99,42 +100,49 @@ export default function ReportsPage() {
             .filter(([key, value]) => value !== 'all' && (key !== 'creationDate' || value !== initialFilterState.creationDate) && value !== '')
             .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${key === 'creationDate' ? new Date(value as Date).toLocaleDateString() : value}`)
             .join(', ');
-        filterDescription = applied ? ` (Filters: ${applied})` : " (No active filters)";
+        filterDescription = applied ? ` (Filters: ${applied})` : " (No active filters applied)";
      }
 
 
     toast({
       title: "Download Report Initiated (Mock)",
       description: `Report download as .xlsx for ${reportScope}${filterDescription} would start. The Excel file would notionally include relevant data and charts. Actual file generation is a backend feature.`,
+      duration: 5000,
     });
   };
   
   const getFilteredTicketsForCharts = (currentUser: Supervisor) => {
     let tickets: Ticket[] = [];
-    // Simplified scope for chart demonstration, does not use activeFilters from state for complexity reasons
+    
     if (currentUser.functionalRole === 'IC Head') {
         tickets = mockTickets;
     } else if (currentUser.functionalRole === 'DH') {
-        const dhProjects = mockProjects.filter(p => currentUser.cityAccess?.includes(p.city));
-        const dhProjectIds = dhProjects.map(p => p.id);
-        tickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
+        const dhManagedEmployeePSNs = mockEmployees.filter(e => e.dhPSN === currentUser.psn).map(e => e.psn);
+        tickets = mockTickets.filter(ticket => 
+            ticket.currentAssigneePSN === currentUser.psn ||
+            (ticket.status === 'Escalated to DH' && dhManagedEmployeePSNs.includes(ticket.psn)) ||
+            (currentUser.cityAccess?.some(city => mockProjects.find(p => p.id === ticket.project)?.city === city)) // Tickets from projects in their cities
+        );
     } else if (currentUser.functionalRole === 'NS') {
+        const nsManagedEmployeePSNs = mockEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn);
         tickets = mockTickets.filter(ticket =>
-            (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn) ||
-            ticket.currentAssigneePSN === currentUser.psn
+            ticket.currentAssigneePSN === currentUser.psn ||
+            (ticket.status === 'Escalated to NS' && nsManagedEmployeePSNs.includes(ticket.psn))
         );
     } else if (currentUser.functionalRole === 'IS') {
          tickets = mockTickets.filter(ticket =>
-            (mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn) ||
-            ticket.currentAssigneePSN === currentUser.psn
+            ticket.currentAssigneePSN === currentUser.psn ||
+            (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
         );
     }
     
-    // Example of applying one filter (status) for charts, can be expanded
-    if (activeFilters.status !== 'all') {
-        return tickets.filter(t => t.status === activeFilters.status);
-    }
-    return tickets;
+    // Apply activeFilters from state for chart data
+    return tickets.filter(ticket => {
+        const statusMatch = activeFilters.status === 'all' || ticket.status === activeFilters.status;
+        const priorityMatch = activeFilters.priority === 'all' || ticket.priority === activeFilters.priority;
+        // Add other filters like date, supervisor, employee, project if needed for chart filtering
+        return statusMatch && priorityMatch;
+    });
   };
 
 
@@ -142,14 +150,12 @@ export default function ReportsPage() {
     <ProtectedPage allowedRoles={['IS', 'NS', 'DH', 'IC Head']}>
      {(currentUser: User) => {
         const currentSupervisorUser = currentUser as Supervisor;
-        const canDownloadFullCityReport = currentSupervisorUser.functionalRole === 'DH';
-        const canDownloadAllReports = currentSupervisorUser.functionalRole === 'IC Head';
         
         const chartDataTickets = getFilteredTicketsForCharts(currentSupervisorUser);
 
         const ticketsByStatusData = Object.entries(
             chartDataTickets.reduce((acc, ticket) => {
-                const statusKey = ticket.status.replace(/\s+/g, '').replace('to', 'To'); // e.g. EscalatedToNS
+                const statusKey = ticket.status.replace(/\s+/g, '').replace(/to/g, 'To'); // e.g. EscalatedToNS
                 acc[statusKey] = (acc[statusKey] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>)
@@ -183,11 +189,11 @@ export default function ReportsPage() {
                                 {ticketsByStatusData.length > 0 ? (
                                 <ChartContainer config={ticketsByStatusChartConfig} className="w-full h-full">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
+                                        <RechartsPieChart>
                                             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                                            <Pie data={ticketsByStatusData} dataKey="tickets" nameKey="name" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}/>
-                                            <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-                                        </PieChart>
+                                            <Pie data={ticketsByStatusData} dataKey="tickets" nameKey="name" labelLine={false} label={({ name, percent }) => `${ticketsByStatusChartConfig[name as keyof typeof ticketsByStatusChartConfig]?.label || name}: ${(percent * 100).toFixed(0)}%`}/>
+                                            <ChartLegend content={<ChartLegendContent nameKey="name" formatter={(value) => ticketsByStatusChartConfig[value as keyof typeof ticketsByStatusChartConfig]?.label || value}/>} />
+                                        </RechartsPieChart>
                                     </ResponsiveContainer>
                                 </ChartContainer>
                                 ) : <p className="text-muted-foreground text-center pt-10">No data to display for current filters.</p>}
@@ -202,13 +208,18 @@ export default function ReportsPage() {
                                 {ticketsByPriorityData.length > 0 ? (
                                 <ChartContainer config={ticketsByPriorityChartConfig} className="w-full h-full">
                                      <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={ticketsByPriorityData} layout="vertical" margin={{left:10, right:30}}>
+                                        <RechartsBarChart data={ticketsByPriorityData} layout="vertical" margin={{left:10, right:30}}>
                                             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                                             <XAxis type="number" />
-                                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} strokeWidth={0} width={80} />
-                                            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
-                                            <Bar dataKey="tickets" radius={5} background={{ fillOpacity: 0.1, radius: 5 }} />
-                                        </BarChart>
+                                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} strokeWidth={0} width={80} 
+                                                   tickFormatter={(value) => ticketsByPriorityChartConfig[value as keyof typeof ticketsByPriorityChartConfig]?.label || value } />
+                                            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" nameKey="name" formatter={(value, name) => [(value), ticketsByPriorityChartConfig[name as keyof typeof ticketsByPriorityChartConfig]?.label || name]} />} />
+                                            <Bar dataKey="tickets" radius={5} background={{ fillOpacity: 0.1, radius: 5 }}>
+                                                {ticketsByPriorityData.map((entry, index) => (
+                                                    <div key={`cell-${index}`} style={{backgroundColor: entry.fill}} />
+                                                ))}
+                                            </Bar>
+                                        </RechartsBarChart>
                                     </ResponsiveContainer>
                                 </ChartContainer>
                                 ) : <p className="text-muted-foreground text-center pt-10">No data to display for current filters.</p>}
@@ -295,7 +306,7 @@ export default function ReportsPage() {
                                 <div className="space-y-1">
                                     <Label htmlFor="filter-supervisor" className="text-xs">Assigned Supervisor (PSN/Name)</Label>
                                     <Input id="filter-supervisor" placeholder="Enter Supervisor PSN or Name" value={activeFilters.supervisor} onChange={(e) => setActiveFilters(prev => ({...prev, supervisor: e.target.value}))}
-                                           disabled={!canDownloadFullCityReport && !canDownloadAllReports} />
+                                           disabled={!(currentSupervisorUser.functionalRole === 'DH' || currentSupervisorUser.functionalRole === 'IC Head')} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="filter-employee" className="text-xs">Employee (PSN/Name)</Label>
@@ -322,16 +333,16 @@ export default function ReportsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                         <Button className="w-full" onClick={() => handleDownloadReport(currentSupervisorUser, false)}
-                                disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || canDownloadFullCityReport || canDownloadAllReports)} >
+                                disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || currentSupervisorUser.functionalRole === 'DH' || currentSupervisorUser.functionalRole === 'IC Head')} >
                         <Download className="mr-2 h-4 w-4" />
                         Download Full Report (.xlsx)
                         {currentSupervisorUser.functionalRole === 'IS' && " (My Resolved/Assigned)"}
                         {currentSupervisorUser.functionalRole === 'NS' && " (My Resolved/Assigned)"}
-                        {canDownloadFullCityReport && !canDownloadAllReports && " (My City/Cities Scope)"}
-                        {canDownloadAllReports && " (All Tickets Scope)"}
+                        {currentSupervisorUser.functionalRole === 'DH' && " (My City/Dept Scope)"}
+                        {currentSupervisorUser.functionalRole === 'IC Head' && " (All Tickets Scope)"}
                         </Button>
                          <Button className="w-full" variant="outline" onClick={() => handleDownloadReport(currentSupervisorUser, true)}
-                                disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || canDownloadFullCityReport || canDownloadAllReports)} >
+                                disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || currentSupervisorUser.functionalRole === 'DH' || currentSupervisorUser.functionalRole === 'IC Head')} >
                         <Download className="mr-2 h-4 w-4" />
                         Download Filtered Report (.xlsx)
                         </Button>

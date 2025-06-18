@@ -14,7 +14,6 @@ function parseAndFormatDate(dateStr?: string): string | undefined {
       day = parts[1].padStart(2, '0');
       year = parts[2];
       
-      // Basic validation
       if (year && year.length === 4 && month && day && 
           parseInt(month, 10) > 0 && parseInt(month, 10) <= 12 &&
           parseInt(day, 10) > 0 && parseInt(day, 10) <= 31) {
@@ -177,7 +176,7 @@ mockEmployees.forEach(emp => {
 });
 
 let ticketCounter = 1;
-const generateTicketIdForMock = (): string => { // Renamed to avoid conflict if user has their own generateTicketId
+const generateTicketIdForMock = (): string => { 
   const paddedCounter = ticketCounter.toString().padStart(7, '0');
   ticketCounter++;
   return `#TK${paddedCounter}`;
@@ -189,6 +188,7 @@ export const mockTickets: Ticket[] = [
     query: 'Unable to access project documents on the shared drive. Receiving an access denied error for Chennai Metro UG-05 docs.',
     priority: 'High', dateOfQuery: '2024-05-01T10:00:00Z', status: 'Open' as TicketStatus,
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.nagarajanS)?.isPSN, project: 'P001',
+    lastStatusUpdateDate: '2024-05-01T10:00:00Z',
   },
   {
     id: generateTicketIdForMock(), psn: employeePSNs.priyaRavi, employeeName: 'Priya Ravichandran',
@@ -197,6 +197,7 @@ export const mockTickets: Ticket[] = [
     dateOfQuery: '2024-05-02T14:30:00Z', status: 'In Progress' as TicketStatus,
     actionPerformed: 'Forwarded to payroll department by IS. Awaiting update.', dateOfResponse: '2024-05-03T09:00:00Z',
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.priyaRavi)?.isPSN, project: 'P002',
+    lastStatusUpdateDate: '2024-05-03T09:00:00Z',
   },
   {
     id: generateTicketIdForMock(), psn: employeePSNs.mohanLal, employeeName: 'Mohan Lal',
@@ -204,6 +205,7 @@ export const mockTickets: Ticket[] = [
     priority: 'Medium', dateOfQuery: '2024-05-03T11:00:00Z', status: 'Pending' as TicketStatus,
     actionPerformed: 'IS Arvind Gupta acknowledged. Checking inventory for replacement.', dateOfResponse: '2024-05-03T15:00:00Z',
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.mohanLal)?.isPSN, project: 'P004',
+    lastStatusUpdateDate: '2024-05-03T15:00:00Z',
   },
    {
     id: generateTicketIdForMock(), psn: employeePSNs.deepakPatil, employeeName: 'Deepak Patil',
@@ -212,6 +214,7 @@ export const mockTickets: Ticket[] = [
     actionPerformed: 'IS Sunil Desai attempted basic troubleshooting. Issue persists. Escalated to NS Payal Rao for IT infra check.',
     dateOfResponse: '2024-05-04T14:00:00Z',
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.deepakPatil)?.nsPSN, project: 'P007',
+    lastStatusUpdateDate: '2024-05-04T14:00:00Z',
   },
   {
     id: generateTicketIdForMock(), psn: employeePSNs.anitaDas, employeeName: 'Anita Das',
@@ -219,6 +222,27 @@ export const mockTickets: Ticket[] = [
     dateOfQuery: '2024-05-05T16:00:00Z', status: 'Resolved' as TicketStatus,
     actionPerformed: 'IS Kavita Sen verified records and corrected leave balance. Employee confirmed.', dateOfResponse: '2024-05-06T10:00:00Z',
     currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.anitaDas)?.isPSN, project: 'P013',
+    lastStatusUpdateDate: '2024-05-06T10:00:00Z',
+  },
+  // Add a ticket that should be overdue for an IS
+  {
+    id: generateTicketIdForMock(), psn: employeePSNs.sureshK, employeeName: 'Suresh K',
+    query: 'Need access to specific training materials for CMRL P1 TBM UG01. Not found in portal.',
+    priority: 'Medium', dateOfQuery: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    status: 'Open' as TicketStatus,
+    currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.sureshK)?.isPSN, project: 'P003',
+    lastStatusUpdateDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  // Add a ticket that should be overdue for NS (escalated 2 days ago)
+   {
+    id: generateTicketIdForMock(), psn: employeePSNs.nagarajanS, employeeName: 'Nagarajan S',
+    query: 'Follow up: Still no access to project documents. This is blocking my work.',
+    priority: 'Urgent', dateOfQuery: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), 
+    status: 'Escalated to NS' as TicketStatus,
+    actionPerformed: 'IS escalated due to no resolution.',
+    dateOfResponse: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Escalated 2 days ago
+    currentAssigneePSN: mockEmployees.find(e=> e.psn === employeePSNs.nagarajanS)?.nsPSN, project: 'P001',
+    lastStatusUpdateDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
 

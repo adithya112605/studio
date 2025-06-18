@@ -40,20 +40,19 @@ export default function SupervisorTicketsPage() {
             if (currentSupervisorUser.functionalRole === 'IC Head') {
                 tickets = mockTickets;
             } else if (currentSupervisorUser.functionalRole === 'DH') {
-                const dhProjects = mockProjects.filter(p => currentSupervisorUser.cityAccess?.includes(p.city));
-                const dhProjectIds = dhProjects.map(p => p.id);
-                tickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
+                tickets = mockTickets.filter(ticket => 
+                    ticket.currentAssigneePSN === currentSupervisorUser.psn || // Directly assigned to DH
+                    (ticket.status === 'Escalated to DH' && mockEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentSupervisorUser.psn) // Escalated to DH for their employee
+                );
             } else if (currentSupervisorUser.functionalRole === 'NS') {
                 tickets = mockTickets.filter(ticket => 
-                    (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn) || 
-                    ticket.currentAssigneePSN === currentSupervisorUser.psn ||
-                    (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn)
+                    ticket.currentAssigneePSN === currentSupervisorUser.psn || // Directly assigned to NS
+                    (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentSupervisorUser.psn) // Escalated to NS for their employee
                 );
             } else if (currentSupervisorUser.functionalRole === 'IS') {
                  tickets = mockTickets.filter(ticket => 
-                    (mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) ||
-                    ticket.currentAssigneePSN === currentSupervisorUser.psn || 
-                    (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn)
+                    ticket.currentAssigneePSN === currentSupervisorUser.psn || // Directly assigned to IS (e.g. 'Open' tickets)
+                    (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentSupervisorUser.psn) // New tickets for their employees
                 );
             }
             return tickets.filter(ticket => {
@@ -174,5 +173,3 @@ export default function SupervisorTicketsPage() {
     </ProtectedPage>
   );
 }
-
-    
