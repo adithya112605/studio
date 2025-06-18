@@ -6,7 +6,7 @@ import AddSupervisorForm from "@/components/admin/AddSupervisorForm";
 
 export default function AddSupervisorPage() {
   return (
-    <ProtectedPage allowedRoles={['IC Head']}> 
+    <ProtectedPage allowedRoles={['DH', 'IC Head']}>
       <div className="py-8">
         <AddSupervisorForm />
       </div>
