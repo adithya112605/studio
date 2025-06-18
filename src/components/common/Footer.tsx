@@ -48,8 +48,8 @@ const Footer = () => {
               <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
               <li><Link href="/dashboard" className="hover:text-primary transition-colors">Employee Portal</Link></li>
               <li><Link href="/tickets/new" className="hover:text-primary transition-colors">Create Ticket</Link></li>
-              <li><Link href="/dashboard" className="hover:text-primary transition-colors">HR Dashboard</Link></li>
-              <li><Link href="/auth/signin?role=hr" className="hover:text-primary transition-colors">Admin Portal</Link></li>
+              <li><Link href="/dashboard" className="hover:text-primary transition-colors">Supervisor Dashboard</Link></li>
+              <li><Link href="/auth/signin?role=supervisor" className="hover:text-primary transition-colors">Admin Portal</Link></li>
             </ul>
           </div>
 
@@ -85,12 +85,12 @@ const Footer = () => {
         </div>
       </div>
       <div className="border-t border-slate-700">
-        <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
-          <p>&copy; {currentYear ? currentYear : new Date().getFullYear()} Larsen &amp; Toubro Limited. All rights reserved.</p>
-          <div className="flex space-x-4 mt-4 md:mt-0">
+        <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row md:justify-center items-center text-center md:gap-x-6 text-xs text-slate-400">
+          <p className="mb-2 md:mb-0">&copy; {currentYear ? currentYear : new Date().getFullYear()} Larsen &amp; Toubro Limited. All rights reserved.</p>
+          <div className="flex flex-wrap justify-center space-x-4">
             <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link>
-            <Link href="/auth/signin?role=hr" className="flex items-center space-x-1 hover:text-primary transition-colors">
+            <Link href="/auth/signin?role=supervisor" className="flex items-center space-x-1 hover:text-primary transition-colors">
               <Shield size={12} />
               <span>Admin</span>
             </Link>
@@ -102,4 +102,3 @@ const Footer = () => {
 };
 
 export default Footer;
-

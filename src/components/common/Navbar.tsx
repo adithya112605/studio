@@ -18,15 +18,22 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
 import LTLogo from './LTLogo';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const toggleMenu = () => {
@@ -68,36 +75,33 @@ const Navbar = () => {
 
 
   const unauthenticatedNavItems = [
-    { href: '/auth/signin', label: 'Sign In' }, // Icons will be added in mobile view
-    { href: '/auth/signup', label: 'Sign Up' }, // Icons will be added in mobile view
+    { href: '/auth/signin', label: 'Sign In' }, 
+    { href: '/auth/signup', label: 'Sign Up' }, 
   ];
 
-  let navItemsToDisplay = unauthenticatedNavItems; // For mobile menu
-  let desktopNavItemsToDisplay: Array<{href:string; label:string; icon?:React.ReactNode}> = []; // For centered desktop nav
+  let navItemsToDisplay = unauthenticatedNavItems; 
+  let desktopNavItemsToDisplay: Array<{href:string; label:string; icon?:React.ReactNode}> = []; 
 
   if (user) {
     if (user.role === 'Employee') {
       navItemsToDisplay = employeeNavItems;
       desktopNavItemsToDisplay = [
-        // { href: '/', label: 'Home'}, // Home is usually just logo
         { href: '/dashboard', label: 'Dashboard'},
         { href: '/tickets/new', label: 'Create Ticket'},
         { href: '/employee/tickets', label: 'My Tickets'},
       ];
     } else { 
       const supervisorUser = user as Supervisor;
-      navItemsToDisplay = [...supervisorBaseNavItems]; // Base for mobile
-      desktopNavItemsToDisplay = [ // For centered desktop nav
-        // { href: '/', label: 'Home'},
+      navItemsToDisplay = [...supervisorBaseNavItems]; 
+      desktopNavItemsToDisplay = [ 
         { href: '/dashboard', label: 'Dashboard'},
         { href: '/hr/tickets', label: 'Tickets'},
         { href: '/supervisor/employee-details', label: 'Employees'},
         { href: '/reports', label: 'Reports'},
       ];
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
-        navItemsToDisplay.push(...adminManagementNavItems); // Add to mobile
-        // Admin management links typically go into a user dropdown or a separate admin section,
-        // rather than cluttering the main centered nav. We'll keep them in the DropdownMenuUser.
+        navItemsToDisplay.push(...adminManagementNavItems); 
+        // Admin management links typically go into a user dropdown or a separate admin section
       }
     }
   }
@@ -122,8 +126,16 @@ const Navbar = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center">
+    <header className={cn(
+        "sticky top-0 z-50 w-full border-b transition-all duration-300",
+        isScrolled 
+          ? "border-border bg-background shadow-md" 
+          : "border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      )}>
+      <div className={cn(
+          "container flex max-w-screen-2xl items-center transition-all duration-300",
+          isScrolled ? "h-14" : "h-16"
+        )}>
 
         {/* Left Section: Logo & Title */}
         <Link href="/" className="flex items-center space-x-2 mr-auto md:mr-6 shrink-0">
@@ -142,8 +154,6 @@ const Navbar = () => {
           </nav>
         )}
         
-        {/* Right Section: Actions & Mobile Menu Toggle */}
-        {/* ml-auto pushes this section to the right of the centered nav or the logo if no centered nav */}
         <div className="flex items-center space-x-2 md:space-x-3 ml-auto">
           <ThemeToggle />
           {user ? (
@@ -152,7 +162,7 @@ const Navbar = () => {
                 <Button variant="ghost" size="icon"><Bell className="w-5 h-5"/></Button>
               </Link>
               <DropdownMenuUser user={user} logout={handleLogout} navItemsForDropdown={navItemsToDisplay} adminManagementNavItems={adminManagementNavItems} />
-              <Button variant="outline" size="sm" onClick={handleLogout} className="hidden lg:inline-flex"> {/* Show on larger screens */}
+              <Button variant="outline" size="sm" onClick={handleLogout} className="hidden lg:inline-flex">
                 <LogOut className="mr-2 h-4 w-4" /> Logout
               </Button>
              </div>
@@ -176,15 +186,15 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden fixed inset-x-0 top-16 z-40 h-[calc(100vh-4rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t border-border/40 animate-in slide-in-from-top-full duration-300">
+        <div className="md:hidden fixed inset-x-0 top-14 sm:top-16 z-40 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t border-border/40 animate-in slide-in-from-top-full duration-300">
           <nav className="flex flex-col space-y-2">
             {navItemsToDisplay.map((item) => {
               let iconToDisplay = item.icon ? React.cloneElement(item.icon, { className: "w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" }) : null;
-              if (!user) { // Special icons for Sign In/Sign Up when unauthenticated
+              if (!user) { 
                 if (item.href === '/auth/signin') iconToDisplay = <LogIn className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" />;
                 if (item.href === '/auth/signup') iconToDisplay = <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" />;
               }
-              if (!iconToDisplay && user) iconToDisplay = <div className="w-5 h-5 shrink-0"></div>; // Placeholder for spacing if authenticated item has no icon
+              if (!iconToDisplay && user) iconToDisplay = <div className="w-5 h-5 shrink-0"></div>; 
 
               return (
                 <Link
@@ -198,7 +208,7 @@ const Navbar = () => {
                 </Link>
               );
             })}
-            {user && ( // Logout button only if user is authenticated
+            {user && ( 
               <Button
                 variant="ghost"
                 onClick={handleLogout}
@@ -226,11 +236,9 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown, adminManagementNa
   const supervisorUser = user as Supervisor;
   const showAdminItems = supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head';
 
-  // Filter out items already visible on desktop, and non-admin items that are also in supervisorBaseNavItems
   const dropdownSpecificItems = navItemsForDropdown.filter(item => 
     !mainDesktopLabels.includes(item.label) && 
     !mainDesktopLabels.includes(item.label.replace("Manage ","")) &&
-    // Ensure that settings and notifications are included if not directly on bar
     (item.label === 'Settings' || item.label === 'Notifications') 
   );
 
@@ -238,11 +246,11 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown, adminManagementNa
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full"> {/* Slightly larger */}
-          <UserCircle2 className="h-7 w-7 text-muted-foreground" /> {/* Slightly smaller icon for better fit */}
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full"> 
+          <UserCircle2 className="h-7 w-7 text-muted-foreground" /> 
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-60" align="end" forceMount> {/* Wider dropdown */}
+      <DropdownMenuContent className="w-60" align="end" forceMount> 
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1 py-1">
             <p className="text-sm font-semibold leading-none">{user.name}</p>
@@ -256,7 +264,6 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown, adminManagementNa
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {/* Common items like Settings, Notifications if not on main bar for mobile */}
         {dropdownSpecificItems.map(item => (
           <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
             <Link href={item.href} className="flex items-center w-full">
@@ -266,7 +273,6 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown, adminManagementNa
           </DropdownMenuItem>
         ))}
         
-        {/* Admin Management Items for DH/IC Head */}
         {showAdminItems && adminManagementNavItems.length > 0 && <DropdownMenuSeparator />}
         {showAdminItems && adminManagementNavItems.map(item => (
              <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
@@ -288,5 +294,3 @@ const DropdownMenuUser = ({ user, logout, navItemsForDropdown, adminManagementNa
 }
 
 export default Navbar;
-
-    
