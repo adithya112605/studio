@@ -5,29 +5,37 @@ import type { Employee, Supervisor, Ticket, Project, City, JobCode, TicketStatus
 function parseAndFormatDate(dateStr?: string): string | undefined {
   if (!dateStr) return undefined;
   try {
-    const parts = dateStr.replace(/-/g, '/').split('/');
-    let month, day, year;
+    // Normalize separators to /
+    const normalizedDateStr = dateStr.replace(/-/g, '/');
+    const parts = normalizedDateStr.split('/');
     
-    // Common formats: MM/DD/YYYY or MM-DD-YYYY or DD-MM-YYYY
-    // Try to infer based on parts
+    let day, month, year;
+
+    // Common formats: MM/DD/YYYY or DD/MM/YYYY
     if (parts.length === 3) {
-        // Assuming MM/DD/YYYY if month part <= 12 and day part <=31
-        if (parseInt(parts[0], 10) <= 12 && parseInt(parts[1], 10) <= 31) {
+        const part0 = parseInt(parts[0], 10);
+        const part1 = parseInt(parts[1], 10);
+        const part2 = parseInt(parts[2], 10);
+
+        if (part0 > 0 && part0 <= 12 && part1 > 0 && part1 <= 31 && (parts[2]?.length === 4 || parts[2]?.length === 2)) { // Likely MM/DD/YYYY or MM/DD/YY
             month = parts[0].padStart(2, '0');
             day = parts[1].padStart(2, '0');
-            year = parts[2];
-        } 
-        // Assuming DD/MM/YYYY if day part <= 31 and month part <= 12
-        else if (parseInt(parts[0], 10) <= 31 && parseInt(parts[1], 10) <= 12) {
+            year = parts[2].length === 2 ? (part2 < 70 ? '20' + parts[2] : '19' + parts[2]) : parts[2];
+        } else if (part0 > 0 && part0 <= 31 && part1 > 0 && part1 <= 12 && (parts[2]?.length === 4 || parts[2]?.length === 2)) { // Likely DD/MM/YYYY or DD/MM/YY
             day = parts[0].padStart(2, '0');
             month = parts[1].padStart(2, '0');
-            year = parts[2];
+            year = parts[2].length === 2 ? (part2 < 70 ? '20' + parts[2] : '19' + parts[2]) : parts[2];
         }
 
-        if (year && year.length === 4 && month && day &&
+        if (year && month && day &&
+            parseInt(year, 10) > 1900 && parseInt(year, 10) <= new Date().getFullYear() && // Basic year sanity check
             parseInt(month, 10) > 0 && parseInt(month, 10) <= 12 &&
             parseInt(day, 10) > 0 && parseInt(day, 10) <= 31) {
-        return `${year}-${month}-${day}`;
+          // Final check for day validity in month (simple version)
+          const testDate = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+          if (testDate.getFullYear() === parseInt(year, 10) && testDate.getMonth() === (parseInt(month, 10) - 1) && testDate.getDate() === parseInt(day, 10)) {
+            return `${year}-${month}-${day}`;
+          }
         }
     }
   } catch (e) {
@@ -85,7 +93,7 @@ export const mockGrades: string[] = [
 export const mockJobCodes: JobCode[] = [
   { id: 'JC001', code: 'M1-A', description: 'Manager Grade 1A' },
   { id: 'JC002', code: 'GET', description: 'Graduate Engineer Trainee' },
-  { id: 'JC003', code: 'E1', description: 'Engineer Grade 1' },
+  { id: 'JC003', code: 'E1', description: 'Engineer Grade 1' }, // Changed from M1-A as it was a duplicate code
   { id: 'JC004', code: 'E2', description: 'Engineer Grade 2' },
   { id: 'JC005', code: 'S1', description: 'Supervisor Grade 1' },
   { id: 'JC006', code: 'TC2', description: 'Technician Grade 2' },
@@ -167,7 +175,7 @@ export const mockEmployees: Employee[] = [
     isPSN: supervisorPSNs.arvindGupta, nsPSN: supervisorPSNs.dhineshKathiravan, dhPSN: supervisorPSNs.dhineshKathiravan,
   },
   {
-    psn: employeePSNs.deepakPatil, name: 'Deepak Patil', role: 'Employee', grade: 'M1-B', jobCodeId: 'JC003', project: 'P007',
+    psn: employeePSNs.deepakPatil, name: 'Deepak Patil', role: 'Employee', grade: 'M1-B', jobCodeId: 'JC003', project: 'P007', // Grade was M3-C, changed to M1-B as JC003 is E1
     businessEmail: 'deepak.patil@lnt.co', dateOfBirth: formattedDOBs[4],
     isPSN: supervisorPSNs.sunilDesai, nsPSN: supervisorPSNs.payalRao, dhPSN: supervisorPSNs.payalRao,
   },
@@ -265,3 +273,5 @@ export const mockTickets: Ticket[] = [
 ];
 
 export const allMockUsers: User[] = [...mockEmployees, ...mockSupervisors];
+
+    
