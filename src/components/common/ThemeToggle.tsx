@@ -21,15 +21,18 @@ export function ThemeToggle() {
     setMounted(true)
   }, [])
 
-  // Render a placeholder or a simplified version until mounted
-  // This avoids rendering theme-dependent classes (dark:...) before client-side hydration is complete
   if (!mounted) {
+    // Render a placeholder with static styles that don't depend on the current theme
+    // This uses Tailwind's default neutral palette which is not overridden by theme variables in globals.css
     return (
-      <Button variant="outline" size="icon" aria-label="Toggle theme" disabled>
-        {/* Render a default icon or a simple placeholder */}
-        <Sun className="h-[1.2rem] w-[1.2rem]" />
-        <span className="sr-only">Toggle theme</span>
-      </Button>
+      <div 
+        className="h-10 w-10 rounded-md border border-neutral-300 bg-neutral-100 flex items-center justify-center" 
+        aria-label="Loading theme options" 
+        role="button" 
+        aria-disabled="true"
+      >
+        <Sun className="h-[1.2rem] w-[1.2rem] text-neutral-400" />
+      </div>
     )
   }
 
