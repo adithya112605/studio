@@ -4,14 +4,15 @@
 import ProtectedPage from "@/components/common/ProtectedPage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Filter, PlusCircle, User, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound } from "lucide-react";
+import { Download, Filter, PlusCircle, User, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar"; // Assuming you have Calendar component
-import React from "react";
-
+import { Calendar } from "@/components/ui/calendar";
+import React, { useState } from "react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { useToast } from "@/hooks/use-toast";
 
 const filterOptions = [
   { label: "Agent", value: "agent", icon: <User className="mr-2 h-4 w-4" /> },
@@ -28,12 +29,36 @@ const filterOptions = [
   { label: "Status", value: "status", icon: <CheckCircle className="mr-2 h-4 w-4" /> },
   { label: "Tag", value: "tag", icon: <Tag className="mr-2 h-4 w-4" /> },
   { label: "Team", value: "team", icon: <Users className="mr-2 h-4 w-4" /> },
-  { label: "Project", value: "project", icon: <Briefcase className="mr-2 h-4 w-4" /> }, // Added Project
+  { label: "Project", value: "project", icon: <Briefcase className="mr-2 h-4 w-4" /> },
 ];
-import { Briefcase } from "lucide-react"; // Import Briefcase
 
 export default function ReportsPage() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [openFilterPopover, setOpenFilterPopover] = useState(false);
+  const { toast } = useToast();
+
+  const handleSelectFilter = (value: string) => {
+    toast({
+      title: "Filter Selected",
+      description: `Selected filter: ${value}. Further configuration would appear here.`,
+    });
+    setOpenFilterPopover(false);
+    // In a real app, you'd add logic here to manage active filters
+  };
+
+  const handleApplyFilters = () => {
+    toast({
+      title: "Action Triggered",
+      description: "Filters would be applied and report data refreshed (Feature not implemented).",
+    });
+  };
+  
+  const handleDownloadReport = () => {
+    toast({
+      title: "Action Triggered",
+      description: "Report download as .xlsx would start (Feature not implemented).",
+    });
+  };
 
   return (
     <ProtectedPage allowedRoles={['HR', 'Head HR']}>
@@ -43,7 +68,6 @@ export default function ReportsPage() {
             <CardTitle className="font-headline text-2xl">Generate Reports</CardTitle>
             <CardDescription>
               Create and download reports based on ticket data. 
-              (This is a placeholder - full report generation and .xlsx download not implemented).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -53,7 +77,7 @@ export default function ReportsPage() {
                 <Filter className="h-5 w-5 text-primary" />
                 <h3 className="font-semibold text-lg">Filters</h3>
               </div>
-              <Popover>
+              <Popover open={openFilterPopover} onOpenChange={setOpenFilterPopover}>
                 <PopoverTrigger asChild>
                   <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Filter</Button>
                 </PopoverTrigger>
@@ -67,10 +91,7 @@ export default function ReportsPage() {
                                 <CommandItem
                                     key={option.value}
                                     value={option.value}
-                                    onSelect={(currentValue) => {
-                                        // Logic to add filter would go here
-                                        console.log("Selected filter:", currentValue);
-                                    }}
+                                    onSelect={() => handleSelectFilter(option.value)}
                                     className="flex items-center cursor-pointer"
                                 >
                                     {option.icon}
@@ -83,15 +104,13 @@ export default function ReportsPage() {
                 </PopoverContent>
               </Popover>
 
-              {/* Example Applied Filters (placeholders) */}
               <div className="space-y-3 mt-4 p-4 border rounded-md bg-muted/30">
-                <h4 className="text-sm font-medium text-muted-foreground">Applied Filters:</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">Applied Filters: (Example Placeholders)</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     
-                    {/* Status Filter */}
                     <div className="space-y-1">
                         <Label htmlFor="filter-status" className="text-xs">Status</Label>
-                        <Select disabled>
+                        <Select>
                             <SelectTrigger id="filter-status">
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
@@ -104,10 +123,9 @@ export default function ReportsPage() {
                         </Select>
                     </div>
 
-                    {/* Priority Filter */}
                      <div className="space-y-1">
                         <Label htmlFor="filter-priority" className="text-xs">Priority</Label>
-                        <Select disabled>
+                        <Select>
                             <SelectTrigger id="filter-priority">
                                 <SelectValue placeholder="Select priority" />
                             </SelectTrigger>
@@ -120,7 +138,6 @@ export default function ReportsPage() {
                         </Select>
                     </div>
                     
-                    {/* Creation Date Filter */}
                     <div className="space-y-1">
                         <Label htmlFor="filter-creation-date" className="text-xs">Creation Date</Label>
                          <Popover>
@@ -128,7 +145,6 @@ export default function ReportsPage() {
                                 <Button
                                 variant={"outline"}
                                 className="w-full justify-start text-left font-normal"
-                                disabled
                                 >
                                 <CalendarDays className="mr-2 h-4 w-4" />
                                 {date ? new Date(date).toLocaleDateString() : <span>Pick a date</span>}
@@ -140,25 +156,22 @@ export default function ReportsPage() {
                                 selected={date}
                                 onSelect={setDate}
                                 initialFocus
-                                disabled 
                                 />
                             </PopoverContent>
                         </Popover>
                     </div>
 
-                    {/* Agent Filter (HR) */}
                     <div className="space-y-1">
                         <Label htmlFor="filter-agent" className="text-xs">Agent (HR)</Label>
-                        <Input id="filter-agent" placeholder="Enter HR PSN or Name" disabled />
+                        <Input id="filter-agent" placeholder="Enter HR PSN or Name" />
                     </div>
-                     {/* Project Filter */}
                     <div className="space-y-1">
                         <Label htmlFor="filter-project" className="text-xs">Project ID/Name</Label>
-                        <Input id="filter-project" placeholder="Enter Project ID or Name" disabled />
+                        <Input id="filter-project" placeholder="Enter Project ID or Name" />
                     </div>
                 </div>
-                 <Button className="mt-4" size="sm" variant="secondary" disabled>
-                    Apply Filters (Not Active)
+                 <Button className="mt-4" size="sm" variant="secondary" onClick={handleApplyFilters}>
+                    Apply Filters
                 </Button>
               </div>
             </div>
@@ -173,8 +186,8 @@ export default function ReportsPage() {
                 </div>
             </div>
 
-            <Button className="w-full" disabled>
-              <Download className="mr-2 h-4 w-4" /> Download Report (.xlsx) (Not Active)
+            <Button className="w-full" onClick={handleDownloadReport}>
+              <Download className="mr-2 h-4 w-4" /> Download Report (.xlsx)
             </Button>
           </CardContent>
         </Card>
@@ -182,6 +195,3 @@ export default function ReportsPage() {
     </ProtectedPage>
   );
 }
-
-// Minimal Command components for Popover content (inline for brevity)
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";

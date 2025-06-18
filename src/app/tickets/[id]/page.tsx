@@ -1,8 +1,9 @@
+
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
 import type { User, Ticket, Employee, HR, TicketStatus } from "@/types";
-import { mockTickets, mockEmployees, mockHRs, mockProjects // Import mockProjects
+import { mockTickets, mockEmployees, mockHRs, mockProjects 
 } from "@/data/mockData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
   const [ticket, setTicket] = useState<Ticket | undefined>(mockTickets.find(t => t.id === ticketId));
   const [hrResponse, setHrResponse] = useState("");
   const [newStatus, setNewStatus] = useState<TicketStatus | undefined>(ticket?.status);
+  const [employeeFollowUp, setEmployeeFollowUp] = useState("");
   const { toast } = useToast();
   const router = useRouter();
 
@@ -57,36 +59,68 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
   const escalatedToHR = ticket.escalatedToPSN ? mockHRs.find(h => h.psn === ticket.escalatedToPSN) : null;
 
   const handleHRUpdate = () => {
-    if (!newStatus) {
-        toast({title: "Error", description: "Please select a new status.", variant: "destructive"});
+    if (!newStatus && !hrResponse) {
+        toast({title: "No Changes", description: "Please provide a response or select a new status.", variant: "default"});
         return;
     }
-    const updatedTicket = {
-      ...ticket,
-      status: newStatus,
-      actionPerformed: hrResponse ? (ticket.actionPerformed ? `${ticket.actionPerformed}\n---\n${new Date().toLocaleString()}:\n${hrResponse}` : `${new Date().toLocaleString()}:\n${hrResponse}`) : ticket.actionPerformed,
-      dateOfResponse: new Date().toISOString(),
-    };
-    const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
-    if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicket;
-    setTicket(updatedTicket);
-    setHrResponse("");
+    if (!ticket) return;
 
-    toast({title: "Ticket Updated", description: `Status changed to ${newStatus}. Response added.`});
+    const updatedTicketData = {
+      ...ticket,
+      status: newStatus || ticket.status,
+      actionPerformed: hrResponse 
+        ? `${ticket.actionPerformed || ''}\n---\nHR (${new Date().toLocaleString()}):\n${hrResponse}`.trim() 
+        : ticket.actionPerformed,
+      dateOfResponse: hrResponse || newStatus ? new Date().toISOString() : ticket.dateOfResponse,
+    };
+    
+    // Update mock data (client-side)
+    const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
+    if (ticketIndex > -1) {
+      mockTickets[ticketIndex] = updatedTicketData;
+    }
+    setTicket(updatedTicketData);
+    setHrResponse("");
+    if (newStatus) setNewStatus(newStatus); // Keep newStatus if it was set
+
+    toast({title: "Ticket Updated", description: `Status changed to ${updatedTicketData.status}. Response added.`});
   };
   
-  const handleEscalate = (headHrPsn: number) => { // headHrPsn changed to number
+  const handleEscalate = (headHrPsn: number) => { 
     if (!ticket) return;
     const updatedTicket = {
         ...ticket,
         status: 'Escalated' as TicketStatus,
         escalatedToPSN: headHrPsn,
-        actionPerformed: `${ticket.actionPerformed || ''}\n---\n${new Date().toLocaleString()}: Escalated to Head HR (${headHrPsn}).`,
+        actionPerformed: `${ticket.actionPerformed || ''}\n---\n${new Date().toLocaleString()}: Escalated to Head HR (${headHrPsn}).`.trim(),
     };
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
     if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicket;
     setTicket(updatedTicket);
+    setNewStatus('Escalated');
     toast({ title: "Ticket Escalated", description: `Ticket ${ticketId} has been escalated.` });
+  };
+
+  const handleAddEmployeeFollowUp = () => {
+    if (!employeeFollowUp.trim()) {
+      toast({ title: "No Information", description: "Please enter your follow-up information.", variant: "default" });
+      return;
+    }
+    if (!ticket) return;
+
+    const updatedTicketData = {
+      ...ticket,
+      followUpQuery: `${ticket.followUpQuery || ''}\n---\nEmployee (${new Date().toLocaleString()}):\n${employeeFollowUp}`.trim(),
+      actionPerformed: `${ticket.actionPerformed || ''}\n---\nEmployee Follow-up (${new Date().toLocaleString()}):\n${employeeFollowUp}`.trim(),
+    };
+
+    const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
+    if (ticketIndex > -1) {
+      mockTickets[ticketIndex] = updatedTicketData;
+    }
+    setTicket(updatedTicketData);
+    setEmployeeFollowUp("");
+    toast({ title: "Information Added", description: "Your follow-up has been added to the ticket." });
   };
 
 
@@ -122,8 +156,8 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
               <div>
                 <h3 className="font-semibold text-lg mb-2">Query Details</h3>
                 <p><strong>Priority:</strong> <Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></p>
-                <p className="mt-2 whitespace-pre-wrap"><strong>Query:</strong> {ticket.query}</p>
-                {ticket.followUpQuery && <p className="mt-2 whitespace-pre-wrap"><strong>Follow-up:</strong> {ticket.followUpQuery}</p>}
+                <p className="mt-2 whitespace-pre-wrap"><strong>Initial Query:</strong> {ticket.query}</p>
+                {ticket.followUpQuery && <p className="mt-2 whitespace-pre-wrap"><strong>Follow-ups:</strong> {ticket.followUpQuery}</p>}
               </div>
               
               {(ticket.actionPerformed || ticket.dateOfResponse) && (<hr/>)}
@@ -131,7 +165,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
               {ticket.actionPerformed && (
                 <div>
                     <h3 className="font-semibold text-lg mb-2">Actions Log / Responses</h3>
-                    <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded-md">{ticket.actionPerformed}</p>
+                    <pre className="text-sm whitespace-pre-wrap bg-muted p-3 rounded-md overflow-x-auto">{ticket.actionPerformed}</pre>
                 </div>
               )}
               {ticket.dateOfResponse && <p className="text-sm text-muted-foreground"><strong>Last Response Date:</strong> {new Date(ticket.dateOfResponse).toLocaleString()}</p>}
@@ -186,7 +220,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button onClick={handleHRUpdate} disabled={!newStatus && !hrResponse}>
+                  <Button onClick={handleHRUpdate}>
                     <Send className="mr-2 h-4 w-4" /> Update Ticket
                   </Button>
                   {user.role === 'HR' && ticket.status !== 'Escalated' && (
@@ -213,10 +247,15 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                    <CardDescription>If you have more details to add, please provide them here.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Textarea placeholder="Type additional information or a follow-up here..." rows={3}/>
+                    <Textarea 
+                      placeholder="Type additional information or a follow-up here..." 
+                      rows={3}
+                      value={employeeFollowUp}
+                      onChange={(e) => setEmployeeFollowUp(e.target.value)}
+                    />
                 </CardContent>
                 <CardFooter>
-                    <Button disabled><Edit3 className="mr-2 h-4 w-4" /> Add Information (Not Implemented)</Button>
+                    <Button onClick={handleAddEmployeeFollowUp}><Edit3 className="mr-2 h-4 w-4" /> Add Information</Button>
                 </CardFooter>
              </Card>
           )}

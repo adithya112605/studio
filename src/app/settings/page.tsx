@@ -11,8 +11,50 @@ import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { User as AuthUser } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+import React, { useState } from "react";
 
 export default function SettingsPage() {
+  const { toast } = useToast();
+  // Example state for switches - in a real app, this would come from context or backend
+  const [emailNotif, setEmailNotif] = useState(true);
+  const [inAppNotif, setInAppNotif] = useState(true);
+  const [twoFa, setTwoFa] = useState(false);
+  const [smsNotif, setSmsNotif] = useState(false);
+  const [digestEmails, setDigestEmails] = useState(false);
+  const [ticketRating, setTicketRating] = useState(false);
+  const [generalFeedback, setGeneralFeedback] = useState(false);
+
+
+  const handleGenericSave = (featureName: string) => {
+    toast({
+      title: "Settings Action",
+      description: `${featureName} preferences would be saved (Feature not implemented).`,
+    });
+  };
+  
+  const handlePasswordUpdate = () => {
+    toast({
+      title: "Security Action",
+      description: "Password update functionality is not yet implemented.",
+    });
+  };
+
+  const handleEditProfile = () => {
+     toast({
+      title: "Profile Action",
+      description: "Profile editing is not yet implemented.",
+    });
+  };
+  
+  const viewAuditTrail = () => {
+     toast({
+      title: "Admin Action",
+      description: "Viewing audit trail is not yet implemented.",
+    });
+  };
+
+
   return (
     <ProtectedPage>
      {(user: AuthUser) => ( 
@@ -27,30 +69,30 @@ export default function SettingsPage() {
                   <User className="w-6 h-6 text-primary" />
                   <CardTitle className="font-headline text-xl">Profile Information</CardTitle>
                 </div>
-                <CardDescription>View your profile details. (Editing is not implemented).</CardDescription>
+                <CardDescription>View your profile details.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                   <div className="space-y-1">
                       <Label htmlFor="psn-settings">PSN</Label>
-                      <Input id="psn-settings" value={user.psn.toString()} readOnly disabled />
+                      <Input id="psn-settings" value={user.psn.toString()} readOnly />
                   </div>
                   <div className="space-y-1">
                       <Label htmlFor="name-settings">Full Name</Label>
-                      <Input id="name-settings" value={user.name} readOnly disabled />
+                      <Input id="name-settings" value={user.name} readOnly />
                   </div>
                   <div className="space-y-1">
                       <Label htmlFor="role-settings">Role</Label>
-                      <Input id="role-settings" value={user.role} readOnly disabled />
+                      <Input id="role-settings" value={user.role} readOnly />
                   </div>
                   {user.project && (
                       <div className="space-y-1">
                           <Label htmlFor="project-settings">Current Project ID</Label>
-                          <Input id="project-settings" value={user.project} readOnly disabled />
+                          <Input id="project-settings" value={user.project} readOnly />
                       </div>
                   )}
               </CardContent>
               <CardFooter>
-                  <Button disabled variant="outline">Edit Profile (Not Active)</Button>
+                  <Button variant="outline" onClick={handleEditProfile}>Edit Profile</Button>
               </CardFooter>
             </Card>
 
@@ -66,17 +108,17 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-1">
                   <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" placeholder="••••••••" disabled />
+                  <Input id="current-password" type="password" placeholder="••••••••" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="new-password">New Password</Label>
-                  <Input id="new-password" type="password" placeholder="••••••••" disabled />
+                  <Input id="new-password" type="password" placeholder="••••••••" />
                 </div>
                  <div className="space-y-1">
                   <Label htmlFor="confirm-new-password">Confirm New Password</Label>
-                  <Input id="confirm-new-password" type="password" placeholder="••••••••" disabled />
+                  <Input id="confirm-new-password" type="password" placeholder="••••••••" />
                 </div>
-                 <Button disabled className="w-full">Update Password (Not Active)</Button>
+                 <Button className="w-full" onClick={handlePasswordUpdate}>Update Password</Button>
                 <div className="pt-2">
                     <p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p>
                     <ul className="text-xs text-muted-foreground list-disc list-inside">
@@ -93,7 +135,7 @@ export default function SettingsPage() {
                         Enhance your account security.
                         </span>
                     </Label>
-                    <Switch id="2fa-toggle" disabled />
+                    <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={setTwoFa} />
                 </div>
               </CardContent>
             </Card>
@@ -114,7 +156,7 @@ export default function SettingsPage() {
                   </div>
                    <div className="space-y-2 pt-2">
                     <Label htmlFor="font-select">Application Font</Label>
-                    <Select disabled>
+                    <Select>
                         <SelectTrigger id="font-select">
                             <SelectValue placeholder="Current (Lato/Merriweather)" />
                         </SelectTrigger>
@@ -127,7 +169,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="language-select">Default Language</Label>
-                    <Select disabled>
+                    <Select>
                         <SelectTrigger id="language-select">
                             <SelectValue placeholder="English (US)" />
                         </SelectTrigger>
@@ -141,7 +183,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="timezone-select">Timezone</Label>
-                    <Select disabled>
+                    <Select>
                         <SelectTrigger id="timezone-select">
                             <SelectValue placeholder="Asia/Kolkata (IST)" />
                         </SelectTrigger>
@@ -154,7 +196,7 @@ export default function SettingsPage() {
                   </div>
                    <div className="space-y-2">
                     <Label htmlFor="dateformat-select">Date Format</Label>
-                    <Select disabled>
+                    <Select>
                         <SelectTrigger id="dateformat-select">
                             <SelectValue placeholder="DD/MM/YYYY" />
                         </SelectTrigger>
@@ -183,32 +225,32 @@ export default function SettingsPage() {
                         <span>Email Notifications</span>
                          <span className="font-normal leading-snug text-muted-foreground text-xs">Receive updates via email.</span>
                     </Label>
-                    <Switch id="email-notif" defaultChecked disabled />
+                    <Switch id="email-notif" checked={emailNotif} onCheckedChange={setEmailNotif} />
                 </div>
                  <div className="flex items-center justify-between">
                     <Label htmlFor="sms-notif" className="flex flex-col space-y-1">
                         <span>SMS Notifications</span>
                          <span className="font-normal leading-snug text-muted-foreground text-xs">Receive critical updates via SMS.</span>
                     </Label>
-                    <Switch id="sms-notif" disabled />
+                    <Switch id="sms-notif" checked={smsNotif} onCheckedChange={setSmsNotif} />
                 </div>
                 <div className="flex items-center justify-between">
                     <Label htmlFor="inapp-notif" className="flex flex-col space-y-1">
                         <span>In-App Notifications</span>
                         <span className="font-normal leading-snug text-muted-foreground text-xs">Show notifications within the app.</span>
                     </Label>
-                    <Switch id="inapp-notif" defaultChecked disabled />
+                    <Switch id="inapp-notif" checked={inAppNotif} onCheckedChange={setInAppNotif} />
                 </div>
                 <div className="flex items-center justify-between">
                     <Label htmlFor="summary-emails" className="flex flex-col space-y-1">
                         <span>Digest Emails</span>
                         <span className="font-normal leading-snug text-muted-foreground text-xs">Receive daily/weekly ticket summaries.</span>
                     </Label>
-                    <Switch id="summary-emails" disabled />
+                    <Switch id="summary-emails" checked={digestEmails} onCheckedChange={setDigestEmails} />
                 </div>
                 <div className="space-y-2 pt-2">
                     <Label htmlFor="notif-freq">Notification Frequency</Label>
-                    <Select disabled>
+                    <Select>
                         <SelectTrigger id="notif-freq">
                             <SelectValue placeholder="Immediately" />
                         </SelectTrigger>
@@ -222,7 +264,7 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
                <CardFooter>
-                  <Button disabled className="w-full">Save Notification Preferences (Not Active)</Button>
+                  <Button className="w-full" onClick={() => handleGenericSave("Notification")}>Save Notification Preferences</Button>
               </CardFooter>
             </Card>
 
@@ -239,11 +281,11 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     <div className="space-y-1">
                         <Label htmlFor="ticket-id-format">Ticket ID Format</Label>
-                        <Input id="ticket-id-format" value="#TKXXXXXXX (Alphanumeric)" readOnly disabled />
+                        <Input id="ticket-id-format" value="#TKXXXXXXX (Alphanumeric)" readOnly />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="default-priority">Default Ticket Priority</Label>
-                        <Select disabled>
+                        <Select>
                             <SelectTrigger id="default-priority">
                                 <SelectValue placeholder="Medium" />
                             </SelectTrigger>
@@ -257,12 +299,12 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="auto-close-days">Auto-close Resolved Tickets (Days)</Label>
-                        <Input id="auto-close-days" type="number" placeholder="e.g., 7" disabled />
+                        <Input id="auto-close-days" type="number" placeholder="e.g., 7" />
                         <p className="text-xs text-muted-foreground">Days after resolution to auto-close a ticket.</p>
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button disabled className="w-full">Save Ticket Settings (Not Active)</Button>
+                    <Button className="w-full" onClick={() => handleGenericSave("Ticket System")}>Save Ticket Settings</Button>
                 </CardFooter>
                 </Card>
             )}
@@ -280,23 +322,23 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     <div className="space-y-1">
                         <Label htmlFor="system-email">System Email Address</Label>
-                        <Input id="system-email" type="email" placeholder="notifications@lnthelpdesk.com" disabled />
+                        <Input id="system-email" type="email" placeholder="notifications@lnthelpdesk.com" />
                         <p className="text-xs text-muted-foreground">Email for sending automated notifications.</p>
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="session-timeout">Session Timeout (Minutes)</Label>
-                        <Input id="session-timeout" type="number" placeholder="30" disabled />
+                        <Input id="session-timeout" type="number" placeholder="30" />
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="login-attempts">Login Attempt Lockout (Attempts)</Label>
-                        <Input id="login-attempts" type="number" placeholder="5" disabled />
+                        <Input id="login-attempts" type="number" placeholder="5" />
                     </div>
-                    <Button variant="outline" className="w-full" disabled>
-                        <Activity className="mr-2 h-4 w-4" /> View Audit Trail (Not Active)
+                    <Button variant="outline" className="w-full" onClick={viewAuditTrail}>
+                        <Activity className="mr-2 h-4 w-4" /> View Audit Trail
                     </Button>
                 </CardContent>
                 <CardFooter>
-                    <Button disabled className="w-full">Save Admin Settings (Not Active)</Button>
+                    <Button className="w-full" onClick={() => handleGenericSave("Administrative")}>Save Admin Settings</Button>
                 </CardFooter>
                 </Card>
             )}
@@ -316,11 +358,11 @@ export default function SettingsPage() {
                         <span>Enable Ticket Rating</span>
                          <span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to rate resolved tickets.</span>
                     </Label>
-                    <Switch id="ticket-rating" disabled />
+                    <Switch id="ticket-rating" checked={ticketRating} onCheckedChange={setTicketRating} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="rating-scale">Rating Scale</Label>
-                    <Select disabled>
+                    <Select>
                         <SelectTrigger id="rating-scale">
                             <SelectValue placeholder="1-5 Stars" />
                         </SelectTrigger>
@@ -336,11 +378,11 @@ export default function SettingsPage() {
                         <span>General System Feedback</span>
                          <span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to submit general feedback.</span>
                     </Label>
-                    <Switch id="general-feedback" disabled />
+                    <Switch id="general-feedback" checked={generalFeedback} onCheckedChange={setGeneralFeedback} />
                 </div>
               </CardContent>
                <CardFooter>
-                  <Button disabled className="w-full">Save Feedback Settings (Not Active)</Button>
+                  <Button className="w-full" onClick={() => handleGenericSave("Feedback")}>Save Feedback Settings</Button>
               </CardFooter>
             </Card>
 
