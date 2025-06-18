@@ -28,7 +28,7 @@ const addSupervisorSchema = z.object({
   dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(),
   title: z.string().min(3, "Title (e.g., Site Incharge, Cluster Head) is required"),
   functionalRole: z.enum(['IS', 'NS', 'DH', 'IC Head']),
-  branchProject: z.string().optional(),
+  branchProject: z.string().optional(), // Can be "NO_PROJECT_SELECTED" or a project ID
   cityAccess: z.array(z.string()).optional(),
   projectsHandledIds: z.array(z.string()).optional(),
 });
@@ -42,7 +42,8 @@ export default function AddSupervisorForm() {
     resolver: zodResolver(addSupervisorSchema),
     defaultValues: {
         cityAccess: [],
-        projectsHandledIds: []
+        projectsHandledIds: [],
+        branchProject: "NO_PROJECT_SELECTED" // Default to "None"
     }
   });
 
@@ -176,7 +177,7 @@ export default function AddSupervisorForm() {
                 name="branchProject"
                 control={control}
                 render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || "NO_PROJECT_SELECTED"}>
                     <SelectTrigger id="branchProject-supervisor"> <SelectValue placeholder="Select primary project if applicable" /> </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="NO_PROJECT_SELECTED">None</SelectItem>
@@ -219,3 +220,5 @@ export default function AddSupervisorForm() {
     </Card>
   );
 }
+
+    

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import TicketResolutionSuggestions from "@/components/hr/TicketResolutionSuggestions";
 import Link from "next/link";
 import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock, BadgePercent } from "lucide-react";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -30,6 +30,14 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
   }
 };
 
+interface OverdueInfoType {
+    isOverdue: boolean;
+    daysOpen: string;
+    deadlineDays: number;
+    nextEscalationLevel: string;
+}
+
+
 const TicketDetailPage = ({ params }: { params: { id: string } }) => {
   const ticketId = params.id;
   const { toast } = useToast();
@@ -37,59 +45,65 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
   const supervisorResponseFileRef = useRef<HTMLInputElement>(null);
   const employeeFollowUpFileRef = useRef<HTMLInputElement>(null);
 
-  const [ticket, setTicket] = useState<Ticket | undefined>(() => mockTickets.find(t => t.id === ticketId));
+  const [ticket, setTicket] = useState<Ticket | undefined>(undefined);
   const [employeeDetails, setEmployeeDetails] = useState<Employee | undefined>(undefined);
   const [jobCodeDetails, setJobCodeDetails] = useState<JobCode | undefined>(undefined);
   const [currentAssignee, setCurrentAssignee] = useState<Supervisor | undefined>(undefined);
+  const [displayOverdueInfo, setDisplayOverdueInfo] = useState<OverdueInfoType | null>(null);
+
 
   const [supervisorResponse, setSupervisorResponse] = useState("");
-  const [newStatus, setNewStatus] = useState<TicketStatus | undefined>(ticket?.status);
+  const [newStatus, setNewStatus] = useState<TicketStatus | undefined>(undefined);
   const [employeeFollowUp, setEmployeeFollowUp] = useState("");
   const [supervisorAttachments, setSupervisorAttachments] = useState<File[]>([]);
   const [employeeAttachments, setEmployeeAttachments] = useState<File[]>([]);
 
 
   useEffect(() => {
-    if (ticket) {
-      const emp = mockEmployees.find(e => e.psn === ticket.psn);
+    const currentTicket = mockTickets.find(t => t.id === ticketId);
+    setTicket(currentTicket);
+    if (currentTicket) {
+      const emp = mockEmployees.find(e => e.psn === currentTicket.psn);
       setEmployeeDetails(emp);
       if (emp) {
         setJobCodeDetails(mockJobCodes.find(jc => jc.id === emp.jobCodeId));
       }
-      setCurrentAssignee(mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN));
-      setNewStatus(ticket.status);
+      setCurrentAssignee(mockSupervisors.find(s => s.psn === currentTicket.currentAssigneePSN));
+      setNewStatus(currentTicket.status);
     }
-  }, [ticket]);
+  }, [ticketId]);
 
-  const overdueInfo = useMemo(() => {
-    if (!ticket || !ticket.lastStatusUpdateDate || !employeeDetails) return null;
+  useEffect(() => {
+    if (ticket && employeeDetails && ticket.lastStatusUpdateDate) {
+        const now = new Date();
+        const lastUpdate = new Date(ticket.lastStatusUpdateDate);
+        const diffTime = Math.abs(now.getTime() - lastUpdate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    const now = new Date();
-    const lastUpdate = new Date(ticket.lastStatusUpdateDate);
-    const diffTime = Math.abs(now.getTime() - lastUpdate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        let deadlineDays = Infinity;
+        let nextEscalationLevel = "";
 
-    let deadlineDays = Infinity;
-    let nextEscalationLevel = "";
-
-    if (ticket.status === 'Open' && ticket.currentAssigneePSN === employeeDetails.isPSN) {
-      deadlineDays = 2;
-      nextEscalationLevel = employeeDetails.nsPSN ? "NS" : (employeeDetails.dhPSN ? "DH" : "IC Head");
-    } else if (ticket.status === 'Escalated to NS' && ticket.currentAssigneePSN === employeeDetails.nsPSN) {
-      deadlineDays = 1;
-      nextEscalationLevel = employeeDetails.dhPSN ? "DH" : "IC Head";
-    } else if (ticket.status === 'Escalated to DH' && ticket.currentAssigneePSN === employeeDetails.dhPSN) {
-      deadlineDays = 1;
-      nextEscalationLevel = "IC Head";
+        if (ticket.status === 'Open' && ticket.currentAssigneePSN === employeeDetails.isPSN) {
+            deadlineDays = 2;
+            nextEscalationLevel = employeeDetails.nsPSN ? "NS" : (employeeDetails.dhPSN ? "DH" : "IC Head");
+        } else if (ticket.status === 'Escalated to NS' && ticket.currentAssigneePSN === employeeDetails.nsPSN) {
+            deadlineDays = 1;
+            nextEscalationLevel = employeeDetails.dhPSN ? "DH" : "IC Head";
+        } else if (ticket.status === 'Escalated to DH' && ticket.currentAssigneePSN === employeeDetails.dhPSN) {
+            deadlineDays = 1;
+            nextEscalationLevel = "IC Head";
+        }
+        
+        const isOverdue = diffDays > deadlineDays && deadlineDays !== Infinity;
+        setDisplayOverdueInfo({
+            isOverdue,
+            daysOpen: diffDays.toFixed(0),
+            deadlineDays,
+            nextEscalationLevel,
+        });
+    } else {
+        setDisplayOverdueInfo(null);
     }
-    
-    const isOverdue = diffDays > deadlineDays;
-    return {
-        isOverdue,
-        daysOpen: diffDays.toFixed(0),
-        deadlineDays,
-        nextEscalationLevel,
-    };
   }, [ticket, employeeDetails]);
 
 
@@ -134,10 +148,10 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
     });
   };
 
-  const processAttachments = (files: File[], ticketId: string): TicketAttachment[] => {
+  const processAttachments = (files: File[], ticketIdToProcess: string): TicketAttachment[] => {
     const currentDate = new Date().toISOString();
     return files.map((file, index) => ({
-        id: `${ticketId}-att-${Date.now()}-${index}`, 
+        id: `${ticketIdToProcess}-att-${Date.now()}-${index}`, 
         fileName: file.name,
         fileType: file.type.startsWith('image/') ? 'image' : 
                     file.type.startsWith('video/') ? 'video' :
@@ -166,14 +180,15 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
         : ticket.actionPerformed,
       dateOfResponse: supervisorResponse || newStatus || newTicketAttachments.length > 0 ? currentDate : ticket.dateOfResponse,
       attachments: [...(ticket.attachments || []), ...newTicketAttachments],
-      lastStatusUpdateDate: (newStatus && newStatus !== ticket.status) || supervisorResponse ? currentDate : ticket.lastStatusUpdateDate,
+      lastStatusUpdateDate: (newStatus && newStatus !== ticket.status) || supervisorResponse || newTicketAttachments.length > 0 ? currentDate : ticket.lastStatusUpdateDate,
     };
 
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
     if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicketData;
-    setTicket(updatedTicketData);
+    setTicket(updatedTicketData); // Refresh local state
     setSupervisorResponse("");
     setSupervisorAttachments([]);
+    // setNewStatus(updatedTicketData.status) // Reflect new status in select if changed by logic
 
     toast({title: "Ticket Updated", description: `Status changed to ${updatedTicketData.status}. Response and/or attachments added.`});
   };
@@ -184,7 +199,10 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
     let nextStatus: TicketStatus | undefined;
     const currentDate = new Date().toISOString();
 
-    switch (currentUser.functionalRole) {
+    let currentLevelRole = ticket.status.startsWith('Escalated to ') ? ticket.status.split(' ')[2] : (ticket.status === 'Open' ? 'IS' : currentUser.functionalRole);
+
+
+    switch (currentLevelRole) {
       case 'IS':
         nextAssigneePSN = employeeDetails.nsPSN;
         nextStatus = 'Escalated to NS';
@@ -192,7 +210,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
              nextAssigneePSN = employeeDetails.dhPSN;
              nextStatus = 'Escalated to DH';
         }
-        if (!nextAssigneePSN) {
+        if (!nextAssigneePSN) { // If no NS or DH, escalate to IC Head
              const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
              nextAssigneePSN = icHead?.psn;
              nextStatus = 'Escalated to IC Head';
@@ -201,7 +219,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
       case 'NS':
         nextAssigneePSN = employeeDetails.dhPSN;
         nextStatus = 'Escalated to DH';
-         if (!nextAssigneePSN) {
+         if (!nextAssigneePSN) { // If no DH, escalate to IC Head
              const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
              nextAssigneePSN = icHead?.psn;
              nextStatus = 'Escalated to IC Head';
@@ -213,7 +231,8 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
         nextStatus = 'Escalated to IC Head';
         break;
       default:
-        toast({title: "Escalation Error", description: "Cannot escalate further from this role.", variant: "destructive"});
+        // This case should ideally not be reached if button visibility is correct
+        toast({title: "Escalation Error", description: "Cannot escalate further from this role or current ticket status.", variant: "destructive"});
         return;
     }
 
@@ -227,7 +246,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
         status: nextStatus,
         currentAssigneePSN: nextAssigneePSN,
         actionPerformed: `${ticket.actionPerformed || ''}\n---\n${new Date(currentDate).toLocaleString()}: Escalated by ${currentUser.name} (${currentUser.psn}) to ${nextStatus.replace('Escalated to ', '')}.`.trim(),
-        lastStatusUpdateDate: currentDate,
+        lastStatusUpdateDate: currentDate, // Update timestamp on escalation
         dateOfResponse: currentDate,
     };
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
@@ -252,6 +271,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
       followUpQuery: employeeFollowUp.trim() ? `${ticket.followUpQuery || ''}\n---\nEmployee (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.followUpQuery,
       actionPerformed: employeeFollowUp.trim() ? `${ticket.actionPerformed || ''}\n---\nEmployee Follow-up (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.actionPerformed,
       attachments: [...(ticket.attachments || []), ...newTicketAttachments],
+      // Employee follow-up does not change lastStatusUpdateDate for supervisor SLA
     };
 
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
@@ -277,6 +297,25 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
         </div>
     )
   );
+  
+  const canEscalate = (currentUser: Supervisor, currentTicket: Ticket): boolean => {
+    if (!currentTicket || !employeeDetails) return false;
+    const status = currentTicket.status;
+    const assignee = currentTicket.currentAssigneePSN;
+
+    if (currentUser.functionalRole === 'IC Head' || status === 'Escalated to IC Head') return false;
+    if (status === 'Resolved' || status === 'Closed') return false;
+
+    // Ensure the current user is indeed the one assigned or matches the escalation level implied by status
+    if (assignee !== currentUser.psn) return false;
+
+
+    if (currentUser.functionalRole === 'IS' && (status === 'Open' || assignee === currentUser.psn)) return true;
+    if (currentUser.functionalRole === 'NS' && (status === 'Escalated to NS' || assignee === currentUser.psn)) return true;
+    if (currentUser.functionalRole === 'DH' && (status === 'Escalated to DH' || assignee === currentUser.psn)) return true;
+    
+    return false;
+  };
 
 
   return (
@@ -287,14 +326,14 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
 
-          {overdueInfo?.isOverdue && !['Resolved', 'Closed'].includes(ticket.status) && (
+          {displayOverdueInfo?.isOverdue && !['Resolved', 'Closed'].includes(ticket.status) && (
             <Alert variant="destructive" className="shadow-md">
               <Clock className="h-5 w-5" />
               <AlertTitle>Ticket Overdue!</AlertTitle>
               <AlertDescription>
-                This ticket has been open or in its current escalated state for {overdueInfo.daysOpen} day(s). 
-                The deadline was {overdueInfo.deadlineDays} day(s). 
-                It requires immediate attention. In a live system, this might be automatically escalated to {overdueInfo.nextEscalationLevel}.
+                This ticket has been open or in its current escalated state for {displayOverdueInfo.daysOpen} day(s). 
+                The deadline was {displayOverdueInfo.deadlineDays} day(s). 
+                It requires immediate attention. In a live system, this might be automatically escalated to {displayOverdueInfo.nextEscalationLevel}.
               </AlertDescription>
             </Alert>
           )}
@@ -416,7 +455,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                   <Button onClick={handleSupervisorUpdate}>
                     <Send className="mr-2 h-4 w-4" /> Update Ticket
                   </Button>
-                  { (user as Supervisor).functionalRole !== 'IC Head' && !ticket.status.startsWith('Escalated to IC Head') && (
+                  { canEscalate(user as Supervisor, ticket) && (
                      <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => handleEscalate(user as Supervisor)}>
                         <ShieldAlert className="mr-2 h-4 w-4"/> Escalate
                     </Button>
@@ -460,3 +499,5 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
 };
 
 export default TicketDetailPage;
+
+    
