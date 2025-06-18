@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2, HomeIcon } from 'lucide-react';
+import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2, HomeIcon, Zap, TrendingUp, Clock, Smile } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 
@@ -32,6 +32,33 @@ export default function HomePage() {
       title: "AI-Powered Suggestions",
       description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling.",
     },
+  ];
+
+  const stats = [
+    {
+      value: "24/7",
+      label: "Support Available",
+      color: "text-primary",
+      icon: <Zap className="w-8 h-8 mb-2" />
+    },
+    {
+      value: "98%",
+      label: "Resolution Rate",
+      color: "text-emerald-500",
+      icon: <TrendingUp className="w-8 h-8 mb-2" />
+    },
+    {
+      value: "<2h",
+      label: "Avg Response Time",
+      color: "text-violet-500",
+      icon: <Clock className="w-8 h-8 mb-2" />
+    },
+    {
+      value: "50K+",
+      label: "Happy Employees",
+      color: "text-amber-500",
+      icon: <Smile className="w-8 h-8 mb-2" />
+    }
   ];
 
   return (
@@ -69,6 +96,21 @@ export default function HomePage() {
               </div>
             </>
           )}
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="w-full py-12 lg:py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {stats.map((stat, index) => (
+              <div key={index} className="flex flex-col items-center p-4 rounded-lg hover:shadow-lg transition-shadow">
+                <div className={`${stat.color} mb-2`}>{stat.icon}</div>
+                <p className={`font-headline text-3xl md:text-4xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
