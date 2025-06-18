@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useEffect, type ReactNode } from 'react';
@@ -5,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import type { User } from '@/types';
+import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { Button } from '@/components/ui/button';
 
 interface ProtectedPageProps {
   children: ReactNode | ((user: User) => ReactNode);
@@ -14,21 +17,20 @@ interface ProtectedPageProps {
 const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast(); // Use the imported hook
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/auth/signin');
     } else if (!loading && user && allowedRoles && !allowedRoles.includes(user.role)) {
-      // User is logged in but doesn't have the required role
-      // Redirect to a general dashboard or an unauthorized page
-      toast({
+      toast({ // Use the destructured toast function
         title: "Access Denied",
         description: "You do not have permission to view this page.",
         variant: "destructive"
       });
-      router.replace('/dashboard'); 
+      router.replace('/dashboard');
     }
-  }, [user, loading, router, allowedRoles]);
+  }, [user, loading, router, allowedRoles, toast]); // Add toast to the dependency array
 
   if (loading || !user) {
     return (
@@ -39,7 +41,6 @@ const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, allowedRoles })
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-     // This case should ideally be caught by useEffect redirect, but as a fallback:
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
         <h1 className="text-2xl font-bold text-destructive mb-4">Access Denied</h1>
@@ -48,17 +49,8 @@ const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, allowedRoles })
       </div>
     );
   }
-  
+
   return typeof children === 'function' ? children(user) : children;
 };
-
-// This is just a helper, actual toast needs to be imported and used within a component with Toaster setup
-const toast = (options: {title: string, description: string, variant?: "destructive"}) => {
-  if (typeof window !== "undefined") {
-    // In a real app, you'd integrate with the actual useToast hook here
-    console.warn(`Toast: ${options.title} - ${options.description}`);
-  }
-};
-import { Button } from '@/components/ui/button'; // Ensure Button is imported
 
 export default ProtectedPage;
