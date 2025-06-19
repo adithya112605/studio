@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TicketResolutionSuggestions from "@/components/hr/TicketResolutionSuggestions";
 import Link from "next/link";
-import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock, BadgePercent } from "lucide-react";
+import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock, BadgePercent, Activity } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -185,11 +185,9 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
 
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
     if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicketData;
-    setTicket(updatedTicketData); // Refresh local state
+    setTicket(updatedTicketData); 
     setSupervisorResponse("");
     setSupervisorAttachments([]);
-    // setNewStatus(updatedTicketData.status) // Reflect new status in select if changed by logic
-
     toast({title: "Ticket Updated", description: `Status changed to ${updatedTicketData.status}. Response and/or attachments added.`});
   };
 
@@ -210,7 +208,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
              nextAssigneePSN = employeeDetails.dhPSN;
              nextStatus = 'Escalated to DH';
         }
-        if (!nextAssigneePSN) { // If no NS or DH, escalate to IC Head
+        if (!nextAssigneePSN) { 
              const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
              nextAssigneePSN = icHead?.psn;
              nextStatus = 'Escalated to IC Head';
@@ -219,7 +217,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
       case 'NS':
         nextAssigneePSN = employeeDetails.dhPSN;
         nextStatus = 'Escalated to DH';
-         if (!nextAssigneePSN) { // If no DH, escalate to IC Head
+         if (!nextAssigneePSN) { 
              const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
              nextAssigneePSN = icHead?.psn;
              nextStatus = 'Escalated to IC Head';
@@ -231,7 +229,6 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
         nextStatus = 'Escalated to IC Head';
         break;
       default:
-        // This case should ideally not be reached if button visibility is correct
         toast({title: "Escalation Error", description: "Cannot escalate further from this role or current ticket status.", variant: "destructive"});
         return;
     }
@@ -246,7 +243,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
         status: nextStatus,
         currentAssigneePSN: nextAssigneePSN,
         actionPerformed: `${ticket.actionPerformed || ''}\n---\n${new Date(currentDate).toLocaleString()}: Escalated by ${currentUser.name} (${currentUser.psn}) to ${nextStatus.replace('Escalated to ', '')}.`.trim(),
-        lastStatusUpdateDate: currentDate, // Update timestamp on escalation
+        lastStatusUpdateDate: currentDate, 
         dateOfResponse: currentDate,
     };
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
@@ -271,7 +268,6 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
       followUpQuery: employeeFollowUp.trim() ? `${ticket.followUpQuery || ''}\n---\nEmployee (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.followUpQuery,
       actionPerformed: employeeFollowUp.trim() ? `${ticket.actionPerformed || ''}\n---\nEmployee Follow-up (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.actionPerformed,
       attachments: [...(ticket.attachments || []), ...newTicketAttachments],
-      // Employee follow-up does not change lastStatusUpdateDate for supervisor SLA
     };
 
     const ticketIndex = mockTickets.findIndex(t => t.id === ticketId);
@@ -306,9 +302,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
     if (currentUser.functionalRole === 'IC Head' || status === 'Escalated to IC Head') return false;
     if (status === 'Resolved' || status === 'Closed') return false;
 
-    // Ensure the current user is indeed the one assigned or matches the escalation level implied by status
     if (assignee !== currentUser.psn) return false;
-
 
     if (currentUser.functionalRole === 'IS' && (status === 'Open' || assignee === currentUser.psn)) return true;
     if (currentUser.functionalRole === 'NS' && (status === 'Escalated to NS' || assignee === currentUser.psn)) return true;
@@ -357,8 +351,8 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                   <p><strong>Business Email:</strong> {employeeDetails.businessEmail || 'N/A'}</p>
                    <p><strong>Date of Birth:</strong> {employeeDetails.dateOfBirth ? new Date(employeeDetails.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
                   <p><strong>Project:</strong> {mockProjects.find(p => p.id === employeeDetails.project)?.name || employeeDetails.project}</p>
-                  <p><strong>Grade:</strong> <BadgePercent className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {employeeDetails.grade}</p>
-                  <p><strong>Job Code:</strong> {jobCodeDetails?.code} ({jobCodeDetails?.description})</p>
+                  <p><strong>Grade (Pay Level):</strong> <BadgePercent className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {employeeDetails.grade}</p>
+                  <p><strong>Job Code (Title):</strong> <Activity className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {jobCodeDetails?.code} - {jobCodeDetails?.description || 'N/A'}</p>
                   <p><strong>IS:</strong> {employeeDetails.isName} ({employeeDetails.isPSN})</p>
                   <p><strong>NS:</strong> {employeeDetails.nsName} ({employeeDetails.nsPSN})</p>
                   <p><strong>DH:</strong> {employeeDetails.dhName} ({employeeDetails.dhPSN})</p>
@@ -499,5 +493,3 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
 };
 
 export default TicketDetailPage;
-
-    

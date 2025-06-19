@@ -91,12 +91,12 @@ export default function MyProfilePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                             <div className="flex items-center">
                                 <BadgePercent className="w-5 h-5 mr-3 text-primary shrink-0" />
-                                <div><strong>Grade:</strong> {employeeUser.grade}</div>
+                                <div><strong>Grade (Pay Level):</strong> {employeeUser.grade}</div>
                             </div>
                             {jobCodeInfo && (
                                 <div className="flex items-center">
                                 <Activity className="w-5 h-5 mr-3 text-primary shrink-0" />
-                                <div><strong>Job Code:</strong> {jobCodeInfo.code} - {jobCodeInfo.description}</div>
+                                <div><strong>Job Code (Title):</strong> {jobCodeInfo.code} - {jobCodeInfo.description}</div>
                                 </div>
                             )}
                             {projectInfo && (

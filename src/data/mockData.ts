@@ -61,11 +61,13 @@ const userProvidedDatesRaw = [
   "12-07-1998", "01-03-1978", "02-11-1997", "09-06-1970", "07/18/1976", "04-02-1999", "09/27/1999", "06/19/1995",
   "11/16/1968", "11/23/2000", "08/17/1999", "09/16/1998", "01/18/1986", "01/20/1981", "12-10-1976", "07-06-1977",
   "04/20/1978", "07-01-1976", "02-05-1994", "02/14/1987", "08-02-1983", "04/20/1994", "02/25/1987", "09-03-1980",
-  // ... (truncated for brevity in this thought block, but will be full in CDATA)
-  // Add more dates to ensure we have at least 150 formatted DOBs
   "01/01/1990", "02/02/1991", "03/03/1992", "04/04/1993", "05/05/1994", "06/06/1995", "07/07/1996", "08/08/1997", "09/09/1998", "10/10/1999",
   "11/11/2000", "12/12/2001", "01/02/1980", "02/03/1981", "03/04/1982", "04/05/1983", "05/06/1984", "06/07/1985", "07/08/1986", "08/09/1987",
-  "09/10/1988", "10/11/1989", "11/12/1990", "12/01/1991"
+  "09/10/1988", "10/11/1989", "11/12/1990", "12/01/1991",
+  // Added more to ensure at least 150
+  "01/15/1970", "02/16/1971", "03/17/1972", "04/18/1973", "05/19/1974", "06/20/1975", "07/21/1976", "08/22/1977", "09/23/1978", "10/24/1979",
+  "11/25/1980", "12/26/1981", "01/27/1982", "02/28/1983", "03/01/1984", "04/02/1985", "05/03/1986", "06/04/1987", "07/05/1988", "08/06/1989",
+  "09/07/1990", "10/08/1991", "11/09/1992", "12/10/1993", "01/11/1994", "02/12/1995", "03/13/1996", "04/14/1997", "05/15/1998", "06/16/1999"
 ];
 
 const formattedDOBs = userProvidedDatesRaw.map(parseAndFormatDate).filter(d => d !== undefined) as string[];
@@ -129,19 +131,79 @@ const predefinedGrades = [
 ].sort();
 export const mockGrades: string[] = predefinedGrades;
 
+const userProvidedJobCodesRaw = [
+    "1100178-Planning manager", "1000122-Manager - P&M", "1000065-Head - Tendering, BU", "1000097-Executive Assistant / Business Unit Co-Ordinator",
+    "1100034-Project Manager", "1000027-Project Head, Large Project", "1100178-Planning manager", "1000070-Segment Head",
+    "1000006-Chief Engineering Manager", "1100028-Construction Manager", "P026-Project Management Group", "G007-Site Execution",
+    "P080-TENDERING", "1100023-IC Head - EHS", "G027-NATM", "D006-Drafting", "Q008-Quality Control & Assurance",
+    "3000006-Head Business Development", "3000130-Manager Quality Control & Assurance", "1000036-Head - Treasury",
+    "1000032-Head - F&A, Mega Project", "1100332-Accounts Manager", "7000089-IR Manager", "7000090-Stores Manager",
+    "1100185-Stores Executive", "1100045-Project Incharge - Accounts", "1100309-Stores Manager", "7000094-IR Executive",
+    "7000092-Stores Executive", "1100148-Accounts Executive", "7000100-Stores Supervisor", "1100317-Stores Supervisor",
+    "A021-Stores", "1100091-Accounts Supervisor", "1100235-Admin Executive", "A019-Admin & IR", "1100168-Admin supervisor",
+    "7000101-IR Supervisor", "1000103-Faa Supervisor", "1100283-Admin manager", "F001-Accounts",
+    "1100450-GRADUATE COMMERCIAL TRAINEE", "1100182-IR Assistant", "1100354-Accounts and Admin in charge",
+    "F008-Finance & Accounts", "A001-Administration", "A016-Industrial Relations", "1000117-Procurement Manager",
+    "1100288-Construction Manager -Civil", "1100082-Site Head - MEP", "1100547-Sr Engineering manager", "1100221-Execution - Mechanical",
+    "1000130-P&M Foreman", "7000164-Civil Manager", "1000124-P&M Engineer", "7000257-Civil Supervisor", "T020-Geo Technical",
+    "7000144-Fabrication Manager", "1100190-EHS Manager", "1100144-Engineer - Civil", "1100635-Engineering Manager (Civil)",
+    "7000293-Erection Technician", "1100371-Precast Manager", "1100519-EHS - Asst Manager", "1100539-Chief Architect",
+    "1000132-P&M Supervisor", "1000139-Formwork Chargehand", "7000279-Formwork Supervisor", "1000128-P&M Chargehand",
+    "1100293-Asst Engineering manager", "1100109-Engineering Manager", "1000023-Manager - Formwork", "7000135-Piping In-charge",
+    "G028-TBM-TUNNEL", "7000161-Planning Manager-Civil", "P037-Tunnelling", "1000045-Manager - Workmen", "1000095-Chargehand",
+    "7000265-Survey Technician", "7000222-Planning Engineer-Civil", "G019-Project Manager", "7000188-Electrical Engineer",
+    "7000132-Erection Manager", "G020-Precast", "1100116-Site engineer", "1100385-Engineer - Quality", "1000024-Manager - Interface",
+    "1100133-EHS Engineer", "1100566-Sr Design engineer", "1100113-Execution foreman", "1100169-Precast engineer",
+    "7000289-Erection Supervisor-Engineer (Mech) _Rp", "7000305-ISD Manager", "7000299-Fabrication Technician",
+    "7000117-EHS Supervisor", "1000092-Site Engineer - Mechanical", "1000117-Procurement Manager", "G029-Utility & Traffic",
+    "1100367-Planning - Quantity survey manager", "7000273-Electrical Technician", "1000066-Manager - Contracts",
+    "1100188-MEP - Asst manager", "1000089-Bim Engineer", "G004-Mechanical Engineering-Execution", "7000186-Civil Engineer",
+    "1000096-Fls Trainee", "1100125-DIPLOMA ENGINEER TRAINEE", "7000189-Erection Engineer", "1100482-Survey Assistants",
+    "1100153-Foreman - Formwork", "1100147-GRADUATE ENGINEER TRAINEE", "1100101-Quarry Manager", "1000110-Marine Operations",
+    "P080-TENDERING", "1000098-Procurement Engineer", "1000087-Graduate Engineer Trainee", "E001-Environment, Health & Safety",
+    "E003-Environment", "G001-Civil Engineering-Execution", "G003-Electrical Engineering-Execution", "G011-Billing",
+    "1000143-Cad Operations", "D002-Architecture", "1100141-Engineer - Planning", "G008-Surveying", "G013-Formwork",
+    "D004-Design & Engineering", "1000073-Head - Quality, Project Site", "7000166-Planning Engineer", "1100333-ISD Engineer",
+    "1000126-P&M - Asst Manager", "D038-BIM", "1100338-Assistant - QA/QC", "1000016-Head - EHS, Mega Project",
+    "P012-Instrumentation Engineering", "P008-Engineering & Execution", "P061-Engineering & System Interface", "Q010-Quality",
+    "H025-HRBP", "1000040-Head - Talent Acquisition", "H005-Human Resource Management", "1000028-Section Head, Large Project",
+    "1000119-Sbg Procurement Head", "1000099-Manager - Mines", "7000127-Fabrication In-charge",
+    "1100039-Site Planning Head", "1000094-Manager - Geo Technical", "M007-Corporate Centre", "1100096-Civil Foreman",
+    "AG01-Quarry, Mining & Crushing", "1100562-Quality Foreman", "7000306-ISD Executive", "7000308-ISD Supervisor",
+    "1100225-Rebar Manager", "1100275-EHS", "D042-Constn. Method Planning Cell", "P016-Operations", "1100162-Rebar engineer",
+    "7000190-Fabrication Engineer", "7000181-Planning Engineer-Mech", "1100104-MEP Manager", "1100161-Precast foreman",
+    "7000258-Erection Supervisor", "2000024-Design Engineer", "P042-Document Controller", "P003-Contract Management",
+    "1000120-Procurement", "1100534-EHS Foreman", "O001-Operation and Maintenance", "1100184-Senior Architect",
+    "1100475-Assistant - QC (Lab Assistants)", "P027-Project Planning", "AF01-Common P&M", "G023-Piling",
+    "Q005-Quality - Compliance / Audit", "Q001-Inspection", "1000127-Head - P&M", "1000046-Head - ISD, IC",
+    "D040-Geotech Design and Engineering", "1100525-Contracts Manager", "1100233-QA/QC Manager", "1100509-Quality Manager",
+    "3000108-Manager Digitalization", "T054-Chargehand", "X005-Supply Chain Management", "7000150-Electrical Manager",
+    "1100114-MEP Engineer", "1100146-Planning - Client billing manager", "7000290-Electrical Supervisor",
+    "1100127-DIPLOMA ENGINEER TRAINEE", "1100091-Document Controller", "1100538-Section In-Charge (Mech)",
+    "1100030-Head - Precast", "1100098-Planning Engineer", "1100290-Planning - Costing manager", "1100139-POST GRADUATE ENGINEER TRAINEE",
+    // Ensure enough unique codes by adding some more potentially different ones if the above list after unique filtering is too small
+    "JC001-Senior Engineer", "JC002-Lead Designer", "JC003-Safety Officer", "JC004-HR Executive", "JC005-Finance Analyst",
+    "JC006-IT Support Specialist", "JC007-Mechanical Foreman", "JC008-Electrical Supervisor", "JC009-Civil Drafter", "JC010-Quality Inspector"
+];
 
-export let mockJobCodes: JobCode[] = [];
-const uniqueJobCodeSet = new Set<string>();
-mockGrades.forEach(grade => uniqueJobCodeSet.add(`JC_${grade.replace(/[^a-zA-Z0-9]/g, '') || 'UNKNOWN'}`));
-mockJobCodes = Array.from(uniqueJobCodeSet).map((jcId, index) => {
-    const gradePart = jcId.substring(3);
-    const originalGrade = mockGrades.find(g => (g.replace(/[^a-zA-Z0-9]/g, '') || 'UNKNOWN') === gradePart) || `Grade ${index + 1}`;
-    return {
-        id: jcId,
-        code: originalGrade,
-        description: originalGrade
-    };
+const parsedJobCodes = new Map<string, { id: string, code: string, description: string }>();
+userProvidedJobCodesRaw.forEach(jcString => {
+    const parts = jcString.split('-', 1);
+    const code = parts[0].trim();
+    let description = jcString.substring(code.length).trim();
+    if (description.startsWith('-')) {
+        description = description.substring(1).trim();
+    }
+    if (!description) { // Handle cases where description might be missing after split
+        description = code; // Or some default like "N/A"
+    }
+
+    if (code && !parsedJobCodes.has(code)) {
+        parsedJobCodes.set(code, { id: code, code: code, description: description });
+    }
 });
+export const mockJobCodes: JobCode[] = Array.from(parsedJobCodes.values());
+
 
 const rawNewEmployeeData = [
     { psnStr: "10004703", name: "ANURAG P M", grade: "M2-B", department: "MAHSR C3 Section-1", email: "anuragpm@lntecc.com", is_name: "Alla, Gopinath", is_psn_str: "85817", ns_name: "Kumar Singh, Sunil", ns_psn_str: "82370", dh_name: "Kumar Agarwal, Manish", dh_psn_str: "20076337" },
@@ -197,8 +259,8 @@ const rawNewEmployeeData = [
 
 let tempEmployees: Employee[] = [];
 const supervisorMap = new Map<number, { name: string, psn: number, roles: Set<User['role']>, email?: string, department?: string, title?: string, citySet: Set<string>, projectSet: Set<string>, grade?: string }>();
-const IC_HEAD_PSN = 20192584; // Example PSN for IC Head
-const IC_HEAD_NAME = "Uma Srinivasan"; // Example Name for IC Head
+const IC_HEAD_PSN = 20192584; 
+const IC_HEAD_NAME = "Uma Srinivasan"; 
 
 supervisorMap.set(IC_HEAD_PSN, {
     name: IC_HEAD_NAME,
@@ -208,7 +270,7 @@ supervisorMap.set(IC_HEAD_PSN, {
     title: "IC Head",
     citySet: new Set<string>(mockCities.map(c => c.name)),
     projectSet: new Set<string>(mockProjects.map(p => p.id)),
-    grade: "M4-C" // Example grade for IC Head
+    grade: "M4-C" 
 });
 
 rawNewEmployeeData.forEach((empData, index) => {
@@ -216,9 +278,9 @@ rawNewEmployeeData.forEach((empData, index) => {
     if (isNaN(psn)) return;
 
     const supervisorPSNs = {
-        is: empData.is_psn_str && !isNaN(parseInt(empData.is_psn_str)) ? parseInt(empData.is_psn_str) : IC_HEAD_PSN, // Fallback to IC Head
-        ns: empData.ns_psn_str && !isNaN(parseInt(empData.ns_psn_str)) ? parseInt(empData.ns_psn_str) : IC_HEAD_PSN, // Fallback to IC Head
-        dh: empData.dh_psn_str && !isNaN(parseInt(empData.dh_psn_str)) ? parseInt(empData.dh_psn_str) : IC_HEAD_PSN, // Fallback to IC Head
+        is: empData.is_psn_str && !isNaN(parseInt(empData.is_psn_str)) ? parseInt(empData.is_psn_str) : IC_HEAD_PSN, 
+        ns: empData.ns_psn_str && !isNaN(parseInt(empData.ns_psn_str)) ? parseInt(empData.ns_psn_str) : IC_HEAD_PSN, 
+        dh: empData.dh_psn_str && !isNaN(parseInt(empData.dh_psn_str)) ? parseInt(empData.dh_psn_str) : IC_HEAD_PSN, 
     };
     const supervisorNames = {
         is: (empData.is_name && empData.is_name.toLowerCase() !== 'n/a' ? empData.is_name : IC_HEAD_NAME),
@@ -232,14 +294,14 @@ rawNewEmployeeData.forEach((empData, index) => {
         const cityMatch = mockCities.find(city => departmentProjectName?.toLowerCase().includes(city.name.toLowerCase()));
         projectObj = (cityMatch && cityMatch.projects.length > 0) ? cityMatch.projects[0] : (mockProjects.find(p => p.id === 'P001') || mockProjects[0]);
     }
-
+    
     const addOrUpdateSupervisor = (psnVal?: number, nameVal?: string, role?: 'IS' | 'NS' | 'DH', titleVal?: string, gradeVal?: string) => {
         if (psnVal && nameVal && role) {
             if (!supervisorMap.has(psnVal)) {
                 supervisorMap.set(psnVal, {
                     name: nameVal, psn: psnVal, roles: new Set(),
                     email: `${psnVal}@lntecc.com`, title: titleVal || role,
-                    citySet: new Set(), projectSet: new Set(), grade: gradeVal || mockGrades[0] // Assign a default grade if not provided
+                    citySet: new Set(), projectSet: new Set(), grade: gradeVal || mockGrades[0] 
                 });
             }
             const sup = supervisorMap.get(psnVal)!;
@@ -259,17 +321,17 @@ rawNewEmployeeData.forEach((empData, index) => {
     
     const originalEmpGrade = empData.grade;
     addOrUpdateSupervisor(supervisorPSNs.is, supervisorNames.is, 'IS', originalEmpGrade, originalEmpGrade);
-    addOrUpdateSupervisor(supervisorPSNs.ns, supervisorNames.ns, 'NS', originalEmpGrade, originalEmpGrade); // NS might not have a 'grade' title in same way
-    addOrUpdateSupervisor(supervisorPSNs.dh, supervisorNames.dh, 'DH', originalEmpGrade, originalEmpGrade); // DH might not have a 'grade' title in same way
+    addOrUpdateSupervisor(supervisorPSNs.ns, supervisorNames.ns, 'NS', originalEmpGrade, originalEmpGrade);
+    addOrUpdateSupervisor(supervisorPSNs.dh, supervisorNames.dh, 'DH', originalEmpGrade, originalEmpGrade);
     
     const empGrade = mockGrades.includes(originalEmpGrade) ? originalEmpGrade : mockGrades[index % mockGrades.length];
-    const jobCodeForGrade = mockJobCodes.find(jc => jc.code === empGrade) || mockJobCodes[0];
+    const assignedJobCode = mockJobCodes.length > 0 ? mockJobCodes[index % mockJobCodes.length] : { id: "UNKNOWN_JC", code: "UNKNOWN_JC", description: "Unknown Job Code" };
 
 
     tempEmployees.push({
         psn: psn, name: empData.name, role: 'Employee',
         grade: empGrade,
-        jobCodeId: jobCodeForGrade.id,
+        jobCodeId: assignedJobCode.id,
         project: projectObj.id,
         businessEmail: empData.email || `${psn}@lntecc.com`,
         dateOfBirth: getNextDOB(),
@@ -281,11 +343,10 @@ rawNewEmployeeData.forEach((empData, index) => {
 
 
 const basePsnForNewEmployees = 30000000;
-const maxTotalUsers = 150; // Target total user count
+const maxTotalUsers = 150; 
 const currentTempEmployeeCount = tempEmployees.length;
-const currentSupervisorCount = supervisorMap.size; // Count supervisors already identified
+const currentSupervisorCount = supervisorMap.size; 
 
-// Calculate how many *new* employees to generate to reach ~maxTotalUsers
 const slotsForNewGeneratedEmployees = Math.max(0, maxTotalUsers - currentTempEmployeeCount - currentSupervisorCount);
 const datesToUseForNewEmployees = Math.min(formattedDOBs.length - dobIndex, slotsForNewGeneratedEmployees);
 
@@ -293,14 +354,14 @@ const datesToUseForNewEmployees = Math.min(formattedDOBs.length - dobIndex, slot
 if (datesToUseForNewEmployees > 0 && mockGrades.length > 0 && mockJobCodes.length > 0 && mockProjects.length > 0) {
     for (let i = 0; i < datesToUseForNewEmployees; i++) {
         const newPsn = basePsnForNewEmployees + i;
-        const existingSupervisorArray = Array.from(supervisorMap.values()).filter(s => s.psn !== IC_HEAD_PSN); // Exclude IC head for direct assignment to new employees
+        const existingSupervisorArray = Array.from(supervisorMap.values()).filter(s => s.psn !== IC_HEAD_PSN); 
         
         const isSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[i % existingSupervisorArray.length] : supervisorMap.get(IC_HEAD_PSN);
         const nsSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[(i + 1) % existingSupervisorArray.length] : supervisorMap.get(IC_HEAD_PSN);
         const dhSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[(i + 2) % existingSupervisorArray.length] : supervisorMap.get(IC_HEAD_PSN);
         
         const assignedGrade = mockGrades[i % mockGrades.length];
-        const assignedJobCode = mockJobCodes.find(jc => jc.code === assignedGrade) || mockJobCodes[0];
+        const assignedJobCode = mockJobCodes[i % mockJobCodes.length];
 
         tempEmployees.push({
             psn: newPsn,
@@ -338,13 +399,12 @@ supervisorMap.forEach(supData => {
     
     const employeeRecord = rawNewEmployeeData.find(e => parseInt(e.psnStr, 10) === supData.psn);
     if(employeeRecord?.grade && (finalTitle === finalFunctionalRole || finalTitle === "Supervisor" || finalTitle === "IS" || finalTitle === "NS" || finalTitle === "DH")){
-        finalTitle = employeeRecord.grade; // Use their actual grade as title if it's more specific
+        finalTitle = employeeRecord.grade; 
     }
-
 
     finalSupervisors.push({
         psn: supData.psn, name: supData.name, role: finalRole, functionalRole: finalFunctionalRole,
-        title: finalTitle, businessEmail: supData.email, dateOfBirth: supData.psn === IC_HEAD_PSN ? getNextDOB() : (employeeRecord ? getNextDOB() : getNextDOB()), // Ensure all supervisors get a DOB
+        title: finalTitle, businessEmail: supData.email, dateOfBirth: supData.psn === IC_HEAD_PSN ? getNextDOB() : (employeeRecord ? getNextDOB() : getNextDOB()), 
         cityAccess: Array.from(supData.citySet),
         branchProject: Array.from(supData.projectSet)[0] || (mockProjects.length > 0 ? mockProjects[0].id : undefined),
         projectsHandledIds: Array.from(supData.projectSet),
@@ -374,7 +434,7 @@ const generateTicketIdForMock = (): string => {
 
 export let mockTickets: Ticket[] = [];
 if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
-    const ticketsToGenerate = Math.min(mockEmployees.length * 2, 100); // Limit to 100 tickets for performance
+    const ticketsToGenerate = Math.min(mockEmployees.length * 2, 100); 
     for (let i = 0; i < ticketsToGenerate; i++) {
         const employee = mockEmployees[i % mockEmployees.length];
         if (!employee || !employee.project) continue;
@@ -389,18 +449,16 @@ if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
         
         const currentStatus = statusOptions[i % statusOptions.length];
         
-        let currentAssigneePSN = employee.isPSN; // Default to IS
+        let currentAssigneePSN = employee.isPSN; 
         if (currentStatus === 'Escalated to NS' && employee.nsPSN) currentAssigneePSN = employee.nsPSN;
         else if (currentStatus === 'Escalated to DH' && employee.dhPSN) currentAssigneePSN = employee.dhPSN;
         else if (currentStatus === 'Escalated to IC Head') currentAssigneePSN = IC_HEAD_PSN;
-        else if (currentStatus === 'Open' && !employee.isPSN) currentAssigneePSN = IC_HEAD_PSN; // If Open and no IS, assign to IC Head
+        else if (currentStatus === 'Open' && !employee.isPSN) currentAssigneePSN = IC_HEAD_PSN; 
         
-        // Fallback if assignee is not found or is undefined
         if (!currentAssigneePSN || !mockSupervisors.find(s => s.psn === currentAssigneePSN)) {
             const projectSupervisors = mockSupervisors.filter(s => s.projectsHandledIds?.includes(project.id) && s.functionalRole === 'IS');
             currentAssigneePSN = projectSupervisors.length > 0 ? projectSupervisors[0].psn : (mockSupervisors.find(s=>s.functionalRole === 'IS')?.psn || IC_HEAD_PSN);
         }
-
 
         const lastStatusUpdateDaysAgo = Math.floor(Math.random() * (dateOffset > 1 ? dateOffset -1 : 0) );
         const lastStatusUpdateDate = new Date(queryDate.getTime() + (dateOffset - lastStatusUpdateDaysAgo) * 24*60*60*1000).toISOString();
@@ -410,7 +468,6 @@ if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
              const responseDaysAfterLastUpdate = Math.floor(Math.random() * Math.max(1, lastStatusUpdateDaysAgo -1)) + 1;
              dateOfResponse = new Date(new Date(lastStatusUpdateDate).getTime() + responseDaysAfterLastUpdate * 24 * 60 * 60 * 1000).toISOString();
         }
-
 
         mockTickets.push({
             id: generateTicketIdForMock(),

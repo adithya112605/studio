@@ -8,15 +8,15 @@ export interface User {
 }
 
 export interface JobCode {
-  id: string;
-  code: string;
-  description: string;
+  id: string; // e.g., "1100178", "P026"
+  code: string; // e.g., "1100178", "P026" (can be same as id)
+  description: string; // e.g., "Planning manager", "Project Management Group"
 }
 
 export interface Employee extends User {
   role: 'Employee';
-  grade: string; // This will now use values from mockGrades
-  jobCodeId: string;
+  grade: string; // e.g., "M1-A", "M2-B" (from mockGrades)
+  jobCodeId: string; // References id in JobCode type
   project: string;
   gender?: 'Male' | 'Female' | 'Other';
   isPSN?: number;
@@ -89,8 +89,8 @@ export interface AddEmployeeFormData {
   businessEmail: string;
   dateOfBirth?: Date; 
   project: string;
-  jobCodeId: string;
-  grade: string; // Will now be a value from the predefined list
+  jobCodeId: string; // Will be the ID from the new JobCode list
+  grade: string; // Will be a value from the predefined mockGrades list
   isPSN?: number;
   nsPSN?: number;
   dhPSN?: number;

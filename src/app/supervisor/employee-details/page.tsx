@@ -2,7 +2,7 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Supervisor, Employee } from "@/types";
+import type { User, Supervisor, Employee, JobCode } from "@/types"; // Added JobCode
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function SupervisorEmployeeDetailsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState<string | "all">("all");
-  const [selectedJobCode, setSelectedJobCode] = useState<string | "all">("all");
+  const [selectedJobCode, setSelectedJobCode] = useState<string | "all">("all"); // Uses JobCode.id
   const [selectedGrade, setSelectedGrade] = useState<string | "all">("all");
 
 
@@ -60,13 +60,14 @@ export default function SupervisorEmployeeDetailsPage() {
         }, [managedEmployeesForFiltering]);
 
         const availableJobCodes = useMemo(() => {
-            const jobCodeIds = new Set(managedEmployeesForFiltering.map(emp => emp.jobCodeId));
-            return mockJobCodes.filter(jc => jobCodeIds.has(jc.id)).sort((a,b) => a.code.localeCompare(b.code));
+            const jobCodeIdsInUse = new Set(managedEmployeesForFiltering.map(emp => emp.jobCodeId));
+            return mockJobCodes.filter(jc => jobCodeIdsInUse.has(jc.id)).sort((a,b) => a.description.localeCompare(b.description));
         }, [managedEmployeesForFiltering]);
 
         const availableGrades = useMemo(() => {
             const gradesInUse = new Set(managedEmployeesForFiltering.map(emp => emp.grade));
-            return mockGrades.filter(g => gradesInUse.has(g)); // Already sorted in mockData
+            // mockGrades is already sorted
+            return mockGrades.filter(g => gradesInUse.has(g)); 
         }, [managedEmployeesForFiltering]);
 
 
@@ -82,7 +83,7 @@ export default function SupervisorEmployeeDetailsPage() {
                 <Card className="shadow-md">
                     <CardHeader>
                         <CardTitle>Filter Employees</CardTitle>
-                        <CardDescription>Search by name/PSN/email or filter by project, job code, or grade.</CardDescription>
+                        <CardDescription>Search by name/PSN/email or filter by project, job code/title, or grade.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <Input 
@@ -101,9 +102,9 @@ export default function SupervisorEmployeeDetailsPage() {
                             </SelectContent>
                         </Select>
                         <Select value={selectedJobCode} onValueChange={setSelectedJobCode}>
-                            <SelectTrigger><SelectValue placeholder="Filter by Job Code" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Filter by Job Code/Title" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Job Codes</SelectItem>
+                                <SelectItem value="all">All Job Codes/Titles</SelectItem>
                                 {availableJobCodes.map(jc => (
                                     <SelectItem key={jc.id} value={jc.id}>{jc.code} - {jc.description}</SelectItem>
                                 ))}
@@ -138,7 +139,7 @@ export default function SupervisorEmployeeDetailsPage() {
                                 <TableHead className="hidden md:table-cell">Email</TableHead>
                                 <TableHead>Project</TableHead>
                                 <TableHead>Grade</TableHead>
-                                <TableHead className="hidden sm:table-cell">Job Code</TableHead>
+                                <TableHead>Job Code (Title)</TableHead>
                                 <TableHead className="hidden lg:table-cell">IS</TableHead>
                                 <TableHead className="hidden lg:table-cell">NS</TableHead>
                                 <TableHead className="hidden lg:table-cell">DH</TableHead>
@@ -155,7 +156,7 @@ export default function SupervisorEmployeeDetailsPage() {
                                         <TableCell className="hidden md:table-cell">{emp.businessEmail || 'N/A'}</TableCell>
                                         <TableCell>{project?.name || emp.project}</TableCell>
                                         <TableCell>{emp.grade}</TableCell>
-                                        <TableCell className="hidden sm:table-cell">{jobCode?.code || 'N/A'}</TableCell>
+                                        <TableCell>{jobCode?.code} - {jobCode?.description || 'N/A'}</TableCell>
                                         <TableCell className="hidden lg:table-cell">{emp.isName || 'N/A'} ({emp.isPSN || 'N/A'})</TableCell>
                                         <TableCell className="hidden lg:table-cell">{emp.nsName || 'N/A'} ({emp.nsPSN || 'N/A'})</TableCell>
                                         <TableCell className="hidden lg:table-cell">{emp.dhName || 'N/A'} ({emp.dhPSN || 'N/A'})</TableCell>

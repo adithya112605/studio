@@ -27,8 +27,8 @@ const addEmployeeSchema = z.object({
   businessEmail: z.string().email("Invalid email address"),
   dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(),
   project: z.string().min(1, "Project selection is required"),
-  jobCodeId: z.string().min(1, "Job Code selection is required"),
-  grade: z.string().min(1, "Grade is required."),
+  jobCodeId: z.string().min(1, "Job Code selection is required"), // Now refers to the new JobCode.id
+  grade: z.string().min(1, "Grade is required."), // Refers to M1-A, M2-B etc.
   isPSN: z.coerce.number().optional(),
   nsPSN: z.coerce.number().optional(),
   dhPSN: z.coerce.number().optional(),
@@ -45,7 +45,7 @@ export default function AddEmployeeForm() {
 
   const onSubmit: SubmitHandler<AddEmployeeFormData> = async (data) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
 
     const newEmployee: Employee = {
       ...data,
@@ -144,31 +144,13 @@ export default function AddEmployeeForm() {
               {errors.project && <p className="text-sm text-destructive">{errors.project.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="jobCodeId">Job Code</Label>
-              <Controller
-                name="jobCodeId"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="jobCodeId"><SelectValue placeholder="Select job code" /></SelectTrigger>
-                    <SelectContent>
-                      {mockJobCodes.map(jc => (<SelectItem key={jc.id} value={jc.id}>{jc.code} - {jc.description}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.jobCodeId && <p className="text-sm text-destructive">{errors.jobCodeId.message}</p>}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-              <Label htmlFor="grade">Grade</Label>
+              <Label htmlFor="grade">Grade (Pay Level)</Label>
               <Controller
                 name="grade"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="grade"><SelectValue placeholder="Select grade" /></SelectTrigger>
+                    <SelectTrigger id="grade"><SelectValue placeholder="Select grade (e.g., M1-A)" /></SelectTrigger>
                     <SelectContent>
                       {mockGrades.map(g => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
                     </SelectContent>
@@ -176,6 +158,24 @@ export default function AddEmployeeForm() {
                 )}
               />
               {errors.grade && <p className="text-sm text-destructive">{errors.grade.message}</p>}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+              <Label htmlFor="jobCodeId">Job Code (Title/Function)</Label>
+              <Controller
+                name="jobCodeId"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger id="jobCodeId"><SelectValue placeholder="Select job code/title" /></SelectTrigger>
+                    <SelectContent>
+                      {mockJobCodes.map(jc => (<SelectItem key={jc.id} value={jc.id}>{jc.code} - {jc.description}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.jobCodeId && <p className="text-sm text-destructive">{errors.jobCodeId.message}</p>}
           </div>
 
           <h3 className="text-lg font-semibold pt-4 border-t mt-6">Assign Supervisors</h3>
