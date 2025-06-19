@@ -30,7 +30,7 @@ const Navbar = () => {
   useEffect(() => {
     setIsMounted(true);
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10); // Adjusted threshold for quicker transition
+      setIsScrolled(window.scrollY > 10); 
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -101,12 +101,13 @@ const Navbar = () => {
       ];
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
         navItemsForMobile.push(...adminManagementNavItems);
+        // Optionally add admin links to desktopNavLinks if desired, e.g., under a "Management" dropdown
       }
     }
   }
 
 
-  if (!isMounted) { // Skeleton loader for Navbar
+  if (!isMounted) { 
     return (
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
@@ -128,12 +129,12 @@ const Navbar = () => {
     <header className={cn(
         "sticky top-0 z-50 w-full border-b transition-all duration-300 ease-in-out",
         isScrolled
-          ? "border-border bg-background shadow-lg" // More pronounced shadow
+          ? "border-border bg-background shadow-lg" 
           : "border-transparent bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60"
       )}>
       <div className={cn(
           "container flex max-w-screen-2xl items-center transition-all duration-300 ease-in-out",
-          isScrolled ? "h-14" : "h-16" // Slight height change
+          isScrolled ? "h-14" : "h-16" 
         )}>
 
         <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
@@ -238,7 +239,7 @@ const DropdownMenuUser = ({ user, logout, adminManagementNavItems }: {
           <div className="flex flex-col space-y-1 py-1">
             <p className="text-sm font-semibold leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.psn.toString()}
+              PSN: {user.psn.toString()}
             </p>
             <p className="text-xs leading-none text-muted-foreground pt-0.5">
               {user.role === 'Employee' ? 'Employee' : `${supervisorUser.title} (${supervisorUser.functionalRole})`}
