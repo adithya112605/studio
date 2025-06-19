@@ -403,9 +403,9 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
               <hr/>
               <div>
                 <h3 className="font-semibold text-lg mb-2">Query Details</h3>
-                <p><strong>Priority:</strong> <Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></p>
-                <p className="mt-2 whitespace-pre-wrap"><strong>Initial Query:</strong> {ticket.query}</p>
-                {ticket.followUpQuery && <p className="mt-2 whitespace-pre-wrap"><strong>Follow-ups:</strong> {ticket.followUpQuery}</p>}
+                <div className="text-sm"><strong>Priority:</strong> <Badge variant={ticket.priority === "Urgent" || ticket.priority === "High" ? "destructive" : "secondary"}>{ticket.priority}</Badge></div>
+                <p className="mt-2 whitespace-pre-wrap text-sm"><strong>Initial Query:</strong> {ticket.query}</p>
+                {ticket.followUpQuery && <p className="mt-2 whitespace-pre-wrap text-sm"><strong>Follow-ups:</strong> {ticket.followUpQuery}</p>}
               </div>
 
               {ticket.attachments && ticket.attachments.length > 0 && (
