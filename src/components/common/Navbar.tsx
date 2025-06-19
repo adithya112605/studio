@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye, LogIn, UserCog, ChevronDown, Building } from 'lucide-react';
+import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye, LogIn, UserCog, ChevronDown, Building, PanelLeft, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
-import type { User, Supervisor, Employee } from '@/types';
+import type { User, Supervisor } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,16 +21,20 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal
 } from "@/components/ui/dropdown-menu"
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import LTLogo from './LTLogo';
 import { cn } from '@/lib/utils';
-import { mockEmployees } from '@/data/mockData'; // For deriving additional roles
+import { mockEmployees } from '@/data/mockData';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'; // Updated import for Sheet
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  const pathname = usePathname(); // For active link styling in mobile
 
   useEffect(() => {
     setIsMounted(true);
@@ -42,38 +46,38 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    setIsOpen(false);
+    setIsOpen(false); // Close mobile menu on logout
     router.push('/');
   };
 
-  // Mobile navigation items (remains comprehensive)
+  // Navigation items for mobile (will be styled like "Christina's" sidebar)
   const commonAuthenticatedNavItemsBaseMobile = [
-    { href: '/', label: 'Home', icon: <Home className="w-4 h-4" /> },
-    { href: '/dashboard', label: 'Dashboard', icon: <Briefcase className="w-4 h-4" /> },
-    { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="w-4 h-4" /> },
+    { href: '/', label: 'Home', icon: <Home /> },
+    { href: '/dashboard', label: 'Dashboard', icon: <Briefcase /> },
+    { href: '/profile', label: 'My Profile', icon: <UserCircle2 /> },
   ];
   const employeeNavItemsMobile = [
     ...commonAuthenticatedNavItemsBaseMobile,
-    { href: '/tickets/new', label: 'Create Ticket', icon: <Ticket className="w-4 h-4" /> },
-    { href: '/employee/tickets', label: 'My Tickets', icon: <FileText className="w-4 h-4" /> },
-    { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
-    { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
+    { href: '/tickets/new', label: 'Create Ticket', icon: <Ticket /> },
+    { href: '/employee/tickets', label: 'My Tickets', icon: <FileText /> },
+    { href: '/notifications', label: 'Notifications', icon: <Bell /> },
+    { href: '/settings', label: 'Settings', icon: <Settings /> },
   ];
   const supervisorBaseNavItemsMobile = [
     ...commonAuthenticatedNavItemsBaseMobile,
-    { href: '/hr/tickets', label: 'Ticket Management', icon: <FileSpreadsheet className="w-4 h-4" /> },
-    { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Eye className="w-4 h-4" /> },
-    { href: '/reports', label: 'Reports', icon: <BarChart3 className="w-4 h-4" /> },
-    { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
-    { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
+    { href: '/hr/tickets', label: 'Ticket Management', icon: <FileSpreadsheet /> },
+    { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Eye /> },
+    { href: '/reports', label: 'Reports', icon: <BarChart3 /> },
+    { href: '/notifications', label: 'Notifications', icon: <Bell /> },
+    { href: '/settings', label: 'Settings', icon: <Settings /> },
   ];
   const adminManagementNavItemsMobile = [
-     { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="w-4 h-4" /> },
-     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserSquare2 className="w-4 h-4" /> },
+     { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users /> },
+     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserSquare2 /> },
   ];
   const unauthenticatedNavItemsMobile = [
-    { href: '/auth/signin', label: 'Sign In', icon: <LogIn className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" /> },
-    { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" /> },
+    { href: '/auth/signin', label: 'Sign In', icon: <LogIn /> },
+    { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus /> },
   ];
 
   let navItemsForMobile = unauthenticatedNavItemsMobile;
@@ -89,25 +93,24 @@ const Navbar = () => {
   }
 
   // Desktop navigation items
-  let desktopNavLinks: Array<{href:string; label:string; isDropdown?: boolean; subItems?: Array<{href:string; label:string; icon?: React.ReactNode}>}> = [];
+  let desktopNavLinks: Array<{href?:string; label:string; isDropdown?: boolean; subItems?: Array<{href:string; label:string; icon?: React.ReactNode; description?: string}>; description?: string}> = [];
   if (user) {
-    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard'});
+    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard', description: 'View your main dashboard.'});
     if (user.role === 'Employee') {
-      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets'});
-      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket'});
+      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets', description: 'View and manage your support tickets.'});
+      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket', description: 'Raise a new support ticket.'});
     } else { // Supervisor roles
       const supervisorUser = user as Supervisor;
-      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.'});
-      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees'});
-      desktopNavLinks.push({ href: '/reports', label: 'Reports'});
+      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.', description: 'Manage and assign support tickets.'});
+      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees', description: 'View details of employees.'});
+      desktopNavLinks.push({ href: '/reports', label: 'Reports', description: 'Generate and view system reports.'});
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
         desktopNavLinks.push({
           label: 'Admin',
           isDropdown: true,
           subItems: [
-            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/> },
-            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/> },
-            // Potentially add more admin links here
+            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: 'Add new employees to the system.' },
+            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: 'Add new supervisors to the system.' },
           ]
         });
       }
@@ -116,17 +119,16 @@ const Navbar = () => {
 
 
   if (!isMounted) {
-    // Simplified skeleton for navbar to prevent layout shifts
     return (
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4">
+        <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
           <div className="flex items-center space-x-2">
             <div className="h-8 w-8 bg-muted rounded-md animate-pulse"></div>
-            <div className="h-5 w-24 bg-muted rounded animate-pulse hidden sm:block"></div>
+            <div className="h-5 w-32 bg-muted rounded animate-pulse hidden sm:block"></div>
           </div>
           <div className="flex items-center space-x-2">
-             <div className="h-8 w-8 bg-muted rounded-md animate-pulse"></div> {/* Theme Toggle */}
-             <div className="h-8 w-20 bg-muted rounded-md animate-pulse hidden md:block"></div> {/* Sign In / User */}
+             <div className="h-8 w-8 bg-muted rounded-md animate-pulse"></div>
+             <div className="h-8 w-20 bg-muted rounded-md animate-pulse hidden md:block"></div>
           </div>
         </div>
       </header>
@@ -134,26 +136,94 @@ const Navbar = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center px-4">
-        {/* Left: Logo + App Name */}
-        <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
-          <LTLogo className="h-7 w-7" />
-          <span className="font-bold font-headline text-lg hidden sm:inline-block">L&amp;T Helpdesk</span>
-        </Link>
+    <TooltipProvider delayDuration={100}>
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card text-card-foreground shadow-sm"> {/* Changed background for darker feel */}
+      <div className="container flex h-16 max-w-screen-2xl items-center px-4">
+        {/* Left: Mobile Menu Toggle (visible on mobile) & Logo + App Name */}
+        <div className="flex items-center">
+            <div className="md:hidden mr-2">
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Open menu" className="h-9 w-9 text-muted-foreground">
+                    <PanelLeft className="h-5 w-5" />
+                </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-72 p-0 bg-background text-foreground">
+                    <div className="flex flex-col h-full">
+                        <div className="p-4 border-b">
+                            <Link href="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+                                <LTLogo className="h-7 w-7" />
+                                <span className="font-bold font-headline text-lg">L&T Helpdesk</span>
+                            </Link>
+                        </div>
+                        <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
+                        {navItemsForMobile.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                            <SheetClose asChild key={item.href}>
+                                <Link
+                                href={item.href}
+                                className={cn(
+                                    "group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                                >
+                                {item.icon ? React.cloneElement(item.icon, { className: cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground") }) : <div className="w-5 h-5 shrink-0"></div>}
+                                <span>{item.label}</span>
+                                </Link>
+                            </SheetClose>
+                            );
+                        })}
+                        {user && (
+                           <SheetClose asChild>
+                            <Button
+                            variant="ghost"
+                            onClick={handleLogout}
+                            className="group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-muted-foreground hover:text-destructive-foreground mt-auto" // Pushes logout to bottom
+                            >
+                            <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive-foreground" />
+                            <span>Logout</span>
+                            </Button>
+                           </SheetClose>
+                        )}
+                        </nav>
+                        {!user && (
+                            <div className="p-4 border-t space-y-2">
+                                <SheetClose asChild>
+                                <Button asChild variant="default" className="w-full" onClick={() => setIsOpen(false)}>
+                                    <Link href="/auth/signup">Sign Up</Link>
+                                </Button>
+                                </SheetClose>
+                                <SheetClose asChild>
+                                <Button asChild variant="outline" className="w-full" onClick={() => setIsOpen(false)}>
+                                    <Link href="/auth/signin">Sign In</Link>
+                                </Button>
+                                </SheetClose>
+                            </div>
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
+            </div>
+            <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
+            <LTLogo className="h-8 w-8" /> {/* Slightly larger logo */}
+            <span className="font-bold font-headline text-xl hidden sm:inline-block">L&T Helpdesk</span>
+            </Link>
+        </div>
 
-        {/* Center: Main Navigation Links (Desktop) */}
+
+        {/* Center: Main Navigation Links (Desktop) - aligned to left of actions */}
         {user && (
-          <nav className="hidden md:flex flex-grow items-center space-x-1 lg:space-x-2 text-sm">
+          <nav className="hidden md:flex flex-grow items-center space-x-1 lg:space-x-2 text-sm ml-6">
             {desktopNavLinks.map((item) =>
               item.isDropdown && item.subItems ? (
                 <DropdownMenu key={item.label}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/5 font-medium h-8 text-xs">
-                      {item.label} <ChevronDown className="ml-1 h-3 w-3" />
+                    <Button variant="ghost" className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
+                      {item.label} <ChevronDown className="ml-1 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuContent align="start" className="w-56">
                     {item.subItems.map(subItem => (
                       <DropdownMenuItem key={subItem.href} asChild>
                         <Link href={subItem.href} className="flex items-center w-full">
@@ -165,9 +235,14 @@ const Navbar = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button key={item.href || item.label} variant="ghost" asChild className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/5 font-medium h-8 text-xs">
-                  <Link href={item.href!}>{item.label}</Link>
-                </Button>
+                <Tooltip key={item.label}>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" asChild className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
+                      <Link href={item.href!}>{item.label}</Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {item.description && <TooltipContent side="bottom"><p>{item.description}</p></TooltipContent>}
+                </Tooltip>
               )
             )}
           </nav>
@@ -180,69 +255,40 @@ const Navbar = () => {
           <ThemeToggle />
           {user ? (
              <div className="flex items-center space-x-1">
-              <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5">
-                <Link href="/notifications" aria-label="Notifications"><Bell className="w-4 h-4"/></Link>
-              </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5">
+                            <Link href="/notifications" aria-label="Notifications"><Bell className="w-5 h-5"/></Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom"><p>View Notifications</p></TooltipContent>
+                </Tooltip>
               <DropdownMenuUser user={user} logout={handleLogout} />
              </div>
           ) : (
              <div className="hidden md:flex items-center space-x-2">
-              <Button asChild variant="ghost" size="sm" className="font-medium text-muted-foreground hover:text-primary px-3 h-8 text-xs">
-                <Link href="/auth/signin">Sign In</Link>
-              </Button>
-              <Button asChild variant="default" size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 h-8 text-xs">
-                <Link href="/auth/signup">Sign Up</Link>
-              </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button asChild variant="ghost" className="font-medium text-muted-foreground hover:text-primary px-4 h-9 text-sm">
+                            <Link href="/auth/signin">SIGN IN</Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom"><p>Access your account</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button asChild variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 h-9 text-sm font-semibold">
+                            <Link href="/auth/signup">GET STARTED</Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom"><p>Create a new account</p></TooltipContent>
+                </Tooltip>
             </div>
           )}
-          {/* Mobile Menu Toggle */}
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label="Open menu" className="h-8 w-8">
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
         </div>
       </div>
-
-      {/* Mobile Menu Drawer */}
-      {isOpen && (
-        <div className="md:hidden fixed inset-x-0 top-14 z-40 h-[calc(100vh-3.5rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t animate-in slide-in-from-top-full duration-300">
-          <nav className="flex flex-col space-y-1">
-            {navItemsForMobile.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="group flex items-center space-x-3 p-3 rounded-lg hover:bg-accent hover:text-accent-foreground text-base font-medium transition-colors"
-                  onClick={toggleMenu}
-                >
-                  {item.icon ? React.cloneElement(item.icon, { className: "w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" }) : <div className="w-5 h-5 shrink-0"></div>}
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            {user && (
-              <Button
-                variant="ghost"
-                onClick={handleLogout}
-                className="group flex items-center space-x-3 p-3 rounded-lg hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-base font-medium transition-colors mt-4"
-              >
-                <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive-foreground" />
-                <span>Logout</span>
-              </Button>
-            )}
-            {!user && (
-              <div className="mt-6 space-y-2">
-                 <Button asChild variant="default" className="w-full" onClick={toggleMenu}>
-                    <Link href="/auth/signup">Sign Up</Link>
-                 </Button>
-                 <Button asChild variant="outline" className="w-full" onClick={toggleMenu}>
-                    <Link href="/auth/signin">Sign In</Link>
-                 </Button>
-              </div>
-            )}
-          </nav>
-        </div>
-      )}
     </header>
+    </TooltipProvider>
   );
 };
 
@@ -276,13 +322,16 @@ const DropdownMenuUser = ({ user, logout }: {
     { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="mr-2 h-4 w-4 text-muted-foreground"/> },
     { href: '/settings', label: 'Settings', icon: <Settings className="mr-2 h-4 w-4 text-muted-foreground"/> },
   ];
-  if (user.role !== 'Employee') { // Add notifications for supervisors here, employees have it in main nav
-     commonDropdownItems.push( { href: '/notifications', label: 'Notifications', icon: <Bell className="mr-2 h-4 w-4 text-muted-foreground"/> });
-  }
+
+  // Notifications for supervisors are in the main navbar now, not repeating here
+  // if (user.role !== 'Employee') { 
+  //    commonDropdownItems.push( { href: '/notifications', label: 'Notifications', icon: <Bell className="mr-2 h-4 w-4 text-muted-foreground"/> });
+  // }
 
   const managementSubItems = [
     { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="mr-2 h-4 w-4"/> },
     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog className="mr-2 h-4 w-4"/> },
+    // Future: { href: '/admin/system-logs', label: 'System Logs', icon: <Info className="mr-2 h-4 w-4"/> },
   ];
   const showAdminItems = supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head');
 
@@ -290,7 +339,7 @@ const DropdownMenuUser = ({ user, logout }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <UserCircle2 className="h-5 w-5 text-muted-foreground hover:text-primary" />
         </Button>
       </DropdownMenuTrigger>
@@ -301,7 +350,7 @@ const DropdownMenuUser = ({ user, logout }: {
             <p className="text-xs leading-none text-muted-foreground">
               PSN: {user.psn.toString()}
             </p>
-            <p className="text-xs leading-none text-muted-foreground pt-0.5">
+            <p className="text-xs leading-none text-muted-foreground pt-0.5 truncate" title={roleDisplay}>
               {roleDisplay}
             </p>
           </div>
@@ -353,5 +402,3 @@ const DropdownMenuUser = ({ user, logout }: {
 }
 
 export default Navbar;
-
-    
