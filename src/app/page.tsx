@@ -4,12 +4,17 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2, HomeIcon, Zap, TrendingUp, Clock, Smile } from 'lucide-react';
+import { MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2, HomeIcon, Zap, TrendingUp, Clock, Smile } from 'lucide-react';
 import Image from 'next/image';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { useAuth } from '@/contexts/AuthContext'; 
+import ScrollTypewriter from '@/components/common/ScrollTypewriter';
+import React, { useState } from 'react';
+
 
 export default function HomePage() {
-  const { user } = useAuth(); // Get current user
+  const { user } = useAuth(); 
+  const [isHeadlinePart1Done, setIsHeadlinePart1Done] = useState(false);
+  const [isHeadlinePart2Done, setIsHeadlinePart2Done] = useState(false);
 
   const features = [
     {
@@ -61,6 +66,11 @@ export default function HomePage() {
     }
   ];
 
+  const headlineText1 = "Welcome to ";
+  const headlineText2 = "L&T Helpdesk";
+  const descriptionText = "Streamlining internal support for L&T employees. Get quick resolutions and manage your queries efficiently with hierarchical supervisor support.";
+
+
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
@@ -80,13 +90,38 @@ export default function HomePage() {
             </>
           ) : (
             <>
-              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                Welcome to <span className="text-primary">L&T Helpdesk</span>
+              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-6 min-h-[3em] md:min-h-[2.5em] lg:min-h-[2em]">
+                <ScrollTypewriter
+                  tag="span"
+                  text={headlineText1}
+                  className="inline"
+                  speed={60}
+                  startOffset="0px 0px -30px 0px"
+                  onAnimationComplete={() => setIsHeadlinePart1Done(true)}
+                />
+                <ScrollTypewriter
+                  tag="span"
+                  text={headlineText2}
+                  className="text-primary inline"
+                  speed={60}
+                  startManually={isHeadlinePart1Done} // Start when first part is done
+                  startOffset="0px 0px -30px 0px" 
+                  onAnimationComplete={() => setIsHeadlinePart2Done(true)}
+                />
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                Streamlining internal support for L&T employees. Get quick resolutions and manage your queries efficiently with hierarchical supervisor support.
-              </p>
-              <div className="space-x-4">
+              
+              <div className="min-h-[5em] md:min-h-[3em]"> {/* Adjusted min-height */}
+                <ScrollTypewriter
+                    tag="p"
+                    text={descriptionText}
+                    className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+                    speed={20}
+                    startManually={isHeadlinePart2Done} // Start when second part of headline is done
+                    startOffset="0px 0px -50px 0px"
+                  />
+              </div>
+
+              <div className="space-x-4 mt-2"> {/* Added mt-2 for slight separation */}
                 <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>

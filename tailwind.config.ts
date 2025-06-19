@@ -18,9 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Updated fonts: Inter for body and headlines
         body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'], // Using Inter for headlines as well for modern look
+        headline: ['Inter', 'sans-serif'], 
         code: ['monospace'],
       },
       colors: {
@@ -101,3 +100,4 @@ export default {
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
