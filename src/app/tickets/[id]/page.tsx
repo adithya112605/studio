@@ -144,11 +144,11 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
       const newFiles = Array.from(event.target.files);
       // Basic validation (example: max 5 files, max 5MB per file)
       if (attachmentSetter === supervisorAttachments && supervisorAttachments.length + newFiles.length > 5) {
-          toast({ title: "Attachment Limit", description: "Maximum 5 attachments allowed.", variant: "default" });
+          toast({ title: "Attachment Limit", description: "Maximum 5 attachments allowed. Each file max 5MB.", variant: "default" });
           return;
       }
       if (attachmentSetter === employeeAttachments && employeeAttachments.length + newFiles.length > 5) {
-          toast({ title: "Attachment Limit", description: "Maximum 5 attachments allowed.", variant: "default" });
+          toast({ title: "Attachment Limit", description: "Maximum 5 attachments allowed. Each file max 5MB.", variant: "default" });
           return;
       }
       for (const file of newFiles) {
