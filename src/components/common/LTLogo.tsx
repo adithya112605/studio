@@ -1,15 +1,56 @@
 // src/components/common/LTLogo.tsx
-import React from 'react';
+"use client";
 
-// Simplified L&T-like SVG representation
-const LTLogo = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <circle cx="32" cy="32" r="29" stroke="currentColor" strokeWidth="3" />
-    {/* L part - stylized */}
-    <path d="M19 22 V42 H34" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-    {/* T part - stylized and slightly offset to appear as the T from L&T logo */}
-    <path d="M32 22 H45 M38.5 22 V42" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { useTheme } from 'next-themes';
+
+interface LTLogoProps {
+  className?: string;
+}
+
+const LTLogo = ({ className }: LTLogoProps) => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const lightThemeLogoSrc = "https://placehold.co/32x32/005BAC/FFFFFF.png?text=LT"; // L&T Blue background, White text
+  const darkThemeLogoSrc = "https://placehold.co/32x32/FFFFFF/005BAC.png?text=LT";   // White background, L&T Blue text
+
+  if (!mounted) {
+    // Fallback for SSR or before theme is resolved, matching the light theme visual
+    return (
+      <div className={className} style={{ width: '32px', height: '32px' }}>
+        <Image
+          src={lightThemeLogoSrc}
+          alt="L&T Helpdesk Logo"
+          width={32}
+          height={32}
+          priority
+          data-ai-hint="company logo"
+        />
+      </div>
+    );
+  }
+
+  const logoSrc = resolvedTheme === 'dark' ? darkThemeLogoSrc : lightThemeLogoSrc;
+
+  return (
+    <div className={className} style={{ width: '32px', height: '32px' }}>
+      <Image
+        src={logoSrc}
+        alt="L&T Helpdesk Logo"
+        width={32}
+        height={32}
+        priority 
+        key={resolvedTheme} // Add key to force re-render on theme change if needed
+        data-ai-hint="company logo"
+      />
+    </div>
+  );
+};
 
 export default LTLogo;

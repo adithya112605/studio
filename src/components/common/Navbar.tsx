@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
-import LTLogo from './LTLogo';
+import LTLogo from './LTLogo'; // Updated import
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -138,7 +138,8 @@ const Navbar = () => {
         )}>
 
         <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
-          <LTLogo className="h-8 w-8 text-primary" />
+          {/* LTLogo component now handles image and sizing */}
+          <LTLogo className="h-8 w-8" /> 
           <span className="font-bold font-headline text-xl hidden sm:inline">L&T Helpdesk</span>
         </Link>
 
