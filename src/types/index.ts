@@ -8,15 +8,15 @@ export interface User {
 }
 
 export interface JobCode {
-  id: string; // e.g., "1100178", "P026"
-  code: string; // e.g., "1100178", "P026" (can be same as id)
-  description: string; // e.g., "Planning manager", "Project Management Group"
+  id: string; 
+  code: string; 
+  description: string; 
 }
 
 export interface Employee extends User {
   role: 'Employee';
-  grade: string; // e.g., "M1-A", "M2-B" (from mockGrades)
-  jobCodeId: string; // References id in JobCode type
+  grade: string; 
+  jobCodeId: string; 
   project: string;
   gender?: 'Male' | 'Female' | 'Other';
   isPSN?: number;
@@ -29,6 +29,7 @@ export interface Employee extends User {
 
 export interface Supervisor extends User {
   role: 'IS' | 'NS' | 'DH' | 'IC Head';
+  functionalRole: 'IS' | 'NS' | 'DH' | 'IC Head'; // Added to ensure consistency
   title: string;
   branchProject?: string;
   projectsHandledIds?: string[];
@@ -62,7 +63,7 @@ export interface Ticket {
   currentAssigneePSN?: number;
   project: string;
   attachments?: TicketAttachment[];
-  lastStatusUpdateDate: string;
+  lastStatusUpdateDate: string; 
 }
 
 export interface Project {
@@ -83,21 +84,23 @@ export interface NewTicketFormData {
   priority: TicketPriority;
 }
 
+// Ensure AddEmployeeFormData.psn and supervisor PSNs are strings for consistency with input handling
 export interface AddEmployeeFormData {
-  psn: number;
+  psn: string; 
   name: string;
   businessEmail: string;
   dateOfBirth?: Date; 
   project: string;
-  jobCodeId: string; // Will be the ID from the new JobCode list
-  grade: string; // Will be a value from the predefined mockGrades list
-  isPSN?: number;
-  nsPSN?: number;
-  dhPSN?: number;
+  jobCodeId: string; 
+  grade: string; 
+  isPSN?: string; 
+  nsPSN?: string; 
+  dhPSN?: string; 
 }
 
+// Ensure AddSupervisorFormData.psn is a string
 export interface AddSupervisorFormData {
-  psn: number;
+  psn: string; 
   name: string;
   businessEmail: string;
   dateOfBirth?: Date; 

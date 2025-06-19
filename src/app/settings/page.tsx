@@ -6,52 +6,61 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, KeyRound, Palette, BellDot, ShieldAlert, MonitorSmartphone, Settings2, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase } from "lucide-react";
+import { User, KeyRound, Palette, BellDot, ShieldAlert, MonitorSmartphone, Settings2, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle"; 
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { User as AuthUser, Employee, Supervisor, JobCode } from "@/types"; // Added Employee, Supervisor
+import type { User as AuthUser, Employee, Supervisor, JobCode } from "@/types"; 
 import { useToast } from "@/hooks/use-toast";
-import React, { useState } from "react";
-import { mockJobCodes, mockProjects } from "@/data/mockData"; // For displaying project/job code info
+import React, { useState, useEffect } from "react";
+import { mockJobCodes, mockProjects } from "@/data/mockData"; 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  // Example state for switches
+  
   const [emailNotif, setEmailNotif] = useState(true);
   const [inAppNotif, setInAppNotif] = useState(true);
   const [twoFa, setTwoFa] = useState(false);
-  const [smsNotif, setSmsNotif] = useState(false); // New
-  const [digestEmails, setDigestEmails] = useState(false); // New
-  const [ticketRating, setTicketRating] = useState(false); // New
-  const [generalFeedback, setGeneralFeedback] = useState(false); // New
+  const [smsNotif, setSmsNotif] = useState(false); 
+  const [digestEmails, setDigestEmails] = useState(false); 
+  const [ticketRating, setTicketRating] = useState(false); 
+  const [generalFeedback, setGeneralFeedback] = useState(false);
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+
+  const checkCapsLock = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (typeof event.getModifierState === 'function') {
+      setIsCapsLockOn(event.getModifierState("CapsLock"));
+    }
+  };
 
 
   const handleGenericSave = (featureName: string) => {
     toast({
-      title: "Settings Action",
-      description: `${featureName} preferences would be saved (Feature not implemented).`,
+      title: "Settings Action (Simulated)",
+      description: `${featureName} preferences would be saved. This is a mock action.`,
     });
   };
   
   const handlePasswordUpdate = () => {
     toast({
-      title: "Security Action",
-      description: "Password update functionality is not yet implemented.",
+      title: "Security Action (Simulated)",
+      description: "Password update functionality is a placeholder. In a real app, this would securely update your password.",
     });
   };
 
   const handleEditProfile = () => {
      toast({
-      title: "Profile Action",
-      description: "Profile editing is not yet implemented.",
+      title: "Profile Action (Simulated)",
+      description: "Profile editing is a placeholder. Changes would typically be managed here or by administrators.",
     });
   };
   
   const viewAuditTrail = () => {
      toast({
-      title: "Admin Action",
-      description: "Viewing audit trail is not yet implemented.",
+      title: "Admin Action (Simulated)",
+      description: "Viewing audit trail is a placeholder. This feature would allow tracking of system changes.",
     });
   };
 
@@ -61,8 +70,8 @@ export default function SettingsPage() {
      {(user: AuthUser) => {
         const isEmployee = user.role === 'Employee';
         const isSupervisor = ['IS', 'NS', 'DH', 'IC Head'].includes(user.role);
-        const employeeUser = user as Employee; // Cast for employee-specific fields
-        const supervisorUser = user as Supervisor; // Cast for supervisor-specific fields
+        const employeeUser = user as Employee; 
+        const supervisorUser = user as Supervisor; 
 
         let jobCodeInfo: JobCode | undefined;
         if(isEmployee && employeeUser.jobCodeId){
@@ -86,7 +95,7 @@ export default function SettingsPage() {
                     <User className="w-6 h-6 text-primary" />
                     <CardTitle className="font-headline text-xl">Profile Information</CardTitle>
                     </div>
-                    <CardDescription>View your profile details.</CardDescription>
+                    <CardDescription>View your profile details. Editing is a placeholder.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-1">
@@ -126,7 +135,7 @@ export default function SettingsPage() {
                     {isSupervisor && supervisorUser.branchProject && (
                          <div className="space-y-1">
                             <Label htmlFor="branch-project-settings">Branch/Primary Project</Label>
-                            <Input id="branch-project-settings" value={supervisorUser.branchProject} readOnly />
+                            <Input id="branch-project-settings" value={mockProjects.find(p => p.id === supervisorUser.branchProject)?.name || supervisorUser.branchProject} readOnly />
                         </div>
                     )}
                      {isSupervisor && supervisorUser.cityAccess && supervisorUser.cityAccess.length > 0 && (
@@ -137,7 +146,7 @@ export default function SettingsPage() {
                     )}
                 </CardContent>
                 <CardFooter>
-                    <Button variant="outline" onClick={handleEditProfile} disabled>Edit Profile</Button>
+                    <Button variant="outline" onClick={handleEditProfile}>Edit Profile</Button>
                 </CardFooter>
                 </Card>
 
@@ -153,16 +162,36 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     <div className="space-y-1">
                     <Label htmlFor="current-password">Current Password</Label>
-                    <Input id="current-password" type="password" placeholder="••••••••" />
+                    <Input id="current-password" type="password" placeholder="••••••••" 
+                      onKeyUp={checkCapsLock}
+                      onKeyDown={checkCapsLock}
+                      onClick={checkCapsLock}
+                    />
                     </div>
                     <div className="space-y-1">
                     <Label htmlFor="new-password">New Password</Label>
-                    <Input id="new-password" type="password" placeholder="••••••••" />
+                    <Input id="new-password" type="password" placeholder="••••••••" 
+                      onKeyUp={checkCapsLock}
+                      onKeyDown={checkCapsLock}
+                      onClick={checkCapsLock}
+                    />
                     </div>
                     <div className="space-y-1">
                     <Label htmlFor="confirm-new-password">Confirm New Password</Label>
-                    <Input id="confirm-new-password" type="password" placeholder="••••••••" />
+                    <Input id="confirm-new-password" type="password" placeholder="••••••••" 
+                      onKeyUp={checkCapsLock}
+                      onKeyDown={checkCapsLock}
+                      onClick={checkCapsLock}
+                    />
                     </div>
+                     {isCapsLockOn && (
+                        <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700">
+                            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                            <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                            Caps Lock is ON.
+                            </AlertDescription>
+                        </Alert>
+                    )}
                     <Button className="w-full" onClick={handlePasswordUpdate}>Update Password</Button>
                     <div className="pt-2">
                         <p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p>
@@ -177,10 +206,10 @@ export default function SettingsPage() {
                         <Label htmlFor="2fa-toggle" className="flex flex-col space-y-1">
                             <span>Two-Factor Authentication (2FA)</span>
                             <span className="font-normal leading-snug text-muted-foreground text-xs">
-                            Enhance your account security.
+                            Enhance your account security (Simulated).
                             </span>
                         </Label>
-                        <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={setTwoFa} />
+                        <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={(checked) => {setTwoFa(checked); handleGenericSave(`2FA ${checked ? 'Enabled' : 'Disabled'}`);}} />
                     </div>
                 </CardContent>
                 </Card>
@@ -201,7 +230,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-2 pt-2">
                         <Label htmlFor="font-select">Application Font</Label>
-                        <Select disabled>
+                        <Select disabled onValueChange={(value) => handleGenericSave(`Font changed to ${value}`)}>
                             <SelectTrigger id="font-select">
                                 <SelectValue placeholder="Current (Lato/Merriweather)" />
                             </SelectTrigger>
@@ -214,7 +243,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="language-select">Default Language</Label>
-                        <Select value="en-us" onValueChange={() => {}}>
+                        <Select defaultValue="en-us" onValueChange={(value) => handleGenericSave(`Language changed to ${value}`)}>
                             <SelectTrigger id="language-select">
                                 <SelectValue placeholder="English (US)" />
                             </SelectTrigger>
@@ -228,7 +257,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="timezone-select">Timezone</Label>
-                        <Select value="ist" onValueChange={() => {}}>
+                        <Select defaultValue="ist" onValueChange={(value) => handleGenericSave(`Timezone changed to ${value}`)}>
                             <SelectTrigger id="timezone-select">
                                 <SelectValue placeholder="Asia/Kolkata (IST)" />
                             </SelectTrigger>
@@ -241,7 +270,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="dateformat-select">Date Format</Label>
-                        <Select value="ddmmyyyy" onValueChange={() => {}}>
+                        <Select defaultValue="ddmmyyyy" onValueChange={(value) => handleGenericSave(`Date format changed to ${value}`)}>
                             <SelectTrigger id="dateformat-select">
                                 <SelectValue placeholder="DD/MM/YYYY" />
                             </SelectTrigger>
@@ -298,7 +327,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-2 pt-2">
                         <Label htmlFor="notif-freq">Notification Frequency</Label>
-                        <Select onValueChange={() => {}} defaultValue="immediate">
+                        <Select onValueChange={(value) => handleGenericSave(`Notification Frequency set to ${value}`)} defaultValue="immediate">
                             <SelectTrigger id="notif-freq">
                                 <SelectValue placeholder="Immediately" />
                             </SelectTrigger>
@@ -333,7 +362,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="default-priority">Default Ticket Priority</Label>
-                            <Select onValueChange={() => {}} defaultValue="Medium">
+                            <Select onValueChange={(value) => handleGenericSave(`Default Priority set to ${value}`)} defaultValue="Medium">
                                 <SelectTrigger id="default-priority">
                                     <SelectValue placeholder="Medium" />
                                 </SelectTrigger>
@@ -407,11 +436,11 @@ export default function SettingsPage() {
                                 <span>Enable Ticket Rating</span>
                                 <span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to rate resolved tickets.</span>
                             </Label>
-                            <Switch id="ticket-rating" checked={ticketRating} onCheckedChange={setTicketRating} />
+                            <Switch id="ticket-rating" checked={ticketRating} onCheckedChange={(checked) => {setTicketRating(checked); handleGenericSave(`Ticket Rating ${checked ? 'Enabled' : 'Disabled'}`);}} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="rating-scale">Rating Scale</Label>
-                            <Select onValueChange={() => {}} defaultValue="5star">
+                            <Select onValueChange={(value) => handleGenericSave(`Rating Scale set to ${value}`)} defaultValue="5star">
                                 <SelectTrigger id="rating-scale">
                                     <SelectValue placeholder="1-5 Stars" />
                                 </SelectTrigger>
@@ -427,7 +456,7 @@ export default function SettingsPage() {
                                 <span>General System Feedback</span>
                                 <span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to submit general feedback.</span>
                             </Label>
-                            <Switch id="general-feedback" checked={generalFeedback} onCheckedChange={setGeneralFeedback} />
+                            <Switch id="general-feedback" checked={generalFeedback} onCheckedChange={(checked) => {setGeneralFeedback(checked); handleGenericSave(`General Feedback ${checked ? 'Enabled' : 'Disabled'}`);}} />
                         </div>
                     </CardContent>
                     <CardFooter>

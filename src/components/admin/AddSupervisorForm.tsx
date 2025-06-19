@@ -22,13 +22,16 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 const addSupervisorSchema = z.object({
-  psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length <= 8, { message: "PSN must be 1 to 8 digits." }),
+  psn: z.string() // Changed for maxLength
+    .min(1, "PSN is required.")
+    .max(8, "PSN must be 1 to 8 digits.")
+    .regex(/^[0-9]+$/, "PSN must be a number."),
   name: z.string().min(3, "Name must be at least 3 characters"),
   businessEmail: z.string().email("Invalid email address"),
   dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(),
   title: z.string().min(3, "Title (e.g., Site Incharge, Cluster Head) is required"),
   functionalRole: z.enum(['IS', 'NS', 'DH', 'IC Head']),
-  branchProject: z.string().optional(), // Can be "NO_PROJECT_SELECTED" or a project ID
+  branchProject: z.string().optional(), 
   cityAccess: z.array(z.string()).optional(),
   projectsHandledIds: z.array(z.string()).optional(),
 });
@@ -43,11 +46,17 @@ export default function AddSupervisorForm() {
     defaultValues: {
         cityAccess: [],
         projectsHandledIds: [],
-        branchProject: "NO_PROJECT_SELECTED" // Default to "None"
+        branchProject: "NO_PROJECT_SELECTED" 
     }
   });
 
   const selectedFunctionalRole = watch("functionalRole");
+
+  const handlePsnInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setValue("psn", numericValue.slice(0, 8), { shouldValidate: true });
+  };
 
   const onSubmit: SubmitHandler<AddSupervisorFormData> = async (data) => {
     setIsLoading(true);
@@ -59,9 +68,16 @@ export default function AddSupervisorForm() {
     }
 
     const newSupervisor: Supervisor = {
-      ...supervisorDataSubmit,
-      dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
-      role: data.functionalRole,
+      psn: Number(supervisorDataSubmit.psn), // Convert PSN string to number
+      name: supervisorDataSubmit.name,
+      businessEmail: supervisorDataSubmit.businessEmail,
+      dateOfBirth: supervisorDataSubmit.dateOfBirth ? format(supervisorDataSubmit.dateOfBirth, "yyyy-MM-dd") : undefined,
+      title: supervisorDataSubmit.title,
+      functionalRole: supervisorDataSubmit.functionalRole,
+      branchProject: supervisorDataSubmit.branchProject,
+      cityAccess: supervisorDataSubmit.cityAccess,
+      projectsHandledIds: supervisorDataSubmit.projectsHandledIds,
+      role: supervisorDataSubmit.functionalRole,
       ticketsResolved: 0,
       ticketsPending: 0,
     };
@@ -92,7 +108,14 @@ export default function AddSupervisorForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="psn-supervisor">PSN (up to 8 digits)</Label>
-              <Input id="psn-supervisor" type="number" {...register("psn")} placeholder="e.g., 20000001" />
+              <Input 
+                id="psn-supervisor" 
+                type="text" 
+                {...register("psn")} 
+                onInput={handlePsnInput}
+                maxLength={8}
+                placeholder="e.g., 20000001" 
+              />
               {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
             </div>
             <div className="space-y-2">
@@ -220,5 +243,3 @@ export default function AddSupervisorForm() {
     </Card>
   );
 }
-
-    

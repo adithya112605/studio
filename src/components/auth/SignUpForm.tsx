@@ -14,11 +14,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import PasswordStrength from './PasswordStrength';
 import type { PasswordStrengthResult } from '@/types';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, AlertTriangle, Sparkles, Info } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
 
 const signUpStep1Schema = z.object({
-  psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length > 0 && val.toString().length <= 8, { message: "PSN must be a number with 1 to 8 digits." }),
+  psn: z.string() // Changed for maxLength
+    .min(1, "PSN is required.")
+    .max(8, "PSN must be 1 to 8 digits.")
+    .regex(/^[0-9]+$/, "PSN must be a number."),
 });
 
 const signUpStep2Schema = z.object({
@@ -32,6 +37,23 @@ const signUpStep2Schema = z.object({
 type SignUpStep1Values = z.infer<typeof signUpStep1Schema>;
 type SignUpStep2Values = z.infer<typeof signUpStep2Schema>;
 
+// Simple password generator
+const generatePassword = (length = 12): string => {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+  let retVal = "";
+  for (let i = 0, n = charset.length; i < length; ++i) {
+    retVal += charset.charAt(Math.floor(Math.random() * n));
+  }
+  // Ensure it has a mix of character types
+  if (!/[a-z]/.test(retVal)) retVal += 'a';
+  if (!/[A-Z]/.test(retVal)) retVal += 'Z';
+  if (!/[0-9]/.test(retVal)) retVal += '1';
+  if (!/[!@#$%^&*()_+~`|}{[\]:;?><,./-=]/.test(retVal)) retVal += '!';
+  
+  return retVal.slice(0, length); // Trim if extra chars were added
+};
+
+
 export default function SignUpForm() {
   const { checkPSNExists, signup } = useAuth();
   const router = useRouter();
@@ -42,6 +64,7 @@ export default function SignUpForm() {
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthResult | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
   const formStep1 = useForm<SignUpStep1Values>({
     resolver: zodResolver(signUpStep1Schema),
@@ -49,22 +72,42 @@ export default function SignUpForm() {
 
   const formStep2 = useForm<SignUpStep2Values>({
     resolver: zodResolver(signUpStep2Schema),
-    mode: "onChange"
+    mode: "onChange" // Validate on change for password confirmation
   });
 
   const watchedPassword = formStep2.watch("password");
 
+  const handlePsnInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const numericValue = value.replace(/[^0-9]/g, '');
+    formStep1.setValue("psn", numericValue.slice(0, 8), { shouldValidate: true });
+  };
+
+  const checkCapsLock = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (typeof event.getModifierState === 'function') {
+      setIsCapsLockOn(event.getModifierState("CapsLock"));
+    }
+  };
+
+  const handleGeneratePassword = () => {
+    const newPassword = generatePassword();
+    formStep2.setValue("password", newPassword, { shouldValidate: true });
+    formStep2.setValue("confirmPassword", newPassword, { shouldValidate: true });
+    toast({ title: "Password Generated", description: "A new strong password has been generated and filled in." });
+  };
+
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
     setIsLoading(true);
-    const exists = await checkPSNExists(data.psn);
+    const psnNumber = Number(data.psn);
+    const exists = await checkPSNExists(psnNumber);
     setIsLoading(false);
     if (exists) {
-      setPsnForStep2(data.psn);
+      setPsnForStep2(psnNumber);
       setStep(2);
     } else {
       toast({
         title: "PSN Not Found",
-        description: "This PSN is not registered in our system. Please contact L&T Admin.",
+        description: "This PSN is not registered in our system or is already activated. Please contact L&T Admin if you believe this is an error.",
         variant: "destructive",
       });
     }
@@ -106,7 +149,14 @@ export default function SignUpForm() {
           <form onSubmit={formStep1.handleSubmit(handlePsnSubmit)} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="psn-signup">PSN (up to 8 digits)</Label>
-              <Input id="psn-signup" type="number" {...formStep1.register("psn")} placeholder="e.g., 10000001" />
+              <Input 
+                id="psn-signup" 
+                type="text" // Changed for maxLength
+                {...formStep1.register("psn")} 
+                onInput={handlePsnInput}
+                maxLength={8}
+                placeholder="e.g., 10000001" 
+              />
               {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -118,9 +168,22 @@ export default function SignUpForm() {
         {step === 2 && (
           <form onSubmit={formStep2.handleSubmit(handlePasswordSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="password-signup">New Password</Label>
+              <div className="flex justify-between items-center">
+                 <Label htmlFor="password-signup">New Password</Label>
+                 <Button type="button" variant="link" size="sm" onClick={handleGeneratePassword} className="text-xs p-0 h-auto">
+                    <Sparkles className="mr-1 h-3 w-3" /> Generate
+                 </Button>
+              </div>
               <div className="relative">
-                <Input id="password-signup" type={showPassword ? "text" : "password"} {...formStep2.register("password")} placeholder="••••••••" />
+                <Input 
+                  id="password-signup" 
+                  type={showPassword ? "text" : "password"} 
+                  {...formStep2.register("password")} 
+                  placeholder="••••••••" 
+                  onKeyUp={checkCapsLock}
+                  onKeyDown={checkCapsLock}
+                  onClick={checkCapsLock}
+                />
                 <Button
                   type="button"
                   variant="ghost"
@@ -128,17 +191,34 @@ export default function SignUpForm() {
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
               <PasswordStrength password={watchedPassword} onStrengthChange={setPasswordStrength} />
               {formStep2.formState.errors.password && <p className="text-sm text-destructive">{formStep2.formState.errors.password.message}</p>}
+              {isCapsLockOn && (
+                 <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                    Caps Lock is ON.
+                    </AlertDescription>
+                </Alert>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
               <div className="relative">
-                <Input id="confirmPassword-signup" type={showConfirmPassword ? "text" : "password"} {...formStep2.register("confirmPassword")} placeholder="••••••••" />
+                <Input 
+                  id="confirmPassword-signup" 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  {...formStep2.register("confirmPassword")} 
+                  placeholder="••••••••" 
+                  onKeyUp={checkCapsLock} // Also check caps lock on confirm for consistency
+                  onKeyDown={checkCapsLock}
+                  onClick={checkCapsLock}
+                />
                  <Button
                   type="button"
                   variant="ghost"
@@ -146,6 +226,7 @@ export default function SignUpForm() {
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -154,15 +235,15 @@ export default function SignUpForm() {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading || !passwordStrength?.isValid}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
+              Create Account & Sign In
             </Button>
-            <Button variant="link" onClick={() => setStep(1)} className="w-full">
+            <Button variant="outline" onClick={() => setStep(1)} className="w-full">
               Back to PSN Entry
             </Button>
           </form>
         )}
       </CardContent>
-      <CardFooter className="text-sm">
+      <CardFooter className="text-sm text-center block">
         <p>
           Already have an account?{' '}
           <Link href="/auth/signin" passHref>

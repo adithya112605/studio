@@ -22,16 +22,19 @@ import { format } from 'date-fns';
 
 
 const addEmployeeSchema = z.object({
-  psn: z.coerce.number().int().positive("PSN must be a positive number.").refine(val => val.toString().length <= 8, { message: "PSN must be 1 to 8 digits." }),
+  psn: z.string() // Changed for maxLength
+    .min(1, "PSN is required.")
+    .max(8, "PSN must be 1 to 8 digits.")
+    .regex(/^[0-9]+$/, "PSN must be a number."),
   name: z.string().min(3, "Name must be at least 3 characters"),
   businessEmail: z.string().email("Invalid email address"),
   dateOfBirth: z.date({ required_error: "Date of birth is required." }).optional(),
   project: z.string().min(1, "Project selection is required"),
-  jobCodeId: z.string().min(1, "Job Code selection is required"), // Now refers to the new JobCode.id
-  grade: z.string().min(1, "Grade is required."), // Refers to M1-A, M2-B etc.
-  isPSN: z.coerce.number().optional(),
-  nsPSN: z.coerce.number().optional(),
-  dhPSN: z.coerce.number().optional(),
+  jobCodeId: z.string().min(1, "Job Code selection is required"),
+  grade: z.string().min(1, "Grade is required."),
+  isPSN: z.string().optional().refine(val => !val || /^[0-9]+$/.test(val) && val.length <= 8, { message: "IS PSN must be up to 8 digits."}),
+  nsPSN: z.string().optional().refine(val => !val || /^[0-9]+$/.test(val) && val.length <= 8, { message: "NS PSN must be up to 8 digits."}),
+  dhPSN: z.string().optional().refine(val => !val || /^[0-9]+$/.test(val) && val.length <= 8, { message: "DH PSN must be up to 8 digits."}),
 });
 
 export default function AddEmployeeForm() {
@@ -39,21 +42,36 @@ export default function AddEmployeeForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<AddEmployeeFormData>({
+  const { register, handleSubmit, control, formState: { errors }, setValue } = useForm<AddEmployeeFormData>({
     resolver: zodResolver(addEmployeeSchema),
   });
+  
+  const handleNumericInput = (fieldName: "psn" | "isPSN" | "nsPSN" | "dhPSN", event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setValue(fieldName, numericValue.slice(0, 8), { shouldValidate: true });
+  };
+
 
   const onSubmit: SubmitHandler<AddEmployeeFormData> = async (data) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000)); 
 
     const newEmployee: Employee = {
-      ...data,
+      psn: Number(data.psn),
+      name: data.name,
+      businessEmail: data.businessEmail,
       dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
+      project: data.project,
+      jobCodeId: data.jobCodeId,
+      grade: data.grade,
       role: 'Employee',
-      isName: data.isPSN ? mockSupervisors.find(s => s.psn === data.isPSN)?.name : undefined,
-      nsName: data.nsPSN ? mockSupervisors.find(s => s.psn === data.nsPSN)?.name : undefined,
-      dhName: data.dhPSN ? mockSupervisors.find(s => s.psn === data.dhPSN)?.name : undefined,
+      isPSN: data.isPSN ? Number(data.isPSN) : undefined,
+      isName: data.isPSN ? mockSupervisors.find(s => s.psn === Number(data.isPSN))?.name : undefined,
+      nsPSN: data.nsPSN ? Number(data.nsPSN) : undefined,
+      nsName: data.nsPSN ? mockSupervisors.find(s => s.psn === Number(data.nsPSN))?.name : undefined,
+      dhPSN: data.dhPSN ? Number(data.dhPSN) : undefined,
+      dhName: data.dhPSN ? mockSupervisors.find(s => s.psn === Number(data.dhPSN))?.name : undefined,
     };
 
     mockEmployees.push(newEmployee);
@@ -74,7 +92,14 @@ export default function AddEmployeeForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="psn">PSN (up to 8 digits)</Label>
-              <Input id="psn" type="number" {...register("psn")} placeholder="e.g., 10000001" />
+              <Input 
+                id="psn" 
+                type="text" 
+                {...register("psn")} 
+                onInput={(e) => handleNumericInput("psn", e as React.ChangeEvent<HTMLInputElement>)}
+                maxLength={8}
+                placeholder="e.g., 10000001" 
+              />
               {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
             </div>
             <div className="space-y-2">
@@ -182,17 +207,38 @@ export default function AddEmployeeForm() {
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label htmlFor="isPSN">Immediate Supervisor (IS) PSN</Label>
-              <Input id="isPSN" type="number" {...register("isPSN")} placeholder="IS PSN (Optional)" />
+              <Input 
+                id="isPSN" 
+                type="text" 
+                {...register("isPSN")} 
+                onInput={(e) => handleNumericInput("isPSN", e as React.ChangeEvent<HTMLInputElement>)}
+                maxLength={8}
+                placeholder="IS PSN (Optional)" 
+              />
               {errors.isPSN && <p className="text-sm text-destructive">{errors.isPSN.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="nsPSN">Next Level Supervisor (NS) PSN</Label>
-              <Input id="nsPSN" type="number" {...register("nsPSN")} placeholder="NS PSN (Optional)" />
+              <Input 
+                id="nsPSN" 
+                type="text" 
+                {...register("nsPSN")} 
+                onInput={(e) => handleNumericInput("nsPSN", e as React.ChangeEvent<HTMLInputElement>)}
+                maxLength={8}
+                placeholder="NS PSN (Optional)" 
+              />
               {errors.nsPSN && <p className="text-sm text-destructive">{errors.nsPSN.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="dhPSN">Department Head (DH) PSN</Label>
-              <Input id="dhPSN" type="number" {...register("dhPSN")} placeholder="DH PSN (Optional)" />
+              <Input 
+                id="dhPSN" 
+                type="text" 
+                {...register("dhPSN")}
+                onInput={(e) => handleNumericInput("dhPSN", e as React.ChangeEvent<HTMLInputElement>)}
+                maxLength={8} 
+                placeholder="DH PSN (Optional)" 
+              />
               {errors.dhPSN && <p className="text-sm text-destructive">{errors.dhPSN.message}</p>}
             </div>
           </div>

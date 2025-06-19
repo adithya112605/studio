@@ -26,8 +26,9 @@ export default function MyProfilePage() {
 
   const handleEditProfile = () => {
     toast({
-      title: "Action Info",
-      description: "Profile editing functionality is typically managed via the Settings page or by administrators.",
+      title: "Action Info (Simulated)",
+      description: "Profile editing functionality is a placeholder. In a real application, you would be able to edit your details here or via the Settings page.",
+      duration: 5000,
     });
   };
 
@@ -49,10 +50,20 @@ export default function MyProfilePage() {
           supervisorChain.ns = mockSupervisors.find(s => s.psn === employeeUser.nsPSN);
           supervisorChain.dh = mockSupervisors.find(s => s.psn === employeeUser.dhPSN);
         } else if (supervisorUser) {
-          if (supervisorUser.branchProject) {
-            projectInfo = mockProjects.find(p => p.id === supervisorUser.branchProject);
+          if (supervisorUser.branchProject) { // Check if branchProject exists
+             const foundProject = mockProjects.find(p => p.id === supervisorUser.branchProject);
+             if (foundProject) {
+                projectInfo = foundProject;
+             } else if (supervisorUser.projectsHandledIds && supervisorUser.projectsHandledIds.length > 0) {
+                // Fallback to first handled project if branchProject ID is invalid or not found
+                projectInfo = mockProjects.find(p => p.id === supervisorUser.projectsHandledIds![0]);
+             }
+          } else if (supervisorUser.projectsHandledIds && supervisorUser.projectsHandledIds.length > 0) {
+             // If no branchProject, use the first project handled
+             projectInfo = mockProjects.find(p => p.id === supervisorUser.projectsHandledIds![0]);
           }
         }
+
 
         const supervisorRoleTitle = supervisorUser ? `${supervisorUser.title} (${supervisorUser.functionalRole})` : '';
 
@@ -119,7 +130,7 @@ export default function MyProfilePage() {
                     <>
                         <h3 className="text-xl font-semibold text-primary border-b pb-2 mb-4 mt-6">Supervisory Role Details</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                            {projectInfo && (
+                            {projectInfo && ( // Ensure projectInfo is defined before accessing its properties
                                 <div className="flex items-center">
                                 <Building className="w-5 h-5 mr-3 text-primary shrink-0" />
                                 <div><strong>Branch/Primary Project:</strong> {projectInfo.name} ({projectInfo.city})</div>
@@ -162,7 +173,7 @@ export default function MyProfilePage() {
               </CardContent>
               <CardFooter className="flex-col space-y-3 items-center p-6 border-t bg-muted/30">
                 <Button variant="outline" onClick={handleEditProfile} className="w-full max-w-xs">
-                  <Edit className="mr-2 h-4 w-4" /> Edit Profile (Placeholder)
+                  <Edit className="mr-2 h-4 w-4" /> Edit Profile (Simulated)
                 </Button>
                  <Button variant="link" asChild className="text-sm">
                     <Link href="/settings">Go to Account Settings</Link>
