@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye, LogIn, UserCog, ChevronDown, Building, PanelLeft, Info } from 'lucide-react';
+import { PanelLeft, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserCog, ChevronDown, Building, LogIn, Info, Sparkles, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +25,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import LTLogo from './LTLogo';
 import { cn } from '@/lib/utils';
 import { mockEmployees } from '@/data/mockData';
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
@@ -39,10 +39,6 @@ const Navbar = () => {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
 
   const handleLogout = () => {
     logout();
@@ -66,19 +62,21 @@ const Navbar = () => {
   const supervisorBaseNavItemsMobile = [
     ...commonAuthenticatedNavItemsBaseMobile,
     { href: '/hr/tickets', label: 'Ticket Management', icon: <FileSpreadsheet /> },
-    { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Eye /> },
+    { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Users /> },
     { href: '/reports', label: 'Reports', icon: <BarChart3 /> },
     { href: '/notifications', label: 'Notifications', icon: <Bell /> },
     { href: '/settings', label: 'Settings', icon: <Settings /> },
   ];
   const adminManagementNavItemsMobile = [
-     { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users /> },
-     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserSquare2 /> },
+     { href: '/admin/add-employee', label: 'Manage Employees', icon: <UserPlus /> },
+     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog /> },
   ];
   const unauthenticatedNavItemsMobile = [
     { href: '/auth/signin', label: 'Sign In', icon: <LogIn /> },
     { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus /> },
     { href: '/', label: 'Home', icon: <Home /> },
+    { href: '/#features', label: 'Features', icon: <Sparkles /> },
+    { href: '/#contact', label: 'Contact', icon: <Info /> },
   ];
 
   let navItemsForMobile = unauthenticatedNavItemsMobile;
@@ -96,26 +94,32 @@ const Navbar = () => {
   
   let desktopNavLinks: Array<{href?:string; label:string; isDropdown?: boolean; subItems?: Array<{href:string; label:string; icon?: React.ReactNode; description?: string}>; description?: string}> = [];
   if (user) {
-    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard', description: 'Access your personalized overview, recent activities, and quick links to key system functionalities.'});
+    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard', description: 'Access your personalized overview, recent activities, and quick links to key system functionalities. Manage your tasks and stay updated with important notifications.'});
     if (user.role === 'Employee') {
-      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets', description: 'View a comprehensive list of all support tickets you have raised, check their current status, and review historical interactions.'});
-      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket', description: 'Initiate a new support request by detailing your issue or query for the HR team to address.'});
+      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets', description: 'View a comprehensive list of all support tickets you have raised. Check their current status, review historical interactions, and add follow-up information.'});
+      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket', description: 'Initiate a new support request by detailing your issue or query for the HR team to address. Attach relevant files and set priority for faster resolution.'});
     } else { 
       const supervisorUser = user as Supervisor;
-      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.', description: 'Oversee, assign, and manage the lifecycle of support tickets relevant to your team or department.'});
-      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees', description: 'Access and review detailed information about employees under your supervision or within your designated scope.'});
-      desktopNavLinks.push({ href: '/reports', label: 'Reports', description: 'Generate, view, and analyze various system reports related to ticket trends, employee performance, and operational metrics.'});
+      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.', description: 'Oversee, assign, and manage the lifecycle of support tickets relevant to your team or department. Escalate issues and monitor resolution progress.'});
+      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees', description: 'Access and review detailed information about employees under your supervision or within your designated scope. View their project assignments and hierarchy.'});
+      desktopNavLinks.push({ href: '/reports', label: 'Reports', description: 'Generate, view, and analyze various system reports related to ticket trends, employee performance, and operational metrics to gain insights.'});
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
         desktopNavLinks.push({
-          label: 'Admin',
+          label: 'Admin Tools',
           isDropdown: true,
           subItems: [
-            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: 'Create new employee profiles in the system, assigning them to projects and relevant supervisors.' },
-            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: 'Onboard new supervisors, defining their roles, project affiliations, and access levels within the helpdesk system.' },
+            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: 'Create new employee profiles in the system, assigning them to projects, job codes, and relevant supervisors.' },
+            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: 'Onboard new supervisors, defining their roles, project affiliations, and city access levels within the helpdesk system.' },
           ]
         });
       }
     }
+  } else {
+    // Nav links for non-authenticated users
+    desktopNavLinks.push(
+        { href: '/#features', label: 'Features', description: 'Explore the key functionalities of the L&T Helpdesk system designed for efficient internal support.' },
+        { href: '/#contact', label: 'Contact Us', description: 'Get in touch with support for assistance or inquiries about the L&T Helpdesk platform.' }
+    );
   }
 
 
@@ -138,7 +142,7 @@ const Navbar = () => {
 
   return (
     <TooltipProvider delayDuration={100}>
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card text-card-foreground shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background text-foreground shadow-sm">
       <div className="container flex h-16 max-w-screen-2xl items-center px-4">
         <div className="flex items-center">
             <div className="md:hidden mr-2">
@@ -148,91 +152,88 @@ const Navbar = () => {
                     <PanelLeft className="h-5 w-5" />
                 </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-72 p-0 bg-background text-foreground">
-                    <div className="flex flex-col h-full">
-                        <div className="p-4 border-b">
-                           <SheetClose asChild>
-                                <Link href="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
-                                    <LTLogo className="h-7 w-7" />
-                                    <SheetTitle asChild>
-                                        <span className="font-bold font-headline text-lg">L&T Helpdesk</span>
-                                    </SheetTitle>
-                                </Link>
+                <SheetContent side="left" className="w-72 p-0 bg-background text-foreground flex flex-col">
+                    <SheetHeader className="p-4 border-b">
+                       <SheetClose asChild>
+                            <Link href="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+                                <LTLogo className="h-7 w-7" />
+                                <SheetTitle asChild><span className="font-bold font-headline text-lg text-foreground">L&T Helpdesk</span></SheetTitle>
+                            </Link>
+                        </SheetClose>
+                    </SheetHeader>
+                    <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
+                    {navItemsForMobile.map((item) => {
+                        const isActive = pathname === item.href;
+                        return (
+                        <SheetClose asChild key={item.label + item.href}>
+                            <Link
+                            href={item.href}
+                            className={cn(
+                                "group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                            )}
+                            >
+                            {item.icon ? React.cloneElement(item.icon, { className: cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground") }) : <div className="w-5 h-5 shrink-0"></div>}
+                            <span>{item.label}</span>
+                            </Link>
+                        </SheetClose>
+                        );
+                    })}
+                    </nav>
+                    <SheetFooter className="p-4 border-t">
+                    {user ? (
+                       <SheetClose asChild>
+                        <Button
+                        variant="outline"
+                        onClick={handleLogout}
+                        className="group flex items-center space-x-3 rounded-md text-sm font-medium transition-colors hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-muted-foreground hover:text-destructive-foreground" 
+                        >
+                        <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive-foreground" />
+                        <span>Logout</span>
+                        </Button>
+                       </SheetClose>
+                    ) : (
+                        <div className="space-y-2 w-full">
+                            <SheetClose asChild>
+                            <Button asChild variant="default" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setIsOpen(false)}>
+                                <Link href="/auth/signup">Sign Up</Link>
+                            </Button>
+                            </SheetClose>
+                            <SheetClose asChild>
+                            <Button asChild variant="outline" className="w-full" onClick={() => setIsOpen(false)}>
+                                <Link href="/auth/signin">Sign In</Link>
+                            </Button>
                             </SheetClose>
                         </div>
-                        <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
-                        {navItemsForMobile.map((item) => {
-                            const isActive = pathname === item.href;
-                            return (
-                            <SheetClose asChild key={item.label + item.href}>
-                                <Link
-                                href={item.href}
-                                className={cn(
-                                    "group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-                                )}
-                                >
-                                {item.icon ? React.cloneElement(item.icon, { className: cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground") }) : <div className="w-5 h-5 shrink-0"></div>}
-                                <span>{item.label}</span>
-                                </Link>
-                            </SheetClose>
-                            );
-                        })}
-                        {user && (
-                           <SheetClose asChild>
-                            <Button
-                            variant="ghost"
-                            onClick={handleLogout}
-                            className="group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-muted-foreground hover:text-destructive-foreground mt-auto" 
-                            >
-                            <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive-foreground" />
-                            <span>Logout</span>
-                            </Button>
-                           </SheetClose>
-                        )}
-                        </nav>
-                        {!user && (
-                            <div className="p-4 border-t space-y-2">
-                                <SheetClose asChild>
-                                <Button asChild variant="default" className="w-full" onClick={() => setIsOpen(false)}>
-                                    <Link href="/auth/signup">Sign Up</Link>
-                                </Button>
-                                </SheetClose>
-                                <SheetClose asChild>
-                                <Button asChild variant="outline" className="w-full" onClick={() => setIsOpen(false)}>
-                                    <Link href="/auth/signin">Sign In</Link>
-                                </Button>
-                                </SheetClose>
-                            </div>
-                        )}
-                    </div>
+                    )}
+                    </SheetFooter>
                 </SheetContent>
             </Sheet>
             </div>
             <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
             <LTLogo className="h-8 w-8" /> 
-            <span className="font-bold font-headline text-xl hidden sm:inline-block">L&T Helpdesk</span>
+            <span className="font-bold font-headline text-xl hidden sm:inline-block text-foreground">L&T Helpdesk</span>
             </Link>
         </div>
 
-        {user && (
-          <nav className="hidden md:flex flex-grow items-center space-x-1 lg:space-x-2 text-sm ml-6">
+        
+          <nav className="hidden md:flex flex-grow items-center justify-center space-x-1 lg:space-x-2 text-sm ml-6">
             {desktopNavLinks.map((item) =>
               item.isDropdown && item.subItems ? (
                 <DropdownMenu key={item.label}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
+                    <Button variant="ghost" className="px-3 py-2 text-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
                       {item.label} <ChevronDown className="ml-1 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-64"> {/* Increased width */}
+                  <DropdownMenuContent align="start" className="w-72 bg-popover text-popover-foreground border-border">
                     {item.subItems.map(subItem => (
-                      <DropdownMenuItem key={subItem.href} asChild>
-                         <Link href={subItem.href} className="flex items-center w-full group">
-                            <div className="flex-shrink-0 mr-2"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
+                      <DropdownMenuItem key={subItem.href} asChild className="hover:bg-accent/50 focus:bg-accent/50">
+                         <Link href={subItem.href} className="flex items-center w-full group p-2">
+                            <div className="flex-shrink-0 mr-2 text-muted-foreground group-hover:text-accent-foreground"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
                             <div className="flex flex-col">
                                 <span className="font-medium group-hover:text-primary">{subItem.label}</span>
-                                {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal">{subItem.description}</p>}
+                                {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal group-hover:text-accent-foreground">{subItem.description}</p>}
                             </div>
                         </Link>
                       </DropdownMenuItem>
@@ -242,17 +243,18 @@ const Navbar = () => {
               ) : (
                 <Tooltip key={item.label}>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" asChild className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
+                    <Button variant="ghost" asChild className="px-3 py-2 text-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
                       <Link href={item.href!}>{item.label}</Link>
                     </Button>
                   </TooltipTrigger>
-                  {item.description && <TooltipContent side="bottom" className="max-w-xs"><p>{item.description}</p></TooltipContent>}
+                  {item.description && <TooltipContent side="bottom" className="max-w-xs bg-popover text-popover-foreground border-border"><p>{item.description}</p></TooltipContent>}
                 </Tooltip>
               )
             )}
           </nav>
-        )}
-        {!user && <div className="flex-grow hidden md:block"></div>}
+        
+        {!user && desktopNavLinks.length === 0 && <div className="flex-grow hidden md:block"></div>}
+
 
         <div className="flex items-center space-x-1 md:space-x-2 ml-auto shrink-0">
           <ThemeToggle />
@@ -260,11 +262,11 @@ const Navbar = () => {
              <div className="flex items-center space-x-1">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5">
+                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-foreground hover:text-primary hover:bg-primary/5">
                             <Link href="/notifications" aria-label="Notifications"><Bell className="w-5 h-5"/></Link>
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom"><p>View Notifications</p></TooltipContent>
+                    <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border"><p>View Notifications</p></TooltipContent>
                 </Tooltip>
               <DropdownMenuUser user={user} logout={handleLogout} />
              </div>
@@ -272,19 +274,19 @@ const Navbar = () => {
              <div className="hidden md:flex items-center space-x-2">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button asChild variant="ghost" className="font-medium text-muted-foreground hover:text-primary px-4 h-9 text-sm">
+                        <Button asChild variant="ghost" className="font-medium text-foreground hover:text-primary px-4 h-9 text-sm">
                             <Link href="/auth/signin">SIGN IN</Link>
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom"><p>Access your account</p></TooltipContent>
+                    <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border"><p>Access your account</p></TooltipContent>
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button asChild variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 h-9 text-sm font-semibold">
+                        <Button asChild variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 h-9 text-sm font-semibold rounded-full">
                             <Link href="/auth/signup">GET STARTED</Link>
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom"><p>Create a new account</p></TooltipContent>
+                    <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border"><p>Create a new account</p></TooltipContent>
                 </Tooltip>
             </div>
           )}
@@ -327,8 +329,8 @@ const DropdownMenuUser = ({ user, logout }: {
   ];
 
   const managementSubItems = [
-    { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="mr-2 h-4 w-4"/>, description: "Add or update employee records." },
-    { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog className="mr-2 h-4 w-4"/>, description: "Add or update supervisor profiles." },
+    { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: "Add new employee profiles and assign roles." },
+    { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: "Onboard new supervisors and define access levels." },
   ];
   const showAdminItems = supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head');
 
@@ -337,13 +339,13 @@ const DropdownMenuUser = ({ user, logout }: {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-          <UserCircle2 className="h-5 w-5 text-muted-foreground hover:text-primary" />
+          <UserCircle2 className="h-5 w-5 text-foreground hover:text-primary" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-72" align="end" forceMount> {/* Increased width */}
+      <DropdownMenuContent className="w-72 bg-popover text-popover-foreground border-border" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1 py-1">
-            <p className="text-sm font-semibold leading-none">{user.name}</p>
+            <p className="text-sm font-semibold leading-none text-foreground">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
               PSN: {user.psn.toString()}
             </p>
@@ -352,13 +354,13 @@ const DropdownMenuUser = ({ user, logout }: {
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>
         {commonDropdownItems.map(item => (
-          <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
+          <DropdownMenuItem key={item.href} asChild className="cursor-pointer hover:bg-accent/50 focus:bg-accent/50">
             <Link href={item.href} className="flex items-center w-full">
               {item.icon}
-              <span>{item.label}</span>
+              <span className="text-popover-foreground">{item.label}</span>
             </Link>
           </DropdownMenuItem>
         ))}
@@ -366,21 +368,21 @@ const DropdownMenuUser = ({ user, logout }: {
 
         {showAdminItems && (
           <>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border"/>
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
+              <DropdownMenuSubTrigger className="hover:bg-accent/50 focus:bg-accent/50 data-[state=open]:bg-accent/50">
                 <Building className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>Admin Management</span>
+                <span className="text-popover-foreground">Admin Management</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
-                <DropdownMenuSubContent className="w-64"> {/* Sub-content width */}
+                <DropdownMenuSubContent className="w-72 bg-popover text-popover-foreground border-border"> 
                   {managementSubItems.map(subItem => (
-                    <DropdownMenuItem key={subItem.href} asChild>
+                    <DropdownMenuItem key={subItem.href} asChild className="hover:bg-accent/50 focus:bg-accent/50">
                        <Link href={subItem.href} className="flex items-start w-full group p-2">
-                          <div className="flex-shrink-0 mr-2 mt-0.5"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
+                          <div className="flex-shrink-0 mr-2 mt-0.5 text-muted-foreground group-hover:text-accent-foreground"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
                           <div className="flex flex-col">
-                              <span className="text-sm font-medium group-hover:text-primary">{subItem.label}</span>
-                              {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal leading-tight">{subItem.description}</p>}
+                              <span className="text-sm font-medium text-popover-foreground group-hover:text-primary">{subItem.label}</span>
+                              {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal leading-tight group-hover:text-accent-foreground">{subItem.description}</p>}
                           </div>
                       </Link>
                     </DropdownMenuItem>
@@ -391,8 +393,8 @@ const DropdownMenuUser = ({ user, logout }: {
           </>
         )}
 
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive/90">
+        <DropdownMenuSeparator className="bg-border"/>
+        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive/90 hover:bg-destructive/10!important">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

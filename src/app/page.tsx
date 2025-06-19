@@ -4,38 +4,34 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, UserSquare2, HomeIcon, Zap, TrendingUp, Clock, Smile } from 'lucide-react';
+import { MessageSquare, ShieldCheck, Users, Briefcase, UserPlus, UserCog, ArrowRight, Sparkles, Zap, TrendingUp, Clock, Smile, CheckCircle, HardHat, Handshake } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext'; 
-import ScrollTypewriter from '@/components/common/ScrollTypewriter';
-import React, { useState } from 'react';
-
+import React from 'react';
 
 export default function HomePage() {
   const { user } = useAuth(); 
-  const [isHeadlinePart1Done, setIsHeadlinePart1Done] = useState(false);
-  const [isHeadlinePart2Done, setIsHeadlinePart2Done] = useState(false);
 
   const features = [
     {
       icon: <MessageSquare className="w-10 h-10 text-primary mb-4" />,
-      title: "Effortless Ticket Raising",
-      description: "Employees can quickly raise support tickets for any issue, ensuring swift attention.",
+      title: "Effortless Ticket Submission",
+      description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
     },
     {
       icon: <ShieldCheck className="w-10 h-10 text-primary mb-4" />,
-      title: "Secure Authentication",
-      description: "Robust PSN-based authentication with password management for secure access.",
+      title: "Secure & Role-Based Access",
+      description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
     },
     {
-      icon: <Users className="w-10 h-10 text-primary mb-4" />,
-      title: "Hierarchical Support",
-      description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with tailored functionalities.",
+      icon: <HardHat className="w-10 h-10 text-primary mb-4" />,
+      title: "Hierarchical Support System",
+      description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
     },
     {
-      icon: <Briefcase className="w-10 h-10 text-primary mb-4" />,
-      title: "AI-Powered Suggestions",
-      description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling.",
+      icon: <Sparkles className="w-10 h-10 text-primary mb-4" />,
+      title: "AI-Powered Insights",
+      description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
     },
   ];
 
@@ -44,189 +40,160 @@ export default function HomePage() {
       value: "24/7",
       label: "Support Available",
       color: "text-primary",
-      icon: <Zap className="w-8 h-8 mb-2" />
+      icon: <Clock className="w-10 h-10 mb-3" />
     },
     {
       value: "98%",
       label: "Resolution Rate",
-      color: "text-emerald-500",
-      icon: <TrendingUp className="w-8 h-8 mb-2" />
+      color: "text-accent",
+      icon: <TrendingUp className="w-10 h-10 mb-3" />
     },
     {
-      value: "<2h",
-      label: "Avg Response Time",
-      color: "text-violet-500",
-      icon: <Clock className="w-8 h-8 mb-2" />
+      value: "<2Hrs",
+      label: "Avg. Response",
+      color: "text-primary",
+      icon: <Zap className="w-10 h-10 mb-3" />
     },
     {
-      value: "50K+",
-      label: "Happy Employees",
-      color: "text-amber-500",
-      icon: <Smile className="w-8 h-8 mb-2" />
+      value: "150K+",
+      label: "Employees Served",
+      color: "text-accent",
+      icon: <Users className="w-10 h-10 mb-3" />
     }
   ];
 
-  const headlineText1 = "Welcome to ";
-  const headlineText2 = "L&T Helpdesk";
-  const descriptionText = "Streamlining internal support for L&T employees. Get quick resolutions and manage your queries efficiently with hierarchical supervisor support.";
-
-
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center bg-background text-foreground min-h-screen overflow-x-hidden">
       {/* Hero Section */}
-      <section className="w-full py-20 lg:py-32 bg-gradient-to-br from-background to-primary/10 dark:from-background dark:to-primary/5">
-        <div className="container mx-auto text-center px-4">
-          {user ? (
-            <>
-              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                Welcome back, <span className="text-primary">{user.name}!</span>
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                Access your dashboard, manage tickets, or explore system features.
-              </p>
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
-                <Link href="/dashboard"><HomeIcon className="mr-2"/> Go to Dashboard</Link>
-              </Button>
-            </>
-          ) : (
-            <>
-              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-6 min-h-[3em] md:min-h-[2.5em] lg:min-h-[2em]">
-                <ScrollTypewriter
-                  tag="span"
-                  text={headlineText1}
-                  className="inline"
-                  speed={60}
-                  startOffset="0px 0px -30px 0px"
-                  onAnimationComplete={() => setIsHeadlinePart1Done(true)}
-                />
-                <ScrollTypewriter
-                  tag="span"
-                  text={headlineText2}
-                  className="text-primary inline"
-                  speed={60}
-                  startManually={isHeadlinePart1Done} // Start when first part is done
-                  startOffset="0px 0px -30px 0px" 
-                  onAnimationComplete={() => setIsHeadlinePart2Done(true)}
-                />
-              </h1>
-              
-              <div className="min-h-[5em] md:min-h-[3em]"> {/* Adjusted min-height */}
-                <ScrollTypewriter
-                    tag="p"
-                    text={descriptionText}
-                    className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
-                    speed={20}
-                    startManually={isHeadlinePart2Done} // Start when second part of headline is done
-                    startOffset="0px 0px -50px 0px"
-                  />
-              </div>
-
-              <div className="space-x-4 mt-2"> {/* Added mt-2 for slight separation */}
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
+      <section className="w-full py-24 lg:py-40 relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-10">
+            <Image
+                src="https://placehold.co/1920x1080.png" // Placeholder for abstract background
+                alt="Abstract Background"
+                layout="fill"
+                objectFit="cover"
+                className="animate-pulse"
+                data-ai-hint="abstract tech background"
+            />
+        </div>
+        <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
+          <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight">
+            L&amp;T Helpdesk
+          </h1>
+          <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
+            Efficient. Reliable. Internal Support, Reimagined for Larsen & Toubro Employees.
+          </p>
+          <div className="space-x-0 space-y-4 sm:space-x-4 sm:space-y-0">
+            {user ? (
+                 <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105">
+                    <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-2 h-5 w-5"/></Link>
+                </Button>
+            ) : (
+                <>
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="px-8 py-3 rounded-lg shadow-lg transition-transform hover:scale-105">
-                  <Link href="/auth/signup">First Time User?</Link>
+                <Button asChild variant="outline" size="lg" className="border-primary text-primary hover:bg-primary/10 px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+                  <Link href="/auth/signup">Get Started</Link>
                 </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="w-full py-12 lg:py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {stats.map((stat, index) => (
-              <div key={index} className="flex flex-col items-center p-4 rounded-lg hover:shadow-lg transition-shadow">
-                <div className={`${stat.color} mb-2`}>{stat.icon}</div>
-                <p className={`font-headline text-3xl md:text-4xl font-bold ${stat.color}`}>{stat.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-              </div>
-            ))}
+                </>
+            )}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 lg:py-24 w-full">
-        <div className="container mx-auto px-4">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-12">
-            Why Choose L&T Helpdesk?
+      <section id="features" className="py-16 lg:py-24 w-full bg-card">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+            Key Features of L&T Helpdesk
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-                <CardHeader>
-                  <div className="flex justify-center">{feature.icon}</div>
-                  <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardContent>
-              </Card>
+              <div key={index} className="text-center p-8 bg-background rounded-xl shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 flex flex-col items-center">
+                <div className="mb-6">{feature.icon}</div>
+                <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* About L&T Section */}
-      <section className="py-16 lg:py-24 bg-secondary/30 w-full">
-        <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6">
-              About <span className="text-primary">Larsen & Toubro</span>
-            </h2>
-            <p className="text-muted-foreground mb-4 leading-relaxed">
-              Larsen & Toubro is a major Indian multinational conglomerate, with business interests in engineering, construction, manufacturing, technology, and financial services. Headquartered in Mumbai, the company is counted among the world's largest construction companies.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              This Helpdesk system is designed to enhance internal support processes, ensuring that every L&T employee receives timely assistance for their work-related queries and issues.
-            </p>
-             <Button asChild variant="link" className="text-primary p-0 mt-4 hover:underline">
-              <a href="https://www.larsentoubro.com/" target="_blank" rel="noopener noreferrer">
-                Learn more about L&T &rarr;
-              </a>
-            </Button>
-          </div>
-          <div className="rounded-lg overflow-hidden shadow-2xl">
-            <Image
-              src="https://placehold.co/600x400.png"
-              alt="L&T Corporate Image"
-              width={600}
-              height={400}
-              className="object-cover w-full h-full"
-              data-ai-hint="corporate building"
-            />
+      {/* Stats Section */}
+      <section className="py-16 lg:py-24 w-full">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+            System Performance at a Glance
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+            {stats.map((stat, index) => (
+              <div key={index} className="flex flex-col items-center p-8 bg-card rounded-xl shadow-xl hover:shadow-accent/20 transition-shadow">
+                <div className={`${stat.color} mb-4`}>{stat.icon}</div>
+                <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
+      
+      {/* Image section like Vexo */}
+      <section className="py-16 lg:py-24 w-full bg-card">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-background p-8 md:p-12 rounded-xl shadow-2xl overflow-hidden">
+                <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                    <div>
+                        <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6 text-foreground">
+                            Built for <span className="text-primary">Efficiency and Scale</span>
+                        </h2>
+                        <p className="text-muted-foreground mb-4 leading-relaxed text-lg">
+                            Our helpdesk platform is engineered to handle the diverse needs of a large organization like Larsen & Toubro, ensuring smooth operations and quick resolutions.
+                        </p>
+                        <ul className="space-y-3 text-muted-foreground">
+                            <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Intuitive user interface for all employees.</li>
+                            <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Scalable infrastructure to support thousands of users.</li>
+                            <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Robust security and data privacy measures.</li>
+                        </ul>
+                        <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-full text-md font-semibold shadow-lg transition-transform hover:scale-105">
+                            <Link href={user ? "/dashboard" : "/auth/signup"}>
+                                {user ? "Explore Dashboard" : "Get Started Now"} <ArrowRight className="ml-2 h-5 w-5"/>
+                            </Link>
+                        </Button>
+                    </div>
+                    <div className="rounded-lg overflow-hidden shadow-2xl aspect-video">
+                        <Image
+                        src="https://placehold.co/600x400.png"
+                        alt="Modern Office or Tech Interface"
+                        width={600}
+                        height={400}
+                        className="object-cover w-full h-full"
+                        data-ai-hint="modern office tech interface"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
 
-      {/* Admin/Supervisor Actions Section - Conditionally render if user is not logged in */}
-      {!user && (
-        <section className="py-16 lg:py-24 w-full">
-          <div className="container mx-auto text-center px-4">
-              <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6">
-                  Administrative & Supervisor Actions
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                  Supervisors and Administrative staff can manage employee records and helpdesk operations. Access requires authentication.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                   <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                      <Link href="/auth/signin?role=supervisor"><UserCog className="mr-2"/> Supervisor Portal Login</Link>
-                  </Button>
-                   <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                      <Link href="/admin/add-employee"><UserPlus className="mr-2"/> Add New Employee</Link>
-                  </Button>
-                   <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 py-3 rounded-lg shadow-lg">
-                      <Link href="/admin/add-supervisor"><UserSquare2 className="mr-2"/> Add New Supervisor</Link>
-                  </Button>
-              </div>
-          </div>
-        </section>
-      )}
+
+      {/* Contact/CTA Section */}
+      <section id="contact" className="py-20 lg:py-32 w-full">
+        <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <Handshake className="w-16 h-16 text-primary mx-auto mb-6"/>
+          <h2 className="font-headline text-3xl md:text-5xl font-bold mb-6 text-foreground">
+            Ready to Experience Streamlined Support?
+          </h2>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+            Join thousands of L&T employees already benefiting from our efficient internal helpdesk system.
+          </p>
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 rounded-full text-xl font-semibold shadow-xl transition-transform hover:scale-105">
+            <Link href={user ? "/dashboard" : "/auth/signup"}>
+                {user ? "Go to Dashboard" : "Create Your Account"}
+            </Link>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

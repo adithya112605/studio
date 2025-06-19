@@ -25,16 +25,16 @@ export default function RootLayout({
         {/* Updated Font Link: Inter */}
         <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased flex flex-col min-h-screen" suppressHydrationWarning> {/* font-body will apply Inter via Tailwind */}
+      <body className="font-body antialiased flex flex-col min-h-screen bg-background text-foreground" suppressHydrationWarning> {/* font-body will apply Inter via Tailwind */}
         <AuthProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="dark" // Vexo is dark by default
             enableSystem
             disableTransitionOnChange
           >
             <Navbar />
-            <main className="flex-grow container mx-auto px-4 py-8">
+            <main className="flex-grow"> {/* Removed container and padding to allow full-width sections */}
               {children}
             </main>
             <Footer />

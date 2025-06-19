@@ -6,79 +6,79 @@
   The body font is now applied via the `font-body` class in src/app/layout.tsx, 
   configured in tailwind.config.ts.
   Headline fonts are applied via the `font-headline` class, also configured in tailwind.config.ts.
-  Explicit font-family rules here for body or .font-headline are removed to rely on Tailwind.
 */
 
 @layer base {
   :root {
-    /* New Blue Theme */
-    --background: 210 40% 96%; /* Very light, slightly desaturated blue */
-    --foreground: 215 28% 17%; /* Dark blue for text */
+    /* Vexo Inspired Dark Theme */
+    --background: 224 71% 4%; /* Very Dark Blue/Almost Black */
+    --foreground: 210 40% 96%; /* Light Gray for text */
     
-    --card: 210 40% 96%; /* Same as background for a cohesive feel */
-    --card-foreground: 215 28% 17%;
+    --card: 223 47% 11%; /* Dark Slate Blue for cards */
+    --card-foreground: 210 40% 96%;
 
-    --popover: 210 40% 96%;
-    --popover-foreground: 215 28% 17%;
+    --popover: 223 47% 11%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 217 91% 60%; /* A strong, trustworthy blue */
-    --primary-foreground: 210 40% 98%; /* Light text on primary blue */
+    --primary: 263 80% 62%; /* Vibrant Purple */
+    --primary-foreground: 210 40% 98%; /* Light text on primary */
 
-    --secondary: 216 34% 90%; /* Lighter blue-gray for secondary elements */
-    --secondary-foreground: 215 28% 17%; /* Dark blue text on secondary */
+    --secondary: 217 33% 17%; /* Darker Blue-Gray for secondary elements */
+    --secondary-foreground: 210 40% 96%; /* Light blue text on secondary */
 
-    --muted: 216 34% 80%; /* Muted blue-gray */
-    --muted-foreground: 215 20% 45%; /* Softer dark blue for muted text */
+    --muted: 217 33% 25%; /* Muted dark blue */
+    --muted-foreground: 210 20% 65%; /* Softer light gray for muted text */
 
-    --accent: 205 90% 50%; /* A slightly brighter, engaging blue for accents */
+    --accent: 240 70% 65%; /* Bright Blue for accents */
     --accent-foreground: 210 40% 98%; /* Light text on accent blue */
 
-    --destructive: 0 72% 51%; /* Keep destructive red for errors */
+    --destructive: 0 63% 40%; /* Darker red for errors */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 214 20% 69%; /* Softer blue-gray for borders */
-    --input: 214 32% 91%; /* Light blue-gray for input backgrounds */
-    --ring: 217 91% 70%; /* Ring color related to primary */
+    --border: 217 33% 25%; /* Dark blue-gray for borders */
+    --input: 217 33% 20%; /* Darker input backgrounds */
+    --ring: 263 70% 72%; /* Ring color related to primary */
 
-    --chart-1: 217 91% 60%;
-    --chart-2: 205 80% 55%;
+    --chart-1: 263 80% 62%;
+    --chart-2: 240 70% 65%;
     --chart-3: 220 70% 65%;
     --chart-4: 190 75% 45%;
     --chart-5: 210 65% 75%;
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* More rounded corners */
   }
 
   .dark {
-    --background: 220 18% 11%; /* Dark slate blue */
-    --foreground: 210 40% 98%; /* Light text on dark background */
+    /* Dark theme is the default Vexo inspired theme */
+    --background: 224 71% 4%;
+    --foreground: 210 40% 96%;
+    
+    --card: 223 47% 11%;
+    --card-foreground: 210 40% 96%;
 
-    --card: 220 18% 11%;
-    --card-foreground: 210 40% 98%;
+    --popover: 223 47% 11%;
+    --popover-foreground: 210 40% 96%;
 
-    --popover: 220 18% 11%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217 91% 60%; /* Consistent primary blue */
+    --primary: 263 80% 62%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 217 30% 25%; /* Darker secondary blue */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 217 20% 20%; /* Muted dark blue */
-    --muted-foreground: 210 30% 70%; /* Lighter muted text */
+    --muted: 217 33% 25%;
+    --muted-foreground: 210 20% 65%;
 
-    --accent: 205 90% 50%; /* Consistent accent blue */
+    --accent: 240 70% 65%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 63% 40%; /* Darker red for destructive elements */
+    --destructive: 0 63% 40%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 217 20% 30%; /* Darker border */
-    --input: 217 25% 22%; /* Dark input background */
-    --ring: 217 91% 70%; /* Consistent ring color */
+    --border: 217 33% 25%;
+    --input: 217 33% 20%;
+    --ring: 263 70% 72%;
     
-    --chart-1: 217 91% 60%;
-    --chart-2: 205 80% 55%;
+    --chart-1: 263 80% 62%;
+    --chart-2: 240 70% 65%;
     --chart-3: 220 70% 65%;
     --chart-4: 190 75% 45%;
     --chart-5: 210 65% 75%;
