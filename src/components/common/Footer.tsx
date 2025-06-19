@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Facebook, Instagram, Youtube, Linkedin, Twitter, Building, Globe, FileText, Users, Briefcase, MapPin, Phone, Mail, BookOpenText, Leaf, Megaphone, Newspaper } from 'lucide-react';
+import { Facebook, Instagram, Youtube, Linkedin, Twitter, Building, Globe, FileText, Users, Briefcase, MapPin, Phone, Mail, BookOpenText, Leaf, Megaphone, Newspaper, Cookie } from 'lucide-react'; // Added Cookie icon
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils'; // Import cn utility
+import { cn } from '@/lib/utils'; 
 
 const Footer = () => {
   const [currentYear, setCurrentYear] = useState<number | string>('');

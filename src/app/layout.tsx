@@ -6,6 +6,7 @@ import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/AuthContext';
+import CookieConsentBanner from '@/components/common/CookieConsentBanner'; // Added import
 
 export const metadata: Metadata = {
   title: 'L&T Helpdesk',
@@ -38,6 +39,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <CookieConsentBanner /> {/* Added CookieConsentBanner */}
             <Toaster />
           </ThemeProvider>
         </AuthProvider>
