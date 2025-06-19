@@ -25,7 +25,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import LTLogo from './LTLogo';
 import { cn } from '@/lib/utils';
 import { mockEmployees } from '@/data/mockData';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'; // Updated import for Sheet
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet'; // Updated import for Sheet & SheetTitle
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
@@ -78,6 +78,7 @@ const Navbar = () => {
   const unauthenticatedNavItemsMobile = [
     { href: '/auth/signin', label: 'Sign In', icon: <LogIn /> },
     { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus /> },
+    { href: '/', label: 'Home', icon: <Home /> },
   ];
 
   let navItemsForMobile = unauthenticatedNavItemsMobile;
@@ -137,9 +138,8 @@ const Navbar = () => {
 
   return (
     <TooltipProvider delayDuration={100}>
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card text-card-foreground shadow-sm"> {/* Changed background for darker feel */}
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card text-card-foreground shadow-sm">
       <div className="container flex h-16 max-w-screen-2xl items-center px-4">
-        {/* Left: Mobile Menu Toggle (visible on mobile) & Logo + App Name */}
         <div className="flex items-center">
             <div className="md:hidden mr-2">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -151,16 +151,20 @@ const Navbar = () => {
                 <SheetContent side="left" className="w-72 p-0 bg-background text-foreground">
                     <div className="flex flex-col h-full">
                         <div className="p-4 border-b">
-                            <Link href="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
-                                <LTLogo className="h-7 w-7" />
-                                <span className="font-bold font-headline text-lg">L&T Helpdesk</span>
-                            </Link>
+                           <SheetClose asChild>
+                                <Link href="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+                                    <LTLogo className="h-7 w-7" />
+                                    <SheetTitle asChild>
+                                        <span className="font-bold font-headline text-lg">L&T Helpdesk</span>
+                                    </SheetTitle>
+                                </Link>
+                            </SheetClose>
                         </div>
                         <nav className="flex-grow p-4 space-y-1.5 overflow-y-auto">
                         {navItemsForMobile.map((item) => {
                             const isActive = pathname === item.href;
                             return (
-                            <SheetClose asChild key={item.href}>
+                            <SheetClose asChild key={item.label + item.href}>
                                 <Link
                                 href={item.href}
                                 className={cn(
@@ -179,7 +183,7 @@ const Navbar = () => {
                             <Button
                             variant="ghost"
                             onClick={handleLogout}
-                            className="group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-muted-foreground hover:text-destructive-foreground mt-auto" // Pushes logout to bottom
+                            className="group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-destructive hover:text-destructive-foreground w-full justify-start text-muted-foreground hover:text-destructive-foreground mt-auto" 
                             >
                             <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive-foreground" />
                             <span>Logout</span>
@@ -206,13 +210,11 @@ const Navbar = () => {
             </Sheet>
             </div>
             <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
-            <LTLogo className="h-8 w-8" /> {/* Slightly larger logo */}
+            <LTLogo className="h-8 w-8" /> 
             <span className="font-bold font-headline text-xl hidden sm:inline-block">L&T Helpdesk</span>
             </Link>
         </div>
 
-
-        {/* Center: Main Navigation Links (Desktop) - aligned to left of actions */}
         {user && (
           <nav className="hidden md:flex flex-grow items-center space-x-1 lg:space-x-2 text-sm ml-6">
             {desktopNavLinks.map((item) =>
@@ -249,8 +251,6 @@ const Navbar = () => {
         )}
         {!user && <div className="flex-grow hidden md:block"></div>}
 
-
-        {/* Right: Actions */}
         <div className="flex items-center space-x-1 md:space-x-2 ml-auto shrink-0">
           <ThemeToggle />
           {user ? (
@@ -323,15 +323,9 @@ const DropdownMenuUser = ({ user, logout }: {
     { href: '/settings', label: 'Settings', icon: <Settings className="mr-2 h-4 w-4 text-muted-foreground"/> },
   ];
 
-  // Notifications for supervisors are in the main navbar now, not repeating here
-  // if (user.role !== 'Employee') { 
-  //    commonDropdownItems.push( { href: '/notifications', label: 'Notifications', icon: <Bell className="mr-2 h-4 w-4 text-muted-foreground"/> });
-  // }
-
   const managementSubItems = [
     { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="mr-2 h-4 w-4"/> },
     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog className="mr-2 h-4 w-4"/> },
-    // Future: { href: '/admin/system-logs', label: 'System Logs', icon: <Info className="mr-2 h-4 w-4"/> },
   ];
   const showAdminItems = supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head');
 
