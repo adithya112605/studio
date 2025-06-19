@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye, LogIn, UserCog } from 'lucide-react';
+import { Menu, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, ShieldCheck, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserSquare2, Eye, LogIn, UserCog, ChevronDown, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
-import type { User, Supervisor } from '@/types';
+import type { User, Supervisor, Employee } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,25 +15,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
-import LTLogo from './LTLogo'; // Updated import
+import LTLogo from './LTLogo';
 import { cn } from '@/lib/utils';
+import { mockEmployees } from '@/data/mockData'; // For deriving additional roles
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10); 
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const toggleMenu = () => {
@@ -46,79 +46,87 @@ const Navbar = () => {
     router.push('/');
   };
 
-  const commonAuthenticatedNavItemsBase = [
+  // Mobile navigation items (remains comprehensive)
+  const commonAuthenticatedNavItemsBaseMobile = [
     { href: '/', label: 'Home', icon: <Home className="w-4 h-4" /> },
     { href: '/dashboard', label: 'Dashboard', icon: <Briefcase className="w-4 h-4" /> },
     { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="w-4 h-4" /> },
   ];
-
-  const employeeNavItems = [
-    ...commonAuthenticatedNavItemsBase,
+  const employeeNavItemsMobile = [
+    ...commonAuthenticatedNavItemsBaseMobile,
     { href: '/tickets/new', label: 'Create Ticket', icon: <Ticket className="w-4 h-4" /> },
     { href: '/employee/tickets', label: 'My Tickets', icon: <FileText className="w-4 h-4" /> },
     { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
-
-  const supervisorBaseNavItems = [
-    ...commonAuthenticatedNavItemsBase,
+  const supervisorBaseNavItemsMobile = [
+    ...commonAuthenticatedNavItemsBaseMobile,
     { href: '/hr/tickets', label: 'Ticket Management', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Eye className="w-4 h-4" /> },
     { href: '/reports', label: 'Reports', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
     { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
-
-  const adminManagementNavItems = [
+  const adminManagementNavItemsMobile = [
      { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="w-4 h-4" /> },
      { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserSquare2 className="w-4 h-4" /> },
   ];
-
-  const unauthenticatedNavItems = [
+  const unauthenticatedNavItemsMobile = [
     { href: '/auth/signin', label: 'Sign In', icon: <LogIn className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" /> },
     { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground" /> },
   ];
 
-  let navItemsForMobile = unauthenticatedNavItems;
-  let desktopNavLinks: Array<{href:string; label:string; icon?:React.ReactNode}> = [];
-
+  let navItemsForMobile = unauthenticatedNavItemsMobile;
   if (user) {
     if (user.role === 'Employee') {
-      navItemsForMobile = employeeNavItems;
-      desktopNavLinks = [
-        { href: '/dashboard', label: 'Dashboard'},
-        { href: '/tickets/new', label: 'Create Ticket'},
-        { href: '/employee/tickets', label: 'My Tickets'},
-      ];
+      navItemsForMobile = employeeNavItemsMobile;
+    } else {
+      navItemsForMobile = [...supervisorBaseNavItemsMobile];
+      if ((user as Supervisor).functionalRole === 'DH' || (user as Supervisor).functionalRole === 'IC Head') {
+        navItemsForMobile.push(...adminManagementNavItemsMobile);
+      }
+    }
+  }
+
+  // Desktop navigation items
+  let desktopNavLinks: Array<{href:string; label:string; isDropdown?: boolean; subItems?: Array<{href:string; label:string; icon?: React.ReactNode}>}> = [];
+  if (user) {
+    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard'});
+    if (user.role === 'Employee') {
+      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets'});
+      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket'});
     } else { // Supervisor roles
       const supervisorUser = user as Supervisor;
-      navItemsForMobile = [...supervisorBaseNavItems];
-      desktopNavLinks = [
-        { href: '/dashboard', label: 'Dashboard'},
-        { href: '/hr/tickets', label: 'Tickets'},
-        { href: '/supervisor/employee-details', label: 'Employees'},
-        { href: '/reports', label: 'Reports'},
-      ];
+      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.'});
+      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees'});
+      desktopNavLinks.push({ href: '/reports', label: 'Reports'});
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
-        navItemsForMobile.push(...adminManagementNavItems);
-        // Optionally add admin links to desktopNavLinks if desired, e.g., under a "Management" dropdown
+        desktopNavLinks.push({
+          label: 'Admin',
+          isDropdown: true,
+          subItems: [
+            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/> },
+            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/> },
+            // Potentially add more admin links here
+          ]
+        });
       }
     }
   }
 
 
-  if (!isMounted) { 
+  if (!isMounted) {
+    // Simplified skeleton for navbar to prevent layout shifts
     return (
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-muted rounded-sm animate-pulse"></div>
-            <div className="w-32 h-6 bg-muted rounded animate-pulse hidden sm:block"></div>
+            <div className="h-8 w-8 bg-muted rounded-md animate-pulse"></div>
+            <div className="h-5 w-24 bg-muted rounded animate-pulse hidden sm:block"></div>
           </div>
           <div className="flex items-center space-x-2">
-             <div className="w-10 h-10 bg-muted rounded-md animate-pulse"></div>
-             <div className="w-10 h-10 bg-muted rounded-full animate-pulse md:hidden"></div>
-             <div className="w-20 h-9 bg-muted rounded-md animate-pulse hidden md:block"></div>
+             <div className="h-8 w-8 bg-muted rounded-md animate-pulse"></div> {/* Theme Toggle */}
+             <div className="h-8 w-20 bg-muted rounded-md animate-pulse hidden md:block"></div> {/* Sign In / User */}
           </div>
         </div>
       </header>
@@ -126,63 +134,79 @@ const Navbar = () => {
   }
 
   return (
-    <header className={cn(
-        "sticky top-0 z-50 w-full border-b transition-all duration-300 ease-in-out",
-        isScrolled
-          ? "border-border bg-background shadow-lg" 
-          : "border-transparent bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60"
-      )}>
-      <div className={cn(
-          "container flex max-w-screen-2xl items-center transition-all duration-300 ease-in-out",
-          isScrolled ? "h-14" : "h-16" 
-        )}>
-
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 max-w-screen-2xl items-center px-4">
+        {/* Left: Logo + App Name */}
         <Link href="/" className="flex items-center space-x-2 mr-6 shrink-0">
-          {/* LTLogo component now handles image and sizing */}
-          <LTLogo className="h-8 w-8" /> 
-          <span className="font-bold font-headline text-xl hidden sm:inline">L&T Helpdesk</span>
+          <LTLogo className="h-7 w-7" />
+          <span className="font-bold font-headline text-lg hidden sm:inline-block">L&amp;T Helpdesk</span>
         </Link>
 
+        {/* Center: Main Navigation Links (Desktop) */}
         {user && (
-          <nav className="hidden md:flex flex-grow items-center justify-center space-x-1 lg:space-x-2 text-sm font-medium">
-            {desktopNavLinks.map((item) => (
-              <Button key={item.href} variant="ghost" asChild className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/5">
-                <Link href={item.href}>{item.label}</Link>
-              </Button>
-            ))}
+          <nav className="hidden md:flex flex-grow items-center space-x-1 lg:space-x-2 text-sm">
+            {desktopNavLinks.map((item) =>
+              item.isDropdown && item.subItems ? (
+                <DropdownMenu key={item.label}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/5 font-medium h-8 text-xs">
+                      {item.label} <ChevronDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {item.subItems.map(subItem => (
+                      <DropdownMenuItem key={subItem.href} asChild>
+                        <Link href={subItem.href} className="flex items-center w-full">
+                           {subItem.icon || <div className="mr-2 h-4 w-4"></div>}
+                          {subItem.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button key={item.href || item.label} variant="ghost" asChild className="px-3 py-2 text-muted-foreground hover:text-primary hover:bg-primary/5 font-medium h-8 text-xs">
+                  <Link href={item.href!}>{item.label}</Link>
+                </Button>
+              )
+            )}
           </nav>
         )}
         {!user && <div className="flex-grow hidden md:block"></div>}
 
-        <div className="flex items-center space-x-2 md:space-x-3 ml-auto shrink-0">
+
+        {/* Right: Actions */}
+        <div className="flex items-center space-x-1 md:space-x-2 ml-auto shrink-0">
           <ThemeToggle />
           {user ? (
-             <div className="flex items-center space-x-1 md:space-x-2">
-              <Button variant="ghost" size="icon" asChild className="hidden md:inline-flex text-muted-foreground hover:text-primary hover:bg-primary/5">
-                <Link href="/notifications" aria-label="Notifications"><Bell className="w-5 h-5"/></Link>
+             <div className="flex items-center space-x-1">
+              <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5">
+                <Link href="/notifications" aria-label="Notifications"><Bell className="w-4 h-4"/></Link>
               </Button>
-              <DropdownMenuUser user={user} logout={handleLogout} adminManagementNavItems={adminManagementNavItems} />
+              <DropdownMenuUser user={user} logout={handleLogout} />
              </div>
           ) : (
              <div className="hidden md:flex items-center space-x-2">
-              <Button asChild variant="default" size="sm" className="font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-primary/90 transition-all text-xs">
+              <Button asChild variant="ghost" size="sm" className="font-medium text-muted-foreground hover:text-primary px-3 h-8 text-xs">
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
-              <Button asChild variant="outline" size="sm" className="px-4 py-2 rounded-lg shadow-sm hover:bg-accent/50 transition-all text-xs">
+              <Button asChild variant="default" size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 h-8 text-xs">
                 <Link href="/auth/signup">Sign Up</Link>
               </Button>
             </div>
           )}
+          {/* Mobile Menu Toggle */}
           <div className="md:hidden">
-            <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label="Open menu">
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label="Open menu" className="h-8 w-8">
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
       </div>
 
+      {/* Mobile Menu Drawer */}
       {isOpen && (
-        <div className="md:hidden fixed inset-x-0 top-14 sm:top-16 z-40 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t animate-in slide-in-from-top-full duration-300">
+        <div className="md:hidden fixed inset-x-0 top-14 z-40 h-[calc(100vh-3.5rem)] bg-background/95 backdrop-blur-sm p-6 pt-4 border-t animate-in slide-in-from-top-full duration-300">
           <nav className="flex flex-col space-y-1">
             {navItemsForMobile.map((item) => (
                 <Link
@@ -205,6 +229,16 @@ const Navbar = () => {
                 <span>Logout</span>
               </Button>
             )}
+            {!user && (
+              <div className="mt-6 space-y-2">
+                 <Button asChild variant="default" className="w-full" onClick={toggleMenu}>
+                    <Link href="/auth/signup">Sign Up</Link>
+                 </Button>
+                 <Button asChild variant="outline" className="w-full" onClick={toggleMenu}>
+                    <Link href="/auth/signin">Sign In</Link>
+                 </Button>
+              </div>
+            )}
           </nav>
         </div>
       )}
@@ -212,30 +246,55 @@ const Navbar = () => {
   );
 };
 
+const getActingRoles = (supervisor: Supervisor): string[] => {
+  const actingRoles = new Set<string>();
+  if (!mockEmployees || mockEmployees.length === 0) return [];
 
-const DropdownMenuUser = ({ user, logout, adminManagementNavItems }: {
+  mockEmployees.forEach(emp => {
+    if (emp.isPSN === supervisor.psn && supervisor.functionalRole !== 'IS') actingRoles.add('IS');
+    if (emp.nsPSN === supervisor.psn && supervisor.functionalRole !== 'NS') actingRoles.add('NS');
+    if (emp.dhPSN === supervisor.psn && supervisor.functionalRole !== 'DH') actingRoles.add('DH');
+  });
+  return Array.from(actingRoles);
+}
+
+const DropdownMenuUser = ({ user, logout }: {
     user: User;
     logout: () => void;
-    adminManagementNavItems: Array<{href:string; label:string; icon?:React.ReactNode}>;
 }) => {
-  const supervisorUser = user as Supervisor;
-  const showAdminItems = supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head';
+  const supervisorUser = user.role !== 'Employee' ? user as Supervisor : null;
+  let roleDisplay = user.role === 'Employee' ? 'Employee' : `${supervisorUser?.title} (${supervisorUser?.functionalRole})`;
 
+  if (supervisorUser) {
+    const acting = getActingRoles(supervisorUser);
+    if (acting.length > 0) {
+      roleDisplay += ` (acts as ${acting.join(', ')})`;
+    }
+  }
+  
   const commonDropdownItems = [
     { href: '/profile', label: 'My Profile', icon: <UserCircle2 className="mr-2 h-4 w-4 text-muted-foreground"/> },
     { href: '/settings', label: 'Settings', icon: <Settings className="mr-2 h-4 w-4 text-muted-foreground"/> },
-    { href: '/notifications', label: 'Notifications', icon: <Bell className="mr-2 h-4 w-4 text-muted-foreground"/> }
   ];
+  if (user.role !== 'Employee') { // Add notifications for supervisors here, employees have it in main nav
+     commonDropdownItems.push( { href: '/notifications', label: 'Notifications', icon: <Bell className="mr-2 h-4 w-4 text-muted-foreground"/> });
+  }
+
+  const managementSubItems = [
+    { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="mr-2 h-4 w-4"/> },
+    { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog className="mr-2 h-4 w-4"/> },
+  ];
+  const showAdminItems = supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head');
 
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-          <UserCog className="h-6 w-6 text-muted-foreground hover:text-primary" />
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <UserCircle2 className="h-5 w-5 text-muted-foreground hover:text-primary" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-60" align="end" forceMount>
+      <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1 py-1">
             <p className="text-sm font-semibold leading-none">{user.name}</p>
@@ -243,12 +302,12 @@ const DropdownMenuUser = ({ user, logout, adminManagementNavItems }: {
               PSN: {user.psn.toString()}
             </p>
             <p className="text-xs leading-none text-muted-foreground pt-0.5">
-              {user.role === 'Employee' ? 'Employee' : `${supervisorUser.title} (${supervisorUser.functionalRole})`}
+              {roleDisplay}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-
+        <DropdownMenuGroup>
         {commonDropdownItems.map(item => (
           <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
             <Link href={item.href} className="flex items-center w-full">
@@ -257,16 +316,31 @@ const DropdownMenuUser = ({ user, logout, adminManagementNavItems }: {
             </Link>
           </DropdownMenuItem>
         ))}
+        </DropdownMenuGroup>
 
-        {showAdminItems && adminManagementNavItems.length > 0 && <DropdownMenuSeparator />}
-        {showAdminItems && adminManagementNavItems.map(item => (
-             <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
-             <Link href={item.href} className="flex items-center w-full">
-               {item.icon ? React.cloneElement(item.icon, {className: "mr-2 h-4 w-4 text-muted-foreground"}) : <div className="mr-2 h-4 w-4"></div>}
-               <span>{item.label}</span>
-             </Link>
-           </DropdownMenuItem>
-        ))}
+        {showAdminItems && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                <span>Admin Management</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  {managementSubItems.map(subItem => (
+                    <DropdownMenuItem key={subItem.href} asChild>
+                      <Link href={subItem.href} className="flex items-center w-full">
+                        {subItem.icon}
+                        {subItem.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+          </>
+        )}
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive/90">
@@ -279,3 +353,5 @@ const DropdownMenuUser = ({ user, logout, adminManagementNavItems }: {
 }
 
 export default Navbar;
+
+    

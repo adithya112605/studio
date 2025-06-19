@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Mail, Briefcase, Building, Users, CalendarDays, Edit, ShieldCheck, BarChart3, Activity, BadgePercent } from "lucide-react";
-import { mockJobCodes, mockProjects, mockSupervisors } from "@/data/mockData";
+import { mockJobCodes, mockProjects, mockSupervisors, mockEmployees } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,20 @@ const getInitials = (name: string = "") => {
   }
   return initials || 'U'; // Fallback initial
 };
+
+const getActingRolesForDisplay = (supervisor: Supervisor): string => {
+  const actingRoles = new Set<string>();
+  if (!mockEmployees || mockEmployees.length === 0) return "";
+
+  mockEmployees.forEach(emp => {
+    if (emp.isPSN === supervisor.psn && supervisor.functionalRole !== 'IS') actingRoles.add('IS');
+    if (emp.nsPSN === supervisor.psn && supervisor.functionalRole !== 'NS') actingRoles.add('NS');
+    if (emp.dhPSN === supervisor.psn && supervisor.functionalRole !== 'DH') actingRoles.add('DH');
+  });
+  const rolesArray = Array.from(actingRoles);
+  return rolesArray.length > 0 ? ` (also acts as: ${rolesArray.join(', ')})` : "";
+}
+
 
 export default function MyProfilePage() {
   const { toast } = useToast();
@@ -50,22 +64,22 @@ export default function MyProfilePage() {
           supervisorChain.ns = mockSupervisors.find(s => s.psn === employeeUser.nsPSN);
           supervisorChain.dh = mockSupervisors.find(s => s.psn === employeeUser.dhPSN);
         } else if (supervisorUser) {
-          if (supervisorUser.branchProject) { // Check if branchProject exists
+          if (supervisorUser.branchProject) { 
              const foundProject = mockProjects.find(p => p.id === supervisorUser.branchProject);
              if (foundProject) {
                 projectInfo = foundProject;
              } else if (supervisorUser.projectsHandledIds && supervisorUser.projectsHandledIds.length > 0) {
-                // Fallback to first handled project if branchProject ID is invalid or not found
                 projectInfo = mockProjects.find(p => p.id === supervisorUser.projectsHandledIds![0]);
              }
           } else if (supervisorUser.projectsHandledIds && supervisorUser.projectsHandledIds.length > 0) {
-             // If no branchProject, use the first project handled
              projectInfo = mockProjects.find(p => p.id === supervisorUser.projectsHandledIds![0]);
           }
         }
 
 
-        const supervisorRoleTitle = supervisorUser ? `${supervisorUser.title} (${supervisorUser.functionalRole})` : '';
+        const supervisorRoleTitle = supervisorUser 
+          ? `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForDisplay(supervisorUser)}` 
+          : '';
 
 
         return (
@@ -130,7 +144,7 @@ export default function MyProfilePage() {
                     <>
                         <h3 className="text-xl font-semibold text-primary border-b pb-2 mb-4 mt-6">Supervisory Role Details</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                            {projectInfo && ( // Ensure projectInfo is defined before accessing its properties
+                            {projectInfo && ( 
                                 <div className="flex items-center">
                                 <Building className="w-5 h-5 mr-3 text-primary shrink-0" />
                                 <div><strong>Branch/Primary Project:</strong> {projectInfo.name} ({projectInfo.city})</div>
@@ -186,3 +200,5 @@ export default function MyProfilePage() {
     </ProtectedPage>
   );
 }
+
+    

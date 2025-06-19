@@ -13,8 +13,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { User as AuthUser, Employee, Supervisor, JobCode } from "@/types"; 
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from "react";
-import { mockJobCodes, mockProjects } from "@/data/mockData"; 
+import { mockJobCodes, mockProjects, mockEmployees } from "@/data/mockData"; 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+
+const getActingRolesForSettingsDisplay = (supervisor: Supervisor): string => {
+  const actingRoles = new Set<string>();
+   if (!mockEmployees || mockEmployees.length === 0) return "";
+  mockEmployees.forEach(emp => {
+    if (emp.isPSN === supervisor.psn && supervisor.functionalRole !== 'IS') actingRoles.add('IS');
+    if (emp.nsPSN === supervisor.psn && supervisor.functionalRole !== 'NS') actingRoles.add('NS');
+    if (emp.dhPSN === supervisor.psn && supervisor.functionalRole !== 'DH') actingRoles.add('DH');
+  });
+  const rolesArray = Array.from(actingRoles);
+  return rolesArray.length > 0 ? ` (also acts as: ${rolesArray.join(', ')})` : "";
+}
 
 
 export default function SettingsPage() {
@@ -81,6 +94,11 @@ export default function SettingsPage() {
         if(isEmployee && employeeUser.project){
             projectInfo = mockProjects.find(p => p.id === employeeUser.project);
         }
+        
+        let supervisorRoleDisplay = "";
+        if (isSupervisor) {
+            supervisorRoleDisplay = `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForSettingsDisplay(supervisorUser)}`;
+        }
 
 
         return (
@@ -112,7 +130,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="role-settings">Role</Label>
-                        <Input id="role-settings" value={isSupervisor ? `${supervisorUser.title} (${supervisorUser.functionalRole})` : user.role} readOnly />
+                        <Input id="role-settings" value={isSupervisor ? supervisorRoleDisplay : user.role} readOnly />
                     </div>
                     {isEmployee && projectInfo && (
                         <div className="space-y-1">
@@ -346,7 +364,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Ticket System Settings Card (Visible to DH and IC Head) */}
-                {(supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') && (
+                {(supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head')) && (
                     <Card className="shadow-lg">
                     <CardHeader>
                         <div className="flex items-center space-x-3">
@@ -358,7 +376,7 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-1">
                             <Label htmlFor="ticket-id-format">Ticket ID Format</Label>
-                            <Input id="ticket-id-format" value="#TKXXXXXXX (Alphanumeric)" readOnly />
+                            <Input id="ticket-id-format" value="TKXXXXXXX (Alphanumeric)" readOnly />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="default-priority">Default Ticket Priority</Label>
@@ -387,7 +405,7 @@ export default function SettingsPage() {
                 )}
 
                 {/* Administrative Settings Card (Visible to IC Head only) */}
-                {supervisorUser.functionalRole === 'IC Head' && (
+                {(supervisorUser && supervisorUser.functionalRole === 'IC Head') && (
                     <Card className="shadow-lg">
                     <CardHeader>
                         <div className="flex items-center space-x-3">
@@ -421,7 +439,7 @@ export default function SettingsPage() {
                 )}
                 
                 {/* Feedback & Satisfaction Card (Visible to DH and IC Head) */}
-                 {(supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') && (
+                 {(supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head')) && (
                     <Card className="shadow-lg">
                     <CardHeader>
                         <div className="flex items-center space-x-3">
@@ -472,3 +490,5 @@ export default function SettingsPage() {
     </ProtectedPage>
   );
 }
+
+    
