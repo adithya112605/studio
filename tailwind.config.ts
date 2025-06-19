@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -17,9 +18,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Updated fonts: Lato for body, Merriweather for headlines
-        body: ['Lato', 'sans-serif'],
-        headline: ['Merriweather', 'serif'],
+        // Updated fonts: Inter for body and headlines
+        body: ['Inter', 'sans-serif'],
+        headline: ['Inter', 'sans-serif'], // Using Inter for headlines as well for modern look
         code: ['monospace'],
       },
       colors: {

@@ -25,7 +25,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import LTLogo from './LTLogo';
 import { cn } from '@/lib/utils';
 import { mockEmployees } from '@/data/mockData';
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet'; // Updated import for Sheet & SheetTitle
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
@@ -34,7 +34,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
-  const pathname = usePathname(); // For active link styling in mobile
+  const pathname = usePathname(); 
 
   useEffect(() => {
     setIsMounted(true);
@@ -46,11 +46,11 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    setIsOpen(false); // Close mobile menu on logout
+    setIsOpen(false); 
     router.push('/');
   };
 
-  // Navigation items for mobile (will be styled like "Christina's" sidebar)
+  
   const commonAuthenticatedNavItemsBaseMobile = [
     { href: '/', label: 'Home', icon: <Home /> },
     { href: '/dashboard', label: 'Dashboard', icon: <Briefcase /> },
@@ -93,25 +93,25 @@ const Navbar = () => {
     }
   }
 
-  // Desktop navigation items
+  
   let desktopNavLinks: Array<{href?:string; label:string; isDropdown?: boolean; subItems?: Array<{href:string; label:string; icon?: React.ReactNode; description?: string}>; description?: string}> = [];
   if (user) {
-    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard', description: 'View your main dashboard.'});
+    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard', description: 'Access your personalized overview, recent activities, and quick links to key system functionalities.'});
     if (user.role === 'Employee') {
-      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets', description: 'View and manage your support tickets.'});
-      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket', description: 'Raise a new support ticket.'});
-    } else { // Supervisor roles
+      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets', description: 'View a comprehensive list of all support tickets you have raised, check their current status, and review historical interactions.'});
+      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket', description: 'Initiate a new support request by detailing your issue or query for the HR team to address.'});
+    } else { 
       const supervisorUser = user as Supervisor;
-      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.', description: 'Manage and assign support tickets.'});
-      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees', description: 'View details of employees.'});
-      desktopNavLinks.push({ href: '/reports', label: 'Reports', description: 'Generate and view system reports.'});
+      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.', description: 'Oversee, assign, and manage the lifecycle of support tickets relevant to your team or department.'});
+      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees', description: 'Access and review detailed information about employees under your supervision or within your designated scope.'});
+      desktopNavLinks.push({ href: '/reports', label: 'Reports', description: 'Generate, view, and analyze various system reports related to ticket trends, employee performance, and operational metrics.'});
       if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
         desktopNavLinks.push({
           label: 'Admin',
           isDropdown: true,
           subItems: [
-            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: 'Add new employees to the system.' },
-            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: 'Add new supervisors to the system.' },
+            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: 'Create new employee profiles in the system, assigning them to projects and relevant supervisors.' },
+            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: 'Onboard new supervisors, defining their roles, project affiliations, and access levels within the helpdesk system.' },
           ]
         });
       }
@@ -225,12 +225,15 @@ const Navbar = () => {
                       {item.label} <ChevronDown className="ml-1 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuContent align="start" className="w-64"> {/* Increased width */}
                     {item.subItems.map(subItem => (
                       <DropdownMenuItem key={subItem.href} asChild>
-                        <Link href={subItem.href} className="flex items-center w-full">
-                           {subItem.icon || <div className="mr-2 h-4 w-4"></div>}
-                          {subItem.label}
+                         <Link href={subItem.href} className="flex items-center w-full group">
+                            <div className="flex-shrink-0 mr-2"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
+                            <div className="flex flex-col">
+                                <span className="font-medium group-hover:text-primary">{subItem.label}</span>
+                                {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal">{subItem.description}</p>}
+                            </div>
                         </Link>
                       </DropdownMenuItem>
                     ))}
@@ -243,7 +246,7 @@ const Navbar = () => {
                       <Link href={item.href!}>{item.label}</Link>
                     </Button>
                   </TooltipTrigger>
-                  {item.description && <TooltipContent side="bottom"><p>{item.description}</p></TooltipContent>}
+                  {item.description && <TooltipContent side="bottom" className="max-w-xs"><p>{item.description}</p></TooltipContent>}
                 </Tooltip>
               )
             )}
@@ -324,8 +327,8 @@ const DropdownMenuUser = ({ user, logout }: {
   ];
 
   const managementSubItems = [
-    { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="mr-2 h-4 w-4"/> },
-    { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog className="mr-2 h-4 w-4"/> },
+    { href: '/admin/add-employee', label: 'Manage Employees', icon: <Users className="mr-2 h-4 w-4"/>, description: "Add or update employee records." },
+    { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog className="mr-2 h-4 w-4"/>, description: "Add or update supervisor profiles." },
   ];
   const showAdminItems = supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head');
 
@@ -337,7 +340,7 @@ const DropdownMenuUser = ({ user, logout }: {
           <UserCircle2 className="h-5 w-5 text-muted-foreground hover:text-primary" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="end" forceMount>
+      <DropdownMenuContent className="w-72" align="end" forceMount> {/* Increased width */}
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1 py-1">
             <p className="text-sm font-semibold leading-none">{user.name}</p>
@@ -370,12 +373,15 @@ const DropdownMenuUser = ({ user, logout }: {
                 <span>Admin Management</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
-                <DropdownMenuSubContent>
+                <DropdownMenuSubContent className="w-64"> {/* Sub-content width */}
                   {managementSubItems.map(subItem => (
                     <DropdownMenuItem key={subItem.href} asChild>
-                      <Link href={subItem.href} className="flex items-center w-full">
-                        {subItem.icon}
-                        {subItem.label}
+                       <Link href={subItem.href} className="flex items-start w-full group p-2">
+                          <div className="flex-shrink-0 mr-2 mt-0.5"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
+                          <div className="flex flex-col">
+                              <span className="text-sm font-medium group-hover:text-primary">{subItem.label}</span>
+                              {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal leading-tight">{subItem.description}</p>}
+                          </div>
                       </Link>
                     </DropdownMenuItem>
                   ))}
