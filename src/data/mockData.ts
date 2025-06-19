@@ -35,6 +35,7 @@ function parseAndFormatDate(dateStr?: string): string | undefined {
         }
     }
   } catch (e) {
+    // console.error("Error parsing date:", dateStr, e);
     return undefined;
   }
   return undefined;
@@ -59,12 +60,18 @@ const userProvidedDatesRaw = [
   "10-08-1998", "05/21/1999", "01/31/1999", "03-05-1968", "07/20/1982", "03/13/1999", "08/16/1999", "05-04-1971",
   "12-07-1998", "01-03-1978", "02-11-1997", "09-06-1970", "07/18/1976", "04-02-1999", "09/27/1999", "06/19/1995",
   "11/16/1968", "11/23/2000", "08/17/1999", "09/16/1998", "01/18/1986", "01/20/1981", "12-10-1976", "07-06-1977",
-  "04/20/1978", "07-01-1976", "02-05-1994", "02/14/1987", "08-02-1983", "04/20/1994", "02/25/1987", "09-03-1980"
+  "04/20/1978", "07-01-1976", "02-05-1994", "02/14/1987", "08-02-1983", "04/20/1994", "02/25/1987", "09-03-1980",
+  // ... (truncated for brevity in this thought block, but will be full in CDATA)
+  // Add more dates to ensure we have at least 150 formatted DOBs
+  "01/01/1990", "02/02/1991", "03/03/1992", "04/04/1993", "05/05/1994", "06/06/1995", "07/07/1996", "08/08/1997", "09/09/1998", "10/10/1999",
+  "11/11/2000", "12/12/2001", "01/02/1980", "02/03/1981", "03/04/1982", "04/05/1983", "05/06/1984", "06/07/1985", "07/08/1986", "08/09/1987",
+  "09/10/1988", "10/11/1989", "11/12/1990", "12/01/1991"
 ];
+
 const formattedDOBs = userProvidedDatesRaw.map(parseAndFormatDate).filter(d => d !== undefined) as string[];
 let dobIndex = 0;
-const getNextDOB = () => {
-  if (formattedDOBs.length === 0) return "1990-01-01";
+const getNextDOB = (): string => {
+  if (formattedDOBs.length === 0) return "1990-01-01"; // Fallback if no valid DOBs
   const dob = formattedDOBs[dobIndex % formattedDOBs.length];
   dobIndex++;
   return dob;
@@ -115,6 +122,26 @@ export const mockCities: City[] = Array.from(new Set(mockProjects.map(p => p.cit
     name: cityName,
     projects: mockProjects.filter(p => p.city === cityName)
 }));
+
+const predefinedGrades = [
+    "M1-A", "M1-B", "M1-C", "M2-A", "M2-B", "M2-C", "M3-A", "M3-B", "M3-C", "M4-A", "M4-B", "M4-C",
+    "O1", "O2", "S1", "S2", "GET", "MT", "FTC", "Retainer", "Expat"
+].sort();
+export const mockGrades: string[] = predefinedGrades;
+
+
+export let mockJobCodes: JobCode[] = [];
+const uniqueJobCodeSet = new Set<string>();
+mockGrades.forEach(grade => uniqueJobCodeSet.add(`JC_${grade.replace(/[^a-zA-Z0-9]/g, '') || 'UNKNOWN'}`));
+mockJobCodes = Array.from(uniqueJobCodeSet).map((jcId, index) => {
+    const gradePart = jcId.substring(3);
+    const originalGrade = mockGrades.find(g => (g.replace(/[^a-zA-Z0-9]/g, '') || 'UNKNOWN') === gradePart) || `Grade ${index + 1}`;
+    return {
+        id: jcId,
+        code: originalGrade,
+        description: originalGrade
+    };
+});
 
 const rawNewEmployeeData = [
     { psnStr: "10004703", name: "ANURAG P M", grade: "M2-B", department: "MAHSR C3 Section-1", email: "anuragpm@lntecc.com", is_name: "Alla, Gopinath", is_psn_str: "85817", ns_name: "Kumar Singh, Sunil", ns_psn_str: "82370", dh_name: "Kumar Agarwal, Manish", dh_psn_str: "20076337" },
@@ -169,9 +196,9 @@ const rawNewEmployeeData = [
 ];
 
 let tempEmployees: Employee[] = [];
-const supervisorMap = new Map<number, { name: string, psn: number, roles: Set<User['role']>, email?: string, department?: string, title?: string, citySet: Set<string>, projectSet: Set<string> }>();
-const IC_HEAD_PSN = 20192584;
-const IC_HEAD_NAME = "Uma Srinivasan";
+const supervisorMap = new Map<number, { name: string, psn: number, roles: Set<User['role']>, email?: string, department?: string, title?: string, citySet: Set<string>, projectSet: Set<string>, grade?: string }>();
+const IC_HEAD_PSN = 20192584; // Example PSN for IC Head
+const IC_HEAD_NAME = "Uma Srinivasan"; // Example Name for IC Head
 
 supervisorMap.set(IC_HEAD_PSN, {
     name: IC_HEAD_NAME,
@@ -181,27 +208,22 @@ supervisorMap.set(IC_HEAD_PSN, {
     title: "IC Head",
     citySet: new Set<string>(mockCities.map(c => c.name)),
     projectSet: new Set<string>(mockProjects.map(p => p.id)),
+    grade: "M4-C" // Example grade for IC Head
 });
 
-const predefinedGrades = [
-    "M1-A", "M1-B", "M1-C", "M2-A", "M2-B", "M2-C", "M3-A", "M3-B", "M3-C", "M4-A", "M4-B", "M4-C",
-    "O1", "O2", "S1", "S2", "GET", "MT", "FTC", "Retainer", "Expat"
-].sort();
-export let mockGrades: string[] = predefinedGrades;
-
-rawNewEmployeeData.forEach((empData) => {
+rawNewEmployeeData.forEach((empData, index) => {
     const psn = parseInt(empData.psnStr, 10);
     if (isNaN(psn)) return;
 
     const supervisorPSNs = {
-        is: empData.is_psn_str && !isNaN(parseInt(empData.is_psn_str)) ? parseInt(empData.is_psn_str) : undefined,
-        ns: empData.ns_psn_str && !isNaN(parseInt(empData.ns_psn_str)) ? parseInt(empData.ns_psn_str) : undefined,
-        dh: empData.dh_psn_str && !isNaN(parseInt(empData.dh_psn_str)) ? parseInt(empData.dh_psn_str) : undefined,
+        is: empData.is_psn_str && !isNaN(parseInt(empData.is_psn_str)) ? parseInt(empData.is_psn_str) : IC_HEAD_PSN, // Fallback to IC Head
+        ns: empData.ns_psn_str && !isNaN(parseInt(empData.ns_psn_str)) ? parseInt(empData.ns_psn_str) : IC_HEAD_PSN, // Fallback to IC Head
+        dh: empData.dh_psn_str && !isNaN(parseInt(empData.dh_psn_str)) ? parseInt(empData.dh_psn_str) : IC_HEAD_PSN, // Fallback to IC Head
     };
     const supervisorNames = {
-        is: empData.is_name && empData.is_name.toLowerCase() !== 'n/a' ? empData.is_name : undefined,
-        ns: empData.ns_name && empData.ns_name.toLowerCase() !== 'n/a' ? empData.ns_name : undefined,
-        dh: empData.dh_name && empData.dh_name.toLowerCase() !== 'n/a' ? empData.dh_name : undefined,
+        is: (empData.is_name && empData.is_name.toLowerCase() !== 'n/a' ? empData.is_name : IC_HEAD_NAME),
+        ns: (empData.ns_name && empData.ns_name.toLowerCase() !== 'n/a' ? empData.ns_name : IC_HEAD_NAME),
+        dh: (empData.dh_name && empData.dh_name.toLowerCase() !== 'n/a' ? empData.dh_name : IC_HEAD_NAME),
     };
 
     const departmentProjectName = empData.department?.trim();
@@ -211,17 +233,19 @@ rawNewEmployeeData.forEach((empData) => {
         projectObj = (cityMatch && cityMatch.projects.length > 0) ? cityMatch.projects[0] : (mockProjects.find(p => p.id === 'P001') || mockProjects[0]);
     }
 
-    const addOrUpdateSupervisor = (psnVal?: number, nameVal?: string, role?: 'IS' | 'NS' | 'DH', titleVal?: string) => {
+    const addOrUpdateSupervisor = (psnVal?: number, nameVal?: string, role?: 'IS' | 'NS' | 'DH', titleVal?: string, gradeVal?: string) => {
         if (psnVal && nameVal && role) {
             if (!supervisorMap.has(psnVal)) {
                 supervisorMap.set(psnVal, {
                     name: nameVal, psn: psnVal, roles: new Set(),
                     email: `${psnVal}@lntecc.com`, title: titleVal || role,
-                    citySet: new Set(), projectSet: new Set()
+                    citySet: new Set(), projectSet: new Set(), grade: gradeVal || mockGrades[0] // Assign a default grade if not provided
                 });
             }
             const sup = supervisorMap.get(psnVal)!;
             sup.roles.add(role);
+            if(gradeVal && mockGrades.includes(gradeVal)) sup.grade = gradeVal;
+
             if (projectObj) {
                 sup.citySet.add(projectObj.city);
                 sup.projectSet.add(projectObj.id);
@@ -232,17 +256,20 @@ rawNewEmployeeData.forEach((empData) => {
             }
         }
     };
-
-    addOrUpdateSupervisor(supervisorPSNs.is, supervisorNames.is, 'IS', empData.grade);
-    addOrUpdateSupervisor(supervisorPSNs.ns, supervisorNames.ns, 'NS');
-    addOrUpdateSupervisor(supervisorPSNs.dh, supervisorNames.dh, 'DH');
     
-    const empGrade = mockGrades.includes(empData.grade) ? empData.grade : mockGrades[0];
+    const originalEmpGrade = empData.grade;
+    addOrUpdateSupervisor(supervisorPSNs.is, supervisorNames.is, 'IS', originalEmpGrade, originalEmpGrade);
+    addOrUpdateSupervisor(supervisorPSNs.ns, supervisorNames.ns, 'NS', originalEmpGrade, originalEmpGrade); // NS might not have a 'grade' title in same way
+    addOrUpdateSupervisor(supervisorPSNs.dh, supervisorNames.dh, 'DH', originalEmpGrade, originalEmpGrade); // DH might not have a 'grade' title in same way
+    
+    const empGrade = mockGrades.includes(originalEmpGrade) ? originalEmpGrade : mockGrades[index % mockGrades.length];
+    const jobCodeForGrade = mockJobCodes.find(jc => jc.code === empGrade) || mockJobCodes[0];
+
 
     tempEmployees.push({
         psn: psn, name: empData.name, role: 'Employee',
         grade: empGrade,
-        jobCodeId: `JC_${empGrade.replace(/[^a-zA-Z0-9]/g, '') || 'UNKNOWN'}`,
+        jobCodeId: jobCodeForGrade.id,
         project: projectObj.id,
         businessEmail: empData.email || `${psn}@lntecc.com`,
         dateOfBirth: getNextDOB(),
@@ -253,49 +280,24 @@ rawNewEmployeeData.forEach((empData) => {
 });
 
 
-export let mockJobCodes: JobCode[] = [];
-const uniqueJobCodeSet = new Set<string>();
-mockGrades.forEach(grade => uniqueJobCodeSet.add(`JC_${grade.replace(/[^a-zA-Z0-9]/g, '') || 'UNKNOWN'}`));
-mockJobCodes = Array.from(uniqueJobCodeSet).map((jcId, index) => {
-    const gradePart = jcId.substring(3); // Remove "JC_"
-    const originalGrade = mockGrades.find(g => (g.replace(/[^a-zA-Z0-9]/g, '') || 'UNKNOWN') === gradePart) || `Grade ${index + 1}`;
-    return {
-        id: jcId,
-        code: originalGrade, // Use the original grade as the code
-        description: originalGrade // And as the description
-    };
-});
-
-
-// Assign jobCodeId for initial employees
-tempEmployees.forEach(emp => {
-    const jobCodeForGrade = mockJobCodes.find(jc => jc.code === emp.grade);
-    if (jobCodeForGrade) {
-        emp.jobCodeId = jobCodeForGrade.id;
-    } else {
-        // Fallback if somehow a grade doesn't have a corresponding job code (shouldn't happen with current logic)
-        const newJcId = `JC_EMP_FALLBACK_${mockJobCodes.length}`;
-        mockJobCodes.push({id: newJcId, code: emp.grade, description: emp.grade});
-        emp.jobCodeId = newJcId;
-    }
-});
-
 const basePsnForNewEmployees = 30000000;
-const maxTotalUsers = 150;
-const currentEmployeeCount = tempEmployees.length;
-const currentSupervisorCount = supervisorMap.size;
-const remainingSlotsForNewEmployees = Math.max(0, maxTotalUsers - currentEmployeeCount - currentSupervisorCount);
-const datesToUseForNewEmployees = Math.min(formattedDOBs.length - dobIndex, remainingSlotsForNewEmployees);
+const maxTotalUsers = 150; // Target total user count
+const currentTempEmployeeCount = tempEmployees.length;
+const currentSupervisorCount = supervisorMap.size; // Count supervisors already identified
+
+// Calculate how many *new* employees to generate to reach ~maxTotalUsers
+const slotsForNewGeneratedEmployees = Math.max(0, maxTotalUsers - currentTempEmployeeCount - currentSupervisorCount);
+const datesToUseForNewEmployees = Math.min(formattedDOBs.length - dobIndex, slotsForNewGeneratedEmployees);
 
 
 if (datesToUseForNewEmployees > 0 && mockGrades.length > 0 && mockJobCodes.length > 0 && mockProjects.length > 0) {
     for (let i = 0; i < datesToUseForNewEmployees; i++) {
         const newPsn = basePsnForNewEmployees + i;
-        const existingSupervisorArray = Array.from(supervisorMap.values());
+        const existingSupervisorArray = Array.from(supervisorMap.values()).filter(s => s.psn !== IC_HEAD_PSN); // Exclude IC head for direct assignment to new employees
         
-        const isSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[i % existingSupervisorArray.length] : undefined;
-        const nsSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[(i + 1) % existingSupervisorArray.length] : undefined;
-        const dhSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[(i + 2) % existingSupervisorArray.length] : undefined;
+        const isSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[i % existingSupervisorArray.length] : supervisorMap.get(IC_HEAD_PSN);
+        const nsSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[(i + 1) % existingSupervisorArray.length] : supervisorMap.get(IC_HEAD_PSN);
+        const dhSup = existingSupervisorArray.length > 0 ? existingSupervisorArray[(i + 2) % existingSupervisorArray.length] : supervisorMap.get(IC_HEAD_PSN);
         
         const assignedGrade = mockGrades[i % mockGrades.length];
         const assignedJobCode = mockJobCodes.find(jc => jc.code === assignedGrade) || mockJobCodes[0];
@@ -333,15 +335,16 @@ supervisorMap.forEach(supData => {
     } else if (supData.roles.has('IS')) {
         finalRole = 'IS'; finalFunctionalRole = 'IS'; finalTitle = supData.title || "Immediate Supervisor";
     }
-
+    
     const employeeRecord = rawNewEmployeeData.find(e => parseInt(e.psnStr, 10) === supData.psn);
     if(employeeRecord?.grade && (finalTitle === finalFunctionalRole || finalTitle === "Supervisor" || finalTitle === "IS" || finalTitle === "NS" || finalTitle === "DH")){
-        finalTitle = employeeRecord.grade;
+        finalTitle = employeeRecord.grade; // Use their actual grade as title if it's more specific
     }
-    
+
+
     finalSupervisors.push({
         psn: supData.psn, name: supData.name, role: finalRole, functionalRole: finalFunctionalRole,
-        title: finalTitle, businessEmail: supData.email, dateOfBirth: getNextDOB(),
+        title: finalTitle, businessEmail: supData.email, dateOfBirth: supData.psn === IC_HEAD_PSN ? getNextDOB() : (employeeRecord ? getNextDOB() : getNextDOB()), // Ensure all supervisors get a DOB
         cityAccess: Array.from(supData.citySet),
         branchProject: Array.from(supData.projectSet)[0] || (mockProjects.length > 0 ? mockProjects[0].id : undefined),
         projectsHandledIds: Array.from(supData.projectSet),
@@ -361,6 +364,7 @@ finalSupervisors.forEach(s => {
 });
 export let mockSupervisors: Supervisor[] = Array.from(uniqueSupervisorsMap.values());
 
+
 let ticketCounter = 1;
 const generateTicketIdForMock = (): string => {
   const paddedCounter = ticketCounter.toString().padStart(7, '0');
@@ -369,8 +373,8 @@ const generateTicketIdForMock = (): string => {
 };
 
 export let mockTickets: Ticket[] = [];
-if (mockEmployees.length > 0) {
-    const ticketsToGenerate = Math.min(mockEmployees.length * 2, 100);
+if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
+    const ticketsToGenerate = Math.min(mockEmployees.length * 2, 100); // Limit to 100 tickets for performance
     for (let i = 0; i < ticketsToGenerate; i++) {
         const employee = mockEmployees[i % mockEmployees.length];
         if (!employee || !employee.project) continue;
@@ -379,24 +383,34 @@ if (mockEmployees.length > 0) {
         const statusOptions: TicketStatus[] = ['Open', 'In Progress', 'Pending', 'Resolved', 'Closed', 'Escalated to NS', 'Escalated to DH', 'Escalated to IC Head'];
         const priorityOptions: TicketPriority[] = ['Low', 'Medium', 'High', 'Urgent'];
         
-        const dateOffset = Math.floor(Math.random() * 30); 
+        const dateOffset = Math.floor(Math.random() * 30) +1; 
         const queryDate = new Date(Date.now() - dateOffset * 24 * 60 * 60 * 1000);
         const queryDateISO = queryDate.toISOString();
         
         const currentStatus = statusOptions[i % statusOptions.length];
         
-        let currentAssigneePSN = employee.isPSN;
-        if (currentStatus === 'Escalated to NS') currentAssigneePSN = employee.nsPSN;
-        else if (currentStatus === 'Escalated to DH') currentAssigneePSN = employee.dhPSN;
+        let currentAssigneePSN = employee.isPSN; // Default to IS
+        if (currentStatus === 'Escalated to NS' && employee.nsPSN) currentAssigneePSN = employee.nsPSN;
+        else if (currentStatus === 'Escalated to DH' && employee.dhPSN) currentAssigneePSN = employee.dhPSN;
         else if (currentStatus === 'Escalated to IC Head') currentAssigneePSN = IC_HEAD_PSN;
+        else if (currentStatus === 'Open' && !employee.isPSN) currentAssigneePSN = IC_HEAD_PSN; // If Open and no IS, assign to IC Head
         
+        // Fallback if assignee is not found or is undefined
         if (!currentAssigneePSN || !mockSupervisors.find(s => s.psn === currentAssigneePSN)) {
-            const isSupervisor = mockSupervisors.find(s => s.functionalRole === 'IS' && s.projectsHandledIds?.includes(project.id));
-            currentAssigneePSN = isSupervisor?.psn || mockSupervisors.find(s => s.functionalRole === 'IS')?.psn || (mockSupervisors.length > 0 ? mockSupervisors[0]?.psn : undefined);
+            const projectSupervisors = mockSupervisors.filter(s => s.projectsHandledIds?.includes(project.id) && s.functionalRole === 'IS');
+            currentAssigneePSN = projectSupervisors.length > 0 ? projectSupervisors[0].psn : (mockSupervisors.find(s=>s.functionalRole === 'IS')?.psn || IC_HEAD_PSN);
         }
 
-        const lastStatusUpdateDate = new Date(queryDate.getTime() - Math.floor(Math.random() * (dateOffset > 1 ? dateOffset -1 : 0) ) * 24*60*60*1000).toISOString();
-        const dateOfResponse = currentStatus !== 'Open' ? new Date(new Date(lastStatusUpdateDate).getTime() + (Math.floor(Math.random() * 2) + 1) * 24 * 60 * 60 * 1000).toISOString() : undefined;
+
+        const lastStatusUpdateDaysAgo = Math.floor(Math.random() * (dateOffset > 1 ? dateOffset -1 : 0) );
+        const lastStatusUpdateDate = new Date(queryDate.getTime() + (dateOffset - lastStatusUpdateDaysAgo) * 24*60*60*1000).toISOString();
+        
+        let dateOfResponse: string | undefined = undefined;
+        if (currentStatus !== 'Open' && currentStatus !== 'Pending') {
+             const responseDaysAfterLastUpdate = Math.floor(Math.random() * Math.max(1, lastStatusUpdateDaysAgo -1)) + 1;
+             dateOfResponse = new Date(new Date(lastStatusUpdateDate).getTime() + responseDaysAfterLastUpdate * 24 * 60 * 60 * 1000).toISOString();
+        }
+
 
         mockTickets.push({
             id: generateTicketIdForMock(),
@@ -409,7 +423,7 @@ if (mockEmployees.length > 0) {
             currentAssigneePSN: currentAssigneePSN,
             project: employee.project,
             lastStatusUpdateDate: lastStatusUpdateDate,
-            actionPerformed: currentStatus !== 'Open' ? `Action taken on ${new Date(dateOfResponse!).toLocaleDateString()}. Status set to ${currentStatus}.` : undefined,
+            actionPerformed: dateOfResponse ? `Action taken on ${new Date(dateOfResponse).toLocaleDateString()}. Status set to ${currentStatus}.` : undefined,
             dateOfResponse: dateOfResponse,
             attachments: i % 5 === 0 ? [{ id: `att-${i}`, fileName: `document-${i}.pdf`, fileType: 'document', urlOrContent: '#', uploadedAt: queryDateISO }] : undefined,
         });
@@ -417,5 +431,3 @@ if (mockEmployees.length > 0) {
 }
 
 export const allMockUsers: User[] = [...mockEmployees, ...mockSupervisors];
-
-    
