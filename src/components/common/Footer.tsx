@@ -1,5 +1,5 @@
 
-"use client"
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -10,10 +10,12 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 const Footer = () => {
-  const [currentYear, setCurrentYear] = useState<number | string>('');
+  const [currentYear, setCurrentYear] = useState<string>('');
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
+    setCurrentYear(new Date().getFullYear().toString());
+    setIsMounted(true);
   }, []);
 
 
@@ -139,7 +141,7 @@ const Footer = () => {
             </div>
             <div className="flex flex-col md:flex-row items-center justify-between w-full gap-y-2 md:gap-y-0 mt-4">
                 <p className="text-muted-foreground text-center md:text-left">
-                &copy; {currentYear} Larsen & Toubro Limited. All rights reserved.
+                &copy; {isMounted ? currentYear : ''} Larsen & Toubro Limited. All rights reserved.
                 </p>
                 <div className="flex items-center space-x-4">
                     <Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
@@ -155,5 +157,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
-    
