@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Facebook, Instagram, Youtube, Linkedin, Twitter, Building, Globe, FileText, Users, Briefcase, MapPin, Phone, Mail, BookOpenText, Leaf, Megaphone, Newspaper } from 'lucide-react'; // Added Twitter, Building, Globe etc.
-// Removed LTLogo import as we'll use a generic icon for "L&T Construction" section
+import { Facebook, Instagram, Youtube, Linkedin, Twitter, Building, Globe, FileText, Users, Briefcase, MapPin, Phone, Mail, BookOpenText, Leaf, Megaphone, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils'; // Import cn utility
 
 const Footer = () => {
   const [currentYear, setCurrentYear] = useState<number | string>('');
@@ -18,7 +18,6 @@ const Footer = () => {
   
 
   const lntConstructionLinks = [
-    // Social links for L&T Construction column
     { href: 'https://facebook.com/larsentoubro', label: 'Facebook', icon: <Facebook size={20} /> },
     { href: 'https://twitter.com/larsentoubro', label: 'Twitter', icon: <Twitter size={20} /> },
     { href: 'https://linkedin.com/company/larsen---toubro', label: 'LinkedIn', icon: <Linkedin size={20} /> },
@@ -26,10 +25,10 @@ const Footer = () => {
 
   const portalLinks = [
     { href: '/', label: 'Home' },
-    { href: '/dashboard', label: 'Employee Portal' }, // Assuming dashboard is the employee portal start
+    { href: '/dashboard', label: 'Employee Portal' },
     { href: '/tickets/new', label: 'Create Ticket' },
-    { href: '/hr/tickets', label: 'HR Dashboard' }, // Link for HRs
-    { href: '/admin/add-employee', label: 'Admin Portal' }, // Link for Admins
+    { href: '/hr/tickets', label: 'HR Dashboard' },
+    { href: '/admin/add-employee', label: 'Admin Portal' },
   ];
 
   const ltOfficialLinks = [
@@ -58,7 +57,6 @@ const Footer = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
           
-          {/* Column 1: L&T Construction */}
           <div className="space-y-4 lg:col-span-2">
             <div className="flex items-center space-x-2 mb-1">
               <Building className="h-7 w-7 text-primary" />
@@ -77,7 +75,6 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Column 2: Portal */}
           <div className="space-y-4">
             <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">Portal</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
@@ -91,7 +88,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 3: L&T Official */}
            <div className="space-y-4">
             <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">L&T Official</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
@@ -106,7 +102,6 @@ const Footer = () => {
             </ul>
           </div>
           
-          {/* Column 4: Resources */}
           <div className="space-y-4">
             <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">Resources</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
@@ -121,9 +116,7 @@ const Footer = () => {
             </ul>
           </div>
 
-
-          {/* Column 5: Support */}
-          <div className="space-y-4 md:col-span-2 lg:col-span-1 lg:col-start-4">
+          <div className="space-y-4 md:col-span-2 lg:col-span-1 lg:col-start-4 xl:col-start-auto"> 
             <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">Support</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
               {supportContacts.map(contact => (
@@ -138,7 +131,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="border-t border-border/40 pt-8 text-sm">
           <div className="flex flex-col md:flex-row justify-between items-center gap-y-4">
             <p className="text-muted-foreground text-center md:text-left">
@@ -149,8 +141,6 @@ const Footer = () => {
                 <Link href="/terms-of-service" className="text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link>
                  <Link href="/cookie-policy" className="text-muted-foreground hover:text-primary transition-colors">Cookie Policy</Link> 
             </div>
-            {/* General social media links moved to the bottom as per previous request, if any, are now within L&T Construction or removed if image is strict */}
-            {/* The image shows social links under L&T Construction, so we follow that. */}
           </div>
         </div>
       </div>
@@ -159,5 +149,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
-    
