@@ -7,40 +7,63 @@ import { cn } from '@/lib/utils';
 interface ScrollRevealProps {
   children: ReactNode;
   className?: string;
-  animationClass?: string; // e.g., 'animate-fadeInUp'
-  delay?: number; // in ms
+  animationInClass?: string;
+  animationOutClass?: string;
+  delayIn?: number; // Delay for the "in" animation
   threshold?: number;
-  once?: boolean; // Only animate once
+  once?: boolean; // If true, only 'in' animation runs once. If false, 'in' and 'out' animations toggle.
 }
 
 const ScrollReveal: React.FC<ScrollRevealProps> = ({
   children,
   className,
-  animationClass = 'animate-fadeInUp', // Default animation
-  delay = 0,
+  animationInClass = 'animate-fadeInUp',
+  animationOutClass = 'animate-fadeOutDown',
+  delayIn = 0,
   threshold = 0.1,
   once = true,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  // currentAnimation will hold the class for the current animation state.
+  // It starts as 'opacity-0' to ensure elements are hidden before the first "in" animation.
+  const [currentAnimation, setCurrentAnimation] = useState<string>('opacity-0');
   const targetRef = useRef<HTMLDivElement | null>(null);
+  
+  // This ref tracks if the "in" animation has triggered at least once.
+  // Useful for the `once={false}` scenario to apply `animationOutClass`.
+  const hasAnimatedInAtLeastOnceRef = useRef(false);
 
   useEffect(() => {
+    const currentTarget = targetRef.current; 
+    if (!currentTarget) return;
+
+    // Set initial state for the element based on its visibility before JS might run or for first paint.
+    // The main purpose is to make it invisible before the first 'in' animation.
+    setCurrentAnimation('opacity-0');
+    // Reset this ref if dependencies change, to allow re-evaluation of "first animation" logic.
+    hasAnimatedInAtLeastOnceRef.current = false;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          if (!hasAnimated || !once) {
-            setTimeout(() => {
-              setIsVisible(true);
-              if (once) {
-                setHasAnimated(true);
-              }
-            }, delay);
-          }
+          // Element is in view
+          // Trigger "in" animation
+          setTimeout(() => {
+            setCurrentAnimation(animationInClass);
+            hasAnimatedInAtLeastOnceRef.current = true;
+          }, delayIn);
         } else {
-          if (!once) {
-            // setIsVisible(false); // Optionally reset if animation should replay on scroll out
+          // Element is out of view
+          if (!once && hasAnimatedInAtLeastOnceRef.current) {
+            // If 'once' is false AND it has been animated in before, apply 'out' animation
+            setCurrentAnimation(animationOutClass);
+          } else if (!hasAnimatedInAtLeastOnceRef.current && !once) {
+            // If it has never animated in (e.g., scrolled past very quickly before delayIn timeout)
+            // and we are in a !once scenario, ensure it's set to its initial hidden state.
+            setCurrentAnimation('opacity-0');
           }
+          // If 'once' is true and it has animated in, it should retain 'animationInClass'
+          // state due to the 'forwards' fill mode, so no change to currentAnimation here.
+          // If 'once' is true and it hasn't animated in, it should remain 'opacity-0'.
         }
       },
       {
@@ -48,27 +71,20 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
       }
     );
 
-    const currentRef = targetRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+    observer.observe(currentTarget);
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
       }
       observer.disconnect();
     };
-  }, [delay, threshold, once, hasAnimated]);
+  }, [animationInClass, animationOutClass, delayIn, threshold, once]); // Key props that re-configure the behavior
 
   return (
     <div
       ref={targetRef}
-      className={cn(
-        'transition-opacity duration-700 ease-out',
-        isVisible ? `${animationClass} opacity-100` : 'opacity-0',
-        className
-      )}
+      className={cn(currentAnimation, className)}
       style={{ willChange: 'opacity, transform' }} // Performance hint
     >
       {children}
