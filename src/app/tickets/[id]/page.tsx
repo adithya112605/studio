@@ -378,7 +378,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
           )}
           
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={displayOverdueInfo?.isOverdue ? 200 : 100}>
-            <Card className="shadow-lg transition-shadow hover:shadow-xl">
+            <Card className="shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -457,7 +457,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
                 <TicketResolutionSuggestions ticketQuery={ticket.query} />
               </ScrollReveal>
               <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
-                <Card className="shadow-lg transition-shadow hover:shadow-xl">
+                <Card className="shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                   <CardHeader>
                     <CardTitle className="font-headline text-xl">Manage Ticket</CardTitle>
                     <CardDescription>Respond to the employee or update the ticket status.</CardDescription>
@@ -512,7 +512,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
 
           {user.role === 'Employee' && !['Resolved', 'Closed'].includes(ticket.status) && (
             <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
-             <Card className="shadow-lg transition-shadow hover:shadow-xl">
+             <Card className="shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                 <CardHeader>
                   <CardTitle className="font-headline text-xl">Add Follow-up Information</CardTitle>
                    <CardDescription>If you have more details to add, please provide them here.</CardDescription>

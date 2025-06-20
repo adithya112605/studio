@@ -86,7 +86,7 @@ export default function MyProfilePage() {
         return (
           <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
             <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-            <Card className="w-full max-w-3xl mx-auto shadow-xl overflow-hidden transition-shadow hover:shadow-2xl">
+            <Card className="w-full max-w-3xl mx-auto shadow-xl overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
               <CardHeader className="text-center bg-muted/30 p-6">
                 <Avatar className="w-24 h-24 mx-auto mb-4 border-2 border-primary shadow-lg">
                   <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(currentUser.name)}`} alt={currentUser.name} data-ai-hint="profile avatar"/>

@@ -98,7 +98,7 @@ export default function AddSupervisorForm() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-xl">
+    <Card className="w-full max-w-2xl mx-auto shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Add New Supervisor</CardTitle>
         <CardDescription>Enter the details for the new supervisor staff member.</CardDescription>

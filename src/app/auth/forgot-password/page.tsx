@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12 px-4">
       <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-        <Card className="w-full max-w-md shadow-xl transition-shadow hover:shadow-2xl">
+        <Card className="w-full max-w-md shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
           <CardHeader>
             <CardTitle className="font-headline text-2xl">Forgot Password</CardTitle>
             <CardDescription>

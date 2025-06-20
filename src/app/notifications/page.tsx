@@ -42,7 +42,7 @@ export default function NotificationsPage() {
     <ProtectedPage>
       <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
         <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-          <Card className="w-full max-w-2xl mx-auto shadow-xl transition-shadow hover:shadow-2xl">
+          <Card className="w-full max-w-2xl mx-auto shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
             <CardHeader>
               <div className="flex justify-between items-center">
                   <CardTitle className="font-headline text-2xl">Notifications</CardTitle>
@@ -57,7 +57,7 @@ export default function NotificationsPage() {
             <CardContent className="space-y-4">
               {notifications.length > 0 ? notifications.map((notif, index) => (
                 <ScrollReveal key={notif.id} animationInClass="animate-fadeInUp" once={false} delayIn={index * 50}>
-                  <div className={`p-4 rounded-md border ${notif.read ? 'bg-muted/50 opacity-70' : 'bg-card hover:bg-muted/20'} transition-colors`}>
+                  <div className={`p-4 rounded-md border ${notif.read ? 'bg-muted/50 opacity-70' : 'bg-card hover:bg-muted/20 hover:shadow-md hover:-translate-y-0.5 transform transition-all duration-200 ease-in-out'} transition-colors`}>
                     <div className="flex items-start space-x-3">
                         <BellRing className={`mt-1 h-5 w-5 ${notif.read ? 'text-muted-foreground' : 'text-primary'}`} />
                         <div>

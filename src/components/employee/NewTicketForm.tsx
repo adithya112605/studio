@@ -150,7 +150,7 @@ export default function NewTicketForm() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-xl">
+    <Card className="w-full max-w-2xl mx-auto shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Raise a New Ticket</CardTitle>
         <CardDescription>Describe your issue or request below. Your Immediate Supervisor (IS) will be notified.</CardDescription>

@@ -86,7 +86,7 @@ const SettingsPage = () => {
       <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Public Profile</h2>
         <p className="text-muted-foreground">This information will be displayed publicly so be careful what you share.</p>
-        <div className="space-y-4 p-6 border rounded-lg bg-card">
+        <div className="space-y-4 p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><Label>PSN</Label><Input value={currentUser.psn.toString()} readOnly className="mt-1"/></div>
                 <div><Label>Full Name</Label><Input value={currentUser.name} readOnly className="mt-1"/></div>
@@ -107,7 +107,7 @@ const SettingsPage = () => {
     <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Password</h2>
         <p className="text-muted-foreground">Update your password. Choose a strong and unique password.</p>
-        <div className="space-y-4 p-6 border rounded-lg bg-card">
+        <div className="space-y-4 p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <div><Label htmlFor="current-password">Current Password</Label><Input id="current-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
             <div><Label htmlFor="new-password">New Password</Label><Input id="new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
             <div><Label htmlFor="confirm-new-password">Confirm New Password</Label><Input id="confirm-new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
@@ -115,7 +115,7 @@ const SettingsPage = () => {
             <div className="pt-2"><p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p><ul className="text-xs text-muted-foreground list-disc list-inside"><li>At least 8 characters</li><li>Uppercase & lowercase letters</li><li>At least one number</li><li>At least one special character</li></ul></div>
             <Button className="w-full mt-4" onClick={handlePasswordUpdate}>Update Password</Button>
         </div>
-        <div className="p-6 border rounded-lg bg-card space-y-4">
+        <div className="p-6 border rounded-lg bg-card space-y-4 transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <div className="flex items-center justify-between">
                 <div>
                     <Label htmlFor="2fa-toggle" className="font-semibold">Two-Factor Authentication (2FA)</Label>
@@ -141,7 +141,7 @@ const SettingsPage = () => {
     <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Appearance</h2>
         <p className="text-muted-foreground">Customize the look and feel of the application to your preference.</p>
-        <div className="p-6 border rounded-lg bg-card">
+        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <AppearanceSettingItem title="Theme" description="Select your preferred light or dark mode."> <ThemeToggle /> </AppearanceSettingItem>
             <AppearanceSettingItem title="Application Font" description="Choose the display font for the interface."> <Select disabled onValueChange={(value) => handleGenericSave("Appearance", `Font changed to ${value}`)}> <SelectTrigger className="w-[180px]"><SelectValue placeholder="Current (Inter)" /></SelectTrigger> <SelectContent> <SelectItem value="system">Inter (Default)</SelectItem> </SelectContent> </Select> </AppearanceSettingItem>
             <AppearanceSettingItem title="Default Language" description="Set your preferred language."> <Select defaultValue="en-us" onValueChange={(value) => handleGenericSave("Appearance", `Language changed to ${value}`)} > <SelectTrigger className="w-[180px]"><SelectValue placeholder="English (US)" /></SelectTrigger> <SelectContent> <SelectItem value="en-us">English (US)</SelectItem> <SelectItem value="en-gb">English (UK)</SelectItem> <SelectItem value="hi-in">Hindi (India)</SelectItem></SelectContent> </Select> </AppearanceSettingItem>
@@ -165,7 +165,7 @@ const SettingsPage = () => {
     <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Notifications</h2>
         <p className="text-muted-foreground">Manage how you receive notifications from the helpdesk system.</p>
-        <div className="p-6 border rounded-lg bg-card">
+        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <NotificationSettingItem title="Email Notifications" description="Receive updates via email for ticket activity." id="email-notif" checked={emailNotif} onCheckedChange={setEmailNotif} />
             <NotificationSettingItem title="SMS Notifications" description="Receive critical alerts and updates via SMS." id="sms-notif" checked={smsNotif} onCheckedChange={setSmsNotif} />
             <NotificationSettingItem title="In-App Notifications" description="Show banners and alerts within the application." id="inapp-notif" checked={inAppNotif} onCheckedChange={setInAppNotif} />
@@ -198,7 +198,7 @@ const SettingsPage = () => {
     <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Ticket System Settings</h2>
         <p className="text-muted-foreground">Configure ticket-related system parameters (Admin Access).</p>
-        <div className="p-6 border rounded-lg bg-card">
+        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <SupervisorSettingItem title="Ticket ID Format" description="System-defined ticket identifier format."> <Input value="TKXXXXXXX (Alphanumeric)" readOnly className="w-[200px]"/> </SupervisorSettingItem>
             <SupervisorSettingItem title="Default Ticket Priority" description="Set the initial priority for new tickets."> <Select onValueChange={(value) => handleGenericSave("Ticket System", `Default Priority: ${value}`)} defaultValue="Medium"> <SelectTrigger className="w-[180px]"><SelectValue placeholder="Medium" /></SelectTrigger> <SelectContent> <SelectItem value="Low">Low</SelectItem> <SelectItem value="Medium">Medium</SelectItem><SelectItem value="High">High</SelectItem> </SelectContent> </Select> </SupervisorSettingItem>
             <SupervisorSettingItem title="Auto-close Resolved Tickets" description="Days after resolution to auto-close."> <Input type="number" placeholder="e.g., 7" className="w-[180px]" onChange={(e) => handleGenericSave("Ticket System", `Auto-close days: ${e.target.value}`)} /> </SupervisorSettingItem>
@@ -210,7 +210,7 @@ const SettingsPage = () => {
      <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Administrative Settings</h2>
         <p className="text-muted-foreground">Manage core system security and operations (IC Head Access).</p>
-        <div className="p-6 border rounded-lg bg-card">
+        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <SupervisorSettingItem title="System Email Address" description="Email for automated notifications."> <Input type="email" placeholder="notifications@lnthelpdesk.com" className="w-[240px]" onChange={(e) => handleGenericSave("Administrative", `System Email: ${e.target.value}`)} /> </SupervisorSettingItem>
             <SupervisorSettingItem title="Session Timeout (Minutes)" description="Idle time before auto-logout."> <Input type="number" placeholder="30" className="w-[180px]" onChange={(e) => handleGenericSave("Administrative", `Session Timeout: ${e.target.value}`)} /> </SupervisorSettingItem>
             <SupervisorSettingItem title="Login Attempt Lockout" description="Attempts before account lockout."> <Input type="number" placeholder="5" className="w-[180px]" onChange={(e) => handleGenericSave("Administrative", `Login Attempts: ${e.target.value}`)} /> </SupervisorSettingItem>
@@ -223,7 +223,7 @@ const SettingsPage = () => {
     <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Feedback & Satisfaction</h2>
         <p className="text-muted-foreground">Manage feedback collection on ticket resolution (Admin Access).</p>
-        <div className="p-6 border rounded-lg bg-card">
+        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <SupervisorSettingItem title="Enable Ticket Rating" description="Allow users to rate resolved tickets.">  <Switch checked={ticketRating} onCheckedChange={(checked) => {setTicketRating(checked); handleGenericSave("Feedback", `Ticket Rating ${checked ? 'Enabled' : 'Disabled'}`);}} /> </SupervisorSettingItem>
             <SupervisorSettingItem title="Rating Scale" description="Define the scale for ticket ratings."> <Select onValueChange={(value) => handleGenericSave("Feedback", `Rating Scale: ${value}`)} defaultValue="5star"> <SelectTrigger className="w-[180px]"><SelectValue placeholder="1-5 Stars" /></SelectTrigger> <SelectContent> <SelectItem value="5star">1-5 Stars</SelectItem> <SelectItem value="thumbs">Thumbs Up/Down</SelectItem></SelectContent> </Select></SupervisorSettingItem>
             <SupervisorSettingItem title="General System Feedback" description="Allow users to submit general feedback."> <Switch checked={generalFeedback} onCheckedChange={(checked) => {setGeneralFeedback(checked); handleGenericSave("Feedback", `General Feedback ${checked ? 'Enabled' : 'Disabled'}`);}} /> </SupervisorSettingItem>
@@ -235,7 +235,7 @@ const SettingsPage = () => {
     <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Accessibility</h2>
         <p className="text-muted-foreground">Adjust settings to improve your experience with the application.</p>
-        <div className="p-6 border rounded-lg bg-card">
+        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
              <AppearanceSettingItem title="High Contrast Mode" description="Increase text and UI element contrast."> <Switch onCheckedChange={(val) => handleGenericSave("Accessibility", `High Contrast ${val ? 'On' : 'Off'}`)} /> </AppearanceSettingItem>
              <AppearanceSettingItem title="Font Size" description="Adjust the global font size."> <Select defaultValue="medium" onValueChange={(val) => handleGenericSave("Accessibility", `Font Size: ${val}`)}> <SelectTrigger className="w-[180px]"><SelectValue placeholder="Medium" /></SelectTrigger><SelectContent><SelectItem value="small">Small</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="large">Large</SelectItem></SelectContent></Select> </AppearanceSettingItem>
              <AppearanceSettingItem title="Keyboard Navigation" description="Enhance focus visibility for keyboard users."> <Switch defaultChecked onCheckedChange={(val) => handleGenericSave("Accessibility", `Keyboard Nav Focus ${val ? 'On' : 'Off'}`)} /> </AppearanceSettingItem>
@@ -248,7 +248,7 @@ const SettingsPage = () => {
     <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-foreground">Billing & Plans</h2>
         <p className="text-muted-foreground">This is an internal L&T helpdesk. Billing and plans are not applicable.</p>
-        <div className="p-6 border rounded-lg bg-card">
+        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <Info className="w-6 h-6 text-primary mb-2"/>
             <p className="text-muted-foreground">This platform is provided for internal use by Larsen & Toubro employees and does not involve direct billing or subscription plans for individual users.</p>
             <p className="text-muted-foreground mt-2">For departmental cost allocations or IT service inquiries, please contact your respective manager or the IT department.</p>

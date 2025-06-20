@@ -71,9 +71,9 @@ export default function HomePage() {
             <Image
                 src="https://placehold.co/1920x1080.png"
                 alt="Abstract Background"
-                layout="fill"
-                objectFit="cover"
-                className="animate-pulse"
+                fill
+                priority
+                className="object-cover animate-pulse"
                 data-ai-hint="abstract tech background"
             />
         </div>
@@ -130,7 +130,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
-                <div className="text-center p-8 bg-background rounded-xl shadow-2xl hover:shadow-primary/20 transition-all duration-300 hover:scale-105 flex flex-col items-center h-full">
+                <div className="text-center p-8 bg-background rounded-xl shadow-lg hover:shadow-2xl hover:shadow-primary/30 dark:hover:shadow-primary/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full">
                   <div className="mb-6">{feature.icon}</div>
                   <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
                   <p className="text-muted-foreground text-sm">{feature.description}</p>
@@ -152,7 +152,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {stats.map((stat, index) => (
               <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
-                <div className="flex flex-col items-center p-8 bg-card rounded-xl shadow-xl hover:shadow-accent/20 transition-all duration-300 hover:scale-105 h-full">
+                <div className="flex flex-col items-center p-8 bg-card rounded-xl shadow-md hover:shadow-xl hover:shadow-accent/30 dark:hover:shadow-accent/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full">
                   <div className={`${stat.color} mb-4`}>{stat.icon}</div>
                   <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
                   <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
@@ -167,7 +167,7 @@ export default function HomePage() {
       <section className="py-16 lg:py-24 w-full bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-            <div className="bg-background p-8 md:p-12 rounded-xl shadow-2xl overflow-hidden">
+            <div className="bg-background p-8 md:p-12 rounded-xl shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:shadow-primary/20 dark:hover:shadow-primary/30 hover:-translate-y-1 overflow-hidden">
                 <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
                     <div>
                         <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>

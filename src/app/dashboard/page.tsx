@@ -35,7 +35,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
         </div>
       </ScrollReveal>
       <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
-       <Card className="transition-shadow hover:shadow-lg">
+       <Card className="transition-all duration-300 ease-in-out hover:shadow-xl dark:hover:shadow-primary/20 hover:-translate-y-1">
         <CardHeader><CardTitle>My Information</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <p><strong>PSN:</strong> {user.psn}</p>
@@ -61,7 +61,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
       </ScrollReveal>
       <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
       {userTickets.length > 0 ? (
-        <Card className="transition-shadow hover:shadow-lg">
+        <Card className="transition-all duration-300 ease-in-out hover:shadow-xl dark:hover:shadow-primary/20 hover:-translate-y-1">
           <CardHeader>
             <CardTitle>Recent Tickets</CardTitle>
             <CardDescription>Here's a list of tickets you've raised.</CardDescription>
@@ -105,7 +105,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
            )}
         </Card>
       ) : (
-        <Card className="text-center py-8 transition-shadow hover:shadow-lg">
+        <Card className="text-center py-8 transition-all duration-300 ease-in-out hover:shadow-xl dark:hover:shadow-primary/20 hover:-translate-y-1">
             <CardContent>
                 <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">You haven't raised any tickets yet.</p>
@@ -159,7 +159,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
           { title: "Total Employees", value: mockEmployees.length, icon: <Users className="h-4 w-4 text-muted-foreground" />, desc: "Employees in the system" }
         ].map((item, index) => (
           <ScrollReveal key={item.title} animationInClass="animate-fadeInUp" once={false} delayIn={100 + index * 100}>
-            <Card className="shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+            <Card className="shadow-md hover:shadow-xl dark:hover:shadow-primary/20 transform transition-all duration-300 ease-in-out hover:-translate-y-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
                 {item.icon}
@@ -175,7 +175,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
 
       <div className="grid gap-6 md:grid-cols-2">
         <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
-         <Card className="shadow-md hover:shadow-lg transition-shadow">
+         <Card className="shadow-md hover:shadow-xl dark:hover:shadow-accent/20 transform transition-all duration-300 ease-in-out hover:-translate-y-1">
             <CardHeader> <CardTitle className="font-headline text-xl">Quick Actions</CardTitle> </CardHeader>
             <CardContent className="space-y-3">
                 {(user.functionalRole === 'DH' || user.functionalRole === 'IC Head') && (
@@ -190,7 +190,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
          </Card>
         </ScrollReveal>
         <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={500}>
-         <Card className="shadow-md hover:shadow-lg transition-shadow">
+         <Card className="shadow-md hover:shadow-xl dark:hover:shadow-destructive/20 transform transition-all duration-300 ease-in-out hover:-translate-y-1">
             <CardHeader>
                 <CardTitle className="font-headline text-xl">Recent High Priority Tickets</CardTitle>
                 <CardDescription>Top open tickets needing urgent attention.</CardDescription>

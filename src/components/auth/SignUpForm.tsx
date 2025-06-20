@@ -138,7 +138,7 @@ export default function SignUpForm() {
 
   return (
     <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-      <Card className="w-full max-w-md shadow-xl transition-shadow hover:shadow-2xl">
+      <Card className="w-full max-w-md shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
           {step === 1 && <CardDescription>Enter your L&T PSN (up to 8 digits) to begin.</CardDescription>}
