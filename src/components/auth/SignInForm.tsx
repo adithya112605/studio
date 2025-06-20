@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,11 +12,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Eye, EyeOff, AlertTriangle, Info } from 'lucide-react';
+import { Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import ScrollReveal from '@/components/common/ScrollReveal';
-
 
 const signInSchema = z.object({
   psn: z.string() 
@@ -54,9 +53,10 @@ export default function SignInForm() {
   };
 
   const handleGoogleSignIn = () => {
+    // This would integrate with Firebase Google Sign-In Provider
     toast({
-      title: "Google Sign-In (Simulated)",
-      description: "This would typically redirect to Google. For L&T Helpdesk, sign-in would only be allowed for verified @lnt.co or associated company email addresses. This feature is not fully implemented.",
+      title: "Google Sign-In (Placeholder)",
+      description: "Google Sign-In with Firebase is not fully implemented in this prototype. Use PSN/Password.",
       duration: 7000,
     });
   };
@@ -64,21 +64,14 @@ export default function SignInForm() {
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     setIsLoading(true);
     const success = await login(Number(data.psn), data.password);
-    setIsLoading(false);
+    setIsLoading(false); // setLoading(false) is handled in AuthContext onAuthStateChanged, but for immediate button state
     if (success) {
-      toast({ title: "Login Successful", description: "Redirecting to dashboard..." });
-      const roleRedirect = searchParams.get('role');
-      if (roleRedirect === 'supervisor') {
-        router.push('/dashboard');
-      } else {
-        router.push('/dashboard');
-      }
+      toast({ title: "Login Attempted", description: "Checking credentials... Redirecting if successful." });
+      // Redirect is handled by AuthContext listener or ProtectedPage
+      const redirectPath = searchParams.get('redirect') || '/dashboard';
+      router.push(redirectPath);
     } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid PSN or password. Please try again.",
-        variant: "destructive",
-      });
+      // Error toast is shown by login function in AuthContext
     }
   };
 
@@ -161,7 +154,7 @@ export default function SignInForm() {
             <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
               <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.5 512 0 403.3 0 261.8S110.5 11.6 244 11.6c70.3 0 133.5 29.1 179.9 75.9L363.5 145.5C334.1 120.2 293.3 100.9 244 100.9c-66.8 0-123.2 46.3-140 107.5H244V261.8zM99.3 203.9C112.7 139.4 173.1 95.4 244 95.4c42.9 0 79.2 21.4 101.8 53.1l42.4-42.4C346.3 52.4 299.6 29.1 244 29.1 151.4 29.1 74.1 83.8 39.5 158.9l59.8 45z"></path>
             </svg>
-            Sign in with Google (Simulated)
+            Sign in with Google (Placeholder)
           </Button>
         </CardContent>
         <CardFooter className="text-sm text-center block">

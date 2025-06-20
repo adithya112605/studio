@@ -14,11 +14,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import PasswordStrength from './PasswordStrength';
 import type { PasswordStrengthResult } from '@/types';
-import { Loader2, Eye, EyeOff, AlertTriangle, Sparkles, Info } from 'lucide-react';
+import { Loader2, Eye, EyeOff, AlertTriangle, Sparkles } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ScrollReveal from '@/components/common/ScrollReveal';
-
 
 const signUpStep1Schema = z.object({
   psn: z.string() 
@@ -28,7 +27,7 @@ const signUpStep1Schema = z.object({
 });
 
 const signUpStep2Schema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters. Ensure it includes uppercase, lowercase, a number, and a special character for best security."),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -44,6 +43,7 @@ const generatePassword = (length = 12): string => {
   for (let i = 0, n = charset.length; i < length; ++i) {
     retVal += charset.charAt(Math.floor(Math.random() * n));
   }
+  // Ensure all character types are present if generated string is too short or unlucky
   if (!/[a-z]/.test(retVal)) retVal += 'a';
   if (!/[A-Z]/.test(retVal)) retVal += 'Z';
   if (!/[0-9]/.test(retVal)) retVal += '1';
@@ -51,7 +51,6 @@ const generatePassword = (length = 12): string => {
   
   return retVal.slice(0, length); 
 };
-
 
 export default function SignUpForm() {
   const { checkPSNExists, signup } = useAuth();
@@ -98,15 +97,16 @@ export default function SignUpForm() {
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
     setIsLoading(true);
     const psnNumber = Number(data.psn);
-    const exists = await checkPSNExists(psnNumber);
+    const psnIsValidLntUser = await checkPSNExists(psnNumber); // Checks against mock L&T data
     setIsLoading(false);
-    if (exists) {
+
+    if (psnIsValidLntUser) {
       setPsnForStep2(psnNumber);
       setStep(2);
     } else {
       toast({
-        title: "PSN Not Found",
-        description: "This PSN is not registered in our system or is already activated. Please contact L&T Admin if you believe this is an error.",
+        title: "PSN Not Recognized",
+        description: "This PSN is not found in our records. Please verify your PSN or contact L&T Admin if you believe this is an error.",
         variant: "destructive",
       });
     }
@@ -116,21 +116,23 @@ export default function SignUpForm() {
     if (!passwordStrength?.isValid) {
       toast({
         title: "Weak Password",
-        description: "Please choose a stronger password based on the guidelines.",
+        description: passwordStrength?.message || "Please choose a stronger password based on the guidelines.",
         variant: "destructive",
       });
       return;
     }
     setIsLoading(true);
-    const result = await signup(psnForStep2, data.password);
-    setIsLoading(false);
+    const result = await signup(psnForStep2, data.password); // This now calls Firebase createUser...
+    setIsLoading(false); // setLoading(false) is handled in AuthContext onAuthStateChanged, but for immediate button state
+    
     if (result.success) {
-      toast({ title: "Account Created!", description: "You are now logged in. Redirecting to dashboard..."});
+      toast({ title: "Account Creation Attempted", description: result.message });
+       // Redirect is handled by AuthContext listener or ProtectedPage
       router.push('/dashboard');
     } else {
       toast({
         title: "Signup Failed",
-        description: result.message || "Could not create account. Please try again.",
+        description: result.message, // Error message from Firebase (e.g., email already in use)
         variant: "destructive",
       });
     }
@@ -142,7 +144,7 @@ export default function SignUpForm() {
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
           {step === 1 && <CardDescription>Enter your L&T PSN (up to 8 digits) to begin.</CardDescription>}
-          {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}).</CardDescription>}
+          {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}). Your associated L&T business email will be used for Firebase registration.</CardDescription>}
         </CardHeader>
         <CardContent>
           {step === 1 && (
@@ -198,7 +200,7 @@ export default function SignUpForm() {
                 </div>
                 <PasswordStrength password={watchedPassword} onStrengthChange={setPasswordStrength} />
                 {formStep2.formState.errors.password && <p className="text-sm text-destructive">{formStep2.formState.errors.password.message}</p>}
-                {isCapsLockOn && (
+                 {isCapsLockOn && (
                   <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700">
                       <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                       <AlertDescription className="text-yellow-700 dark:text-yellow-300">
@@ -237,7 +239,7 @@ export default function SignUpForm() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account & Sign In
               </Button>
-              <Button variant="outline" onClick={() => setStep(1)} className="w-full">
+              <Button variant="outline" onClick={() => setStep(1)} className="w-full" type="button">
                 Back to PSN Entry
               </Button>
             </form>
