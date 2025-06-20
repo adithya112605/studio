@@ -10,6 +10,7 @@ import { mockTickets, mockEmployees, mockSupervisors, mockJobCodes, mockProjects
 import { FileText, PlusCircle, Users, BarChart2, CheckCircle, UserSquare2, Eye, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
@@ -28,10 +29,13 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="font-headline text-3xl font-bold">My Dashboard</h1>
-      </div>
-       <Card>
+      <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+        <div className="flex justify-between items-center">
+          <h1 className="font-headline text-3xl font-bold">My Dashboard</h1>
+        </div>
+      </ScrollReveal>
+      <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+       <Card className="transition-shadow hover:shadow-lg">
         <CardHeader><CardTitle>My Information</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <p><strong>PSN:</strong> {user.psn}</p>
@@ -45,15 +49,19 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
           <p><strong>Department Head (DH):</strong> {user.dhName || 'N/A'} ({user.dhPSN || 'N/A'})</p>
         </CardContent>
       </Card>
+      </ScrollReveal>
 
-      <div className="flex justify-between items-center mt-6">
-        <h2 className="font-headline text-2xl font-bold">My Tickets</h2>
-        <Button asChild>
-          <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
-        </Button>
-      </div>
+      <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
+        <div className="flex justify-between items-center mt-6">
+          <h2 className="font-headline text-2xl font-bold">My Tickets</h2>
+          <Button asChild>
+            <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
+          </Button>
+        </div>
+      </ScrollReveal>
+      <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
       {userTickets.length > 0 ? (
-        <Card>
+        <Card className="transition-shadow hover:shadow-lg">
           <CardHeader>
             <CardTitle>Recent Tickets</CardTitle>
             <CardDescription>Here's a list of tickets you've raised.</CardDescription>
@@ -97,7 +105,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
            )}
         </Card>
       ) : (
-        <Card className="text-center py-8">
+        <Card className="text-center py-8 transition-shadow hover:shadow-lg">
             <CardContent>
                 <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">You haven't raised any tickets yet.</p>
@@ -107,6 +115,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
             </CardContent>
         </Card>
       )}
+      </ScrollReveal>
     </div>
   );
 };
@@ -140,41 +149,32 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-headline text-3xl font-bold">{user.title} Dashboard</h1>
+      <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+        <h1 className="font-headline text-3xl font-bold">{user.title} Dashboard</h1>
+      </ScrollReveal>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Tickets</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{openTicketsCount}</div>
-            <p className="text-xs text-muted-foreground">Tickets requiring attention</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resolved Today</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{resolvedTodayCount}</div>
-            <p className="text-xs text-muted-foreground">Tickets closed today</p>
-          </CardContent>
-        </Card>
-         <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockEmployees.length}</div>
-             <p className="text-xs text-muted-foreground">Employees in the system</p>
-          </CardContent>
-        </Card>
+        {[
+          { title: "Active Tickets", value: openTicketsCount, icon: <FileText className="h-4 w-4 text-muted-foreground" />, desc: "Tickets requiring attention" },
+          { title: "Resolved Today", value: resolvedTodayCount, icon: <CheckCircle className="h-4 w-4 text-muted-foreground" />, desc: "Tickets closed today" },
+          { title: "Total Employees", value: mockEmployees.length, icon: <Users className="h-4 w-4 text-muted-foreground" />, desc: "Employees in the system" }
+        ].map((item, index) => (
+          <ScrollReveal key={item.title} animationInClass="animate-fadeInUp" once={false} delayIn={100 + index * 100}>
+            <Card className="shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                {item.icon}
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{item.value}</div>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
+              </CardContent>
+            </Card>
+          </ScrollReveal>
+        ))}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
+        <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
          <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader> <CardTitle className="font-headline text-xl">Quick Actions</CardTitle> </CardHeader>
             <CardContent className="space-y-3">
@@ -188,6 +188,8 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
                 <Button className="w-full justify-start text-left" variant="outline" asChild><Link href="/reports"><BarChart2 className="mr-2 h-5 w-5" /> Generate Reports</Link></Button>
             </CardContent>
          </Card>
+        </ScrollReveal>
+        <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={500}>
          <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader>
                 <CardTitle className="font-headline text-xl">Recent High Priority Tickets</CardTitle>
@@ -214,6 +216,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
                 <Button variant="outline" className="w-full" asChild><Link href="/hr/tickets">View All Tickets <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             </CardFooter>
          </Card>
+        </ScrollReveal>
       </div>
     </div>
   );
@@ -223,7 +226,7 @@ export default function DashboardPage() {
   return (
     <ProtectedPage>
       {(user: User) => (
-        <div className="py-6">
+        <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8">
           {user.role === 'Employee' && <EmployeeDashboard user={user as Employee} />}
           {(user.role === 'IS' || user.role === 'NS' || user.role === 'DH' || user.role === 'IC Head') && <SupervisorDashboard user={user as Supervisor} />}
         </div>
@@ -231,5 +234,3 @@ export default function DashboardPage() {
     </ProtectedPage>
   );
 }
-
-    

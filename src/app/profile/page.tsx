@@ -11,6 +11,7 @@ import { mockJobCodes, mockProjects, mockSupervisors, mockEmployees } from "@/da
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
 const getInitials = (name: string = "") => {
   const names = name.split(' ');
@@ -18,7 +19,7 @@ const getInitials = (name: string = "") => {
   if (names.length > 1) {
     initials += names[names.length - 1]?.substring(0, 1).toUpperCase() || '';
   }
-  return initials || 'U'; // Fallback initial
+  return initials || 'U'; 
 };
 
 const getActingRolesForDisplay = (supervisor: Supervisor): string => {
@@ -83,8 +84,9 @@ export default function MyProfilePage() {
 
 
         return (
-          <div className="container mx-auto py-8">
-            <Card className="w-full max-w-3xl mx-auto shadow-xl overflow-hidden">
+          <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+            <Card className="w-full max-w-3xl mx-auto shadow-xl overflow-hidden transition-shadow hover:shadow-2xl">
               <CardHeader className="text-center bg-muted/30 p-6">
                 <Avatar className="w-24 h-24 mx-auto mb-4 border-2 border-primary shadow-lg">
                   <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(currentUser.name)}`} alt={currentUser.name} data-ai-hint="profile avatar"/>
@@ -194,11 +196,10 @@ export default function MyProfilePage() {
                 </Button>
               </CardFooter>
             </Card>
+            </ScrollReveal>
           </div>
         );
       }}
     </ProtectedPage>
   );
 }
-
-    

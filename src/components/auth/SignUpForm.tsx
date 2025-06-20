@@ -17,10 +17,11 @@ import type { PasswordStrengthResult } from '@/types';
 import { Loader2, Eye, EyeOff, AlertTriangle, Sparkles, Info } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import ScrollReveal from '@/components/common/ScrollReveal';
 
 
 const signUpStep1Schema = z.object({
-  psn: z.string() // Changed for maxLength
+  psn: z.string() 
     .min(1, "PSN is required.")
     .max(8, "PSN must be 1 to 8 digits.")
     .regex(/^[0-9]+$/, "PSN must be a number."),
@@ -37,20 +38,18 @@ const signUpStep2Schema = z.object({
 type SignUpStep1Values = z.infer<typeof signUpStep1Schema>;
 type SignUpStep2Values = z.infer<typeof signUpStep2Schema>;
 
-// Simple password generator
 const generatePassword = (length = 12): string => {
   const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
   let retVal = "";
   for (let i = 0, n = charset.length; i < length; ++i) {
     retVal += charset.charAt(Math.floor(Math.random() * n));
   }
-  // Ensure it has a mix of character types
   if (!/[a-z]/.test(retVal)) retVal += 'a';
   if (!/[A-Z]/.test(retVal)) retVal += 'Z';
   if (!/[0-9]/.test(retVal)) retVal += '1';
   if (!/[!@#$%^&*()_+~`|}{[\]:;?><,./-=]/.test(retVal)) retVal += '!';
   
-  return retVal.slice(0, length); // Trim if extra chars were added
+  return retVal.slice(0, length); 
 };
 
 
@@ -72,7 +71,7 @@ export default function SignUpForm() {
 
   const formStep2 = useForm<SignUpStep2Values>({
     resolver: zodResolver(signUpStep2Schema),
-    mode: "onChange" // Validate on change for password confirmation
+    mode: "onChange" 
   });
 
   const watchedPassword = formStep2.watch("password");
@@ -138,119 +137,121 @@ export default function SignUpForm() {
   };
 
   return (
-    <Card className="w-full max-w-md shadow-xl">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
-        {step === 1 && <CardDescription>Enter your L&T PSN (up to 8 digits) to begin.</CardDescription>}
-        {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}).</CardDescription>}
-      </CardHeader>
-      <CardContent>
-        {step === 1 && (
-          <form onSubmit={formStep1.handleSubmit(handlePsnSubmit)} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="psn-signup">PSN (up to 8 digits)</Label>
-              <Input 
-                id="psn-signup" 
-                type="text" // Changed for maxLength
-                {...formStep1.register("psn")} 
-                onInput={handlePsnInput}
-                maxLength={8}
-                placeholder="e.g., 10000001" 
-              />
-              {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Verify PSN
-            </Button>
-          </form>
-        )}
-        {step === 2 && (
-          <form onSubmit={formStep2.handleSubmit(handlePasswordSubmit)} className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                 <Label htmlFor="password-signup">New Password</Label>
-                 <Button type="button" variant="link" size="sm" onClick={handleGeneratePassword} className="text-xs p-0 h-auto">
-                    <Sparkles className="mr-1 h-3 w-3" /> Generate
-                 </Button>
-              </div>
-              <div className="relative">
+    <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+      <Card className="w-full max-w-md shadow-xl transition-shadow hover:shadow-2xl">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
+          {step === 1 && <CardDescription>Enter your L&T PSN (up to 8 digits) to begin.</CardDescription>}
+          {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}).</CardDescription>}
+        </CardHeader>
+        <CardContent>
+          {step === 1 && (
+            <form onSubmit={formStep1.handleSubmit(handlePsnSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="psn-signup">PSN (up to 8 digits)</Label>
                 <Input 
-                  id="password-signup" 
-                  type={showPassword ? "text" : "password"} 
-                  {...formStep2.register("password")} 
-                  placeholder="••••••••" 
-                  onKeyUp={checkCapsLock}
-                  onKeyDown={checkCapsLock}
-                  onClick={checkCapsLock}
+                  id="psn-signup" 
+                  type="text" 
+                  {...formStep1.register("psn")} 
+                  onInput={handlePsnInput}
+                  maxLength={8}
+                  placeholder="e.g., 10000001" 
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+                {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
               </div>
-              <PasswordStrength password={watchedPassword} onStrengthChange={setPasswordStrength} />
-              {formStep2.formState.errors.password && <p className="text-sm text-destructive">{formStep2.formState.errors.password.message}</p>}
-              {isCapsLockOn && (
-                 <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                    <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                    Caps Lock is ON.
-                    </AlertDescription>
-                </Alert>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
-              <div className="relative">
-                <Input 
-                  id="confirmPassword-signup" 
-                  type={showConfirmPassword ? "text" : "password"} 
-                  {...formStep2.register("confirmPassword")} 
-                  placeholder="••••••••" 
-                  onKeyUp={checkCapsLock} // Also check caps lock on confirm for consistency
-                  onKeyDown={checkCapsLock}
-                  onClick={checkCapsLock}
-                />
-                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Verify PSN
+              </Button>
+            </form>
+          )}
+          {step === 2 && (
+            <form onSubmit={formStep2.handleSubmit(handlePasswordSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="password-signup">New Password</Label>
+                  <Button type="button" variant="link" size="sm" onClick={handleGeneratePassword} className="text-xs p-0 h-auto">
+                      <Sparkles className="mr-1 h-3 w-3" /> Generate
+                  </Button>
+                </div>
+                <div className="relative">
+                  <Input 
+                    id="password-signup" 
+                    type={showPassword ? "text" : "password"} 
+                    {...formStep2.register("password")} 
+                    placeholder="••••••••" 
+                    onKeyUp={checkCapsLock}
+                    onKeyDown={checkCapsLock}
+                    onClick={checkCapsLock}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <PasswordStrength password={watchedPassword} onStrengthChange={setPasswordStrength} />
+                {formStep2.formState.errors.password && <p className="text-sm text-destructive">{formStep2.formState.errors.password.message}</p>}
+                {isCapsLockOn && (
+                  <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                      <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                      Caps Lock is ON.
+                      </AlertDescription>
+                  </Alert>
+                )}
               </div>
-              {formStep2.formState.errors.confirmPassword && <p className="text-sm text-destructive">{formStep2.formState.errors.confirmPassword.message}</p>}
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading || !passwordStrength?.isValid}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account & Sign In
-            </Button>
-            <Button variant="outline" onClick={() => setStep(1)} className="w-full">
-              Back to PSN Entry
-            </Button>
-          </form>
-        )}
-      </CardContent>
-      <CardFooter className="text-sm text-center block">
-        <p>
-          Already have an account?{' '}
-          <Link href="/auth/signin" passHref>
-            <Button variant="link" className="p-0 h-auto">Sign In</Button>
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
+                <div className="relative">
+                  <Input 
+                    id="confirmPassword-signup" 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    {...formStep2.register("confirmPassword")} 
+                    placeholder="••••••••" 
+                    onKeyUp={checkCapsLock} 
+                    onKeyDown={checkCapsLock}
+                    onClick={checkCapsLock}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                {formStep2.formState.errors.confirmPassword && <p className="text-sm text-destructive">{formStep2.formState.errors.confirmPassword.message}</p>}
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading || !passwordStrength?.isValid}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Account & Sign In
+              </Button>
+              <Button variant="outline" onClick={() => setStep(1)} className="w-full">
+                Back to PSN Entry
+              </Button>
+            </form>
+          )}
+        </CardContent>
+        <CardFooter className="text-sm text-center block">
+          <p>
+            Already have an account?{' '}
+            <Link href="/auth/signin" passHref>
+              <Button variant="link" className="p-0 h-auto">Sign In</Button>
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </ScrollReveal>
   );
 }

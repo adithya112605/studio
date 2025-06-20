@@ -15,9 +15,10 @@ import React, { useState, useMemo } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from "@/data/mockData";
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer, PieChart as RechartsPieChart, Pie } from 'recharts'; // Renamed imports
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer, PieChart as RechartsPieChart, Pie } from 'recharts'; 
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
 const filterOptions = [
   { label: "Agent (Supervisor)", value: "agent", icon: <UserIcon className="mr-2 h-4 w-4" /> },
@@ -121,7 +122,7 @@ export default function ReportsPage() {
         tickets = mockTickets.filter(ticket => 
             ticket.currentAssigneePSN === currentUser.psn ||
             (ticket.status === 'Escalated to DH' && dhManagedEmployeePSNs.includes(ticket.psn)) ||
-            (currentUser.cityAccess?.some(city => mockProjects.find(p => p.id === ticket.project)?.city === city)) // Tickets from projects in their cities
+            (currentUser.cityAccess?.some(city => mockProjects.find(p => p.id === ticket.project)?.city === city)) 
         );
     } else if (currentUser.functionalRole === 'NS') {
         const nsManagedEmployeePSNs = mockEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn);
@@ -136,11 +137,9 @@ export default function ReportsPage() {
         );
     }
     
-    // Apply activeFilters from state for chart data
     return tickets.filter(ticket => {
         const statusMatch = activeFilters.status === 'all' || ticket.status === activeFilters.status;
         const priorityMatch = activeFilters.priority === 'all' || ticket.priority === activeFilters.priority;
-        // Add other filters like date, supervisor, employee, project if needed for chart filtering
         return statusMatch && priorityMatch;
     });
   };
@@ -155,7 +154,7 @@ export default function ReportsPage() {
 
         const ticketsByStatusData = Object.entries(
             chartDataTickets.reduce((acc, ticket) => {
-                const statusKey = ticket.status.replace(/\s+/g, '').replace(/to/g, 'To'); // e.g. EscalatedToNS
+                const statusKey = ticket.status.replace(/\s+/g, '').replace(/to/g, 'To'); 
                 acc[statusKey] = (acc[statusKey] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>)
@@ -170,8 +169,9 @@ export default function ReportsPage() {
 
 
         return (
-            <div className="py-8 space-y-8">
-                <Card className="w-full max-w-6xl mx-auto shadow-xl">
+            <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 space-y-8">
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+                <Card className="w-full max-w-6xl mx-auto shadow-xl transition-shadow hover:shadow-2xl">
                 <CardHeader>
                     <CardTitle className="font-headline text-3xl">Reports & Analytics</CardTitle>
                     <CardDescription>
@@ -180,7 +180,8 @@ export default function ReportsPage() {
                 </CardHeader>
                 <CardContent className="space-y-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <Card className="shadow-md">
+                      <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+                        <Card className="shadow-md transition-shadow hover:shadow-lg">
                             <CardHeader>
                                 <CardTitle className="text-xl font-semibold flex items-center"><PieChart className="mr-2 h-5 w-5 text-primary"/>Tickets by Status</CardTitle>
                                 <CardDescription>Distribution of tickets based on their current status.</CardDescription>
@@ -199,7 +200,9 @@ export default function ReportsPage() {
                                 ) : <p className="text-muted-foreground text-center pt-10">No data to display for current filters.</p>}
                             </CardContent>
                         </Card>
-                         <Card className="shadow-md">
+                      </ScrollReveal>
+                      <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
+                         <Card className="shadow-md transition-shadow hover:shadow-lg">
                             <CardHeader>
                                 <CardTitle className="text-xl font-semibold flex items-center"><TrendingUp className="mr-2 h-5 w-5 text-primary"/>Tickets by Priority</CardTitle>
                                 <CardDescription>Breakdown of tickets by their assigned priority level.</CardDescription>
@@ -225,8 +228,10 @@ export default function ReportsPage() {
                                 ) : <p className="text-muted-foreground text-center pt-10">No data to display for current filters.</p>}
                             </CardContent>
                         </Card>
+                        </ScrollReveal>
                     </div>
 
+                    <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
                     <div className="space-y-4 pt-6 border-t">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
@@ -320,7 +325,9 @@ export default function ReportsPage() {
                             <Button className="mt-4" size="sm" variant="secondary" onClick={handleApplyFilters}>Apply Filters & Refresh Charts</Button>
                         </div>
                     </div>
+                    </ScrollReveal>
 
+                    <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
                     <div>
                         <h3 className="font-semibold mb-2 text-lg">Report Preview (Example Attributes)</h3>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -330,7 +337,9 @@ export default function ReportsPage() {
                             <p className="italic text-muted-foreground">Filtered report data preview would appear here based on mock logic...</p>
                         </div>
                     </div>
+                    </ScrollReveal>
 
+                    <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={500}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                         <Button className="w-full" onClick={() => handleDownloadReport(currentSupervisorUser, false)}
                                 disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || currentSupervisorUser.functionalRole === 'DH' || currentSupervisorUser.functionalRole === 'IC Head')} >
@@ -348,8 +357,10 @@ export default function ReportsPage() {
                         </Button>
                     </div>
                     <p className="text-xs text-muted-foreground text-center">Note: Excel generation with embedded charts is a backend feature and is only mocked here. Downloads will trigger a notification.</p>
+                    </ScrollReveal>
                 </CardContent>
                 </Card>
+                </ScrollReveal>
             </div>
         );
       }}

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import React, { useState, useMemo } from "react";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
@@ -70,9 +71,9 @@ const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> 
   }, [currentUser, searchTerm, statusFilter, priorityFilter]);
 
   return (
-    <>
+    <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
       {filteredTickets.length > 0 ? (
-        <Card className="shadow-lg mt-6">
+        <Card className="shadow-lg mt-6 transition-shadow hover:shadow-xl">
           <CardHeader>
             <CardTitle>Ticket Queue ({filteredTickets.length})</CardTitle>
             <CardDescription>A complete list of tickets relevant to your scope.</CardDescription>
@@ -118,19 +119,18 @@ const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> 
           </CardContent>
         </Card>
       ) : (
-        <Card className="text-center py-10 shadow-lg mt-6">
+        <Card className="text-center py-10 shadow-lg mt-6 transition-shadow hover:shadow-xl">
           <CardContent>
             <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground">No tickets found matching your criteria in your queue.</p>
           </CardContent>
         </Card>
       )}
-    </>
+    </ScrollReveal>
   );
 };
 
 export default function SupervisorTicketsPage() {
-  // Moved useState hooks to the top level of SupervisorTicketsPage
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Ticket['status'] | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<Ticket['priority'] | "all">("all");
@@ -141,7 +141,8 @@ export default function SupervisorTicketsPage() {
         const currentSupervisorUser = currentUser as Supervisor;
         
         return (
-            <div className="space-y-6 py-6">
+            <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 space-y-6">
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                   <h1 className="font-headline text-2xl md:text-3xl font-bold">Manage Tickets ({currentSupervisorUser.title})</h1>
                   <div className="flex gap-2">
@@ -153,8 +154,10 @@ export default function SupervisorTicketsPage() {
                     </Button>
                   </div>
                 </div>
+              </ScrollReveal>
 
-                <Card className="shadow-lg">
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+                <Card className="shadow-lg transition-shadow hover:shadow-xl">
                     <CardHeader>
                         <CardTitle>Filter Tickets</CardTitle>
                         <CardDescription>Search by keyword or filter by status/priority.</CardDescription>
@@ -162,8 +165,8 @@ export default function SupervisorTicketsPage() {
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <Input 
                             placeholder="Search by Ticket ID, PSN, Name, Query..."
-                            value={searchTerm} // Use state from SupervisorTicketsPage
-                            onChange={(e) => setSearchTerm(e.target.value)} // Use setter from SupervisorTicketsPage
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)} 
                             className="md:col-span-1"
                         />
                         <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as Ticket['status'] | "all")}>
@@ -186,6 +189,7 @@ export default function SupervisorTicketsPage() {
                         </Select>
                     </CardContent>
                 </Card>
+              </ScrollReveal>
 
                 <SupervisorTicketsPageContent
                     currentUser={currentSupervisorUser}
@@ -199,4 +203,3 @@ export default function SupervisorTicketsPage() {
     </ProtectedPage>
   );
 }
-

@@ -2,7 +2,7 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Supervisor, Employee, JobCode } from "@/types"; // Added JobCode
+import type { User, Supervisor, Employee, JobCode } from "@/types"; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -12,12 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
 
 export default function SupervisorEmployeeDetailsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState<string | "all">("all");
-  const [selectedJobCode, setSelectedJobCode] = useState<string | "all">("all"); // Uses JobCode.id
+  const [selectedJobCode, setSelectedJobCode] = useState<string | "all">("all"); 
   const [selectedGrade, setSelectedGrade] = useState<string | "all">("all");
 
 
@@ -66,21 +67,23 @@ export default function SupervisorEmployeeDetailsPage() {
 
         const availableGrades = useMemo(() => {
             const gradesInUse = new Set(managedEmployeesForFiltering.map(emp => emp.grade));
-            // mockGrades is already sorted
             return mockGrades.filter(g => gradesInUse.has(g)); 
         }, [managedEmployeesForFiltering]);
 
 
         return (
-            <div className="space-y-6 py-6">
+            <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 space-y-6">
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                     <h1 className="font-headline text-2xl md:text-3xl font-bold">View Employee Details</h1>
                      <Button variant="outline" asChild>
                         <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4"/> Back to Dashboard</Link>
                     </Button>
                 </div>
+              </ScrollReveal>
 
-                <Card className="shadow-md">
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+                <Card className="shadow-md transition-shadow hover:shadow-lg">
                     <CardHeader>
                         <CardTitle>Filter Employees</CardTitle>
                         <CardDescription>Search by name/PSN/email or filter by project, job code/title, or grade.</CardDescription>
@@ -121,10 +124,11 @@ export default function SupervisorEmployeeDetailsPage() {
                         </Select>
                     </CardContent>
                 </Card>
+              </ScrollReveal>
 
-
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
                 {filteredAndSearchedEmployees.length > 0 ? (
-                <Card className="shadow-lg">
+                <Card className="shadow-lg transition-shadow hover:shadow-xl">
                     <CardHeader>
                     <CardTitle>Employee List ({filteredAndSearchedEmployees.length})</CardTitle>
                     <CardDescription>Details of employees under your purview matching the criteria.</CardDescription>
@@ -169,13 +173,14 @@ export default function SupervisorEmployeeDetailsPage() {
                     </CardContent>
                 </Card>
                 ) : (
-                <Card className="text-center py-10 shadow-lg">
+                <Card className="text-center py-10 shadow-lg transition-shadow hover:shadow-xl">
                     <CardContent>
                         <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">No employees found matching your criteria or under your direct supervision.</p>
                     </CardContent>
                 </Card>
                 )}
+              </ScrollReveal>
             </div>
         );
       }}

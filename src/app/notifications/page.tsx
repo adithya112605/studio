@@ -7,8 +7,8 @@ import { BellRing, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState } from "react";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
-// Mock notifications structure
 interface MockNotification {
   id: number;
   title: string;
@@ -40,36 +40,40 @@ export default function NotificationsPage() {
 
   return (
     <ProtectedPage>
-      <div className="py-8">
-        <Card className="w-full max-w-2xl mx-auto shadow-xl">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-                <CardTitle className="font-headline text-2xl">Notifications</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}> 
-                  <Archive className="mr-2 h-4 w-4" /> Mark all as read
-                </Button>
-            </div>
-            <CardDescription>
-              Updates on your tickets and other important system messages.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {notifications.length > 0 ? notifications.map(notif => (
-              <div key={notif.id} className={`p-4 rounded-md border ${notif.read ? 'bg-muted/50 opacity-70' : 'bg-card'}`}>
-                <div className="flex items-start space-x-3">
-                    <BellRing className={`mt-1 h-5 w-5 ${notif.read ? 'text-muted-foreground' : 'text-primary'}`} />
-                    <div>
-                        <h4 className={`font-semibold ${notif.read ? '' : 'text-foreground'}`}>{notif.title}</h4>
-                        <p className="text-sm text-muted-foreground">{notif.message}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{notif.date}</p>
+      <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
+        <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+          <Card className="w-full max-w-2xl mx-auto shadow-xl transition-shadow hover:shadow-2xl">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                  <CardTitle className="font-headline text-2xl">Notifications</CardTitle>
+                  <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}> 
+                    <Archive className="mr-2 h-4 w-4" /> Mark all as read
+                  </Button>
+              </div>
+              <CardDescription>
+                Updates on your tickets and other important system messages.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {notifications.length > 0 ? notifications.map((notif, index) => (
+                <ScrollReveal key={notif.id} animationInClass="animate-fadeInUp" once={false} delayIn={index * 50}>
+                  <div className={`p-4 rounded-md border ${notif.read ? 'bg-muted/50 opacity-70' : 'bg-card hover:bg-muted/20'} transition-colors`}>
+                    <div className="flex items-start space-x-3">
+                        <BellRing className={`mt-1 h-5 w-5 ${notif.read ? 'text-muted-foreground' : 'text-primary'}`} />
+                        <div>
+                            <h4 className={`font-semibold ${notif.read ? '' : 'text-foreground'}`}>{notif.title}</h4>
+                            <p className="text-sm text-muted-foreground">{notif.message}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{notif.date}</p>
+                        </div>
                     </div>
-                </div>
-              </div>  
-            )) : (
-                <p className="text-muted-foreground text-center py-4">No new notifications.</p>
-            )}
-          </CardContent>
-        </Card>
+                  </div>  
+                </ScrollReveal>
+              )) : (
+                  <p className="text-muted-foreground text-center py-4">No new notifications.</p>
+              )}
+            </CardContent>
+          </Card>
+        </ScrollReveal>
       </div>
     </ProtectedPage>
   );

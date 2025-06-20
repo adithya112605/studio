@@ -10,13 +10,12 @@ import { mockTickets } from "@/data/mockData";
 import { FileText, PlusCircle, ArrowLeft } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-// Removed: import { useAuth } from "@/contexts/AuthContext";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
-// Duplicated from dashboard/page.tsx - consider moving to utils
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case 'Open': return 'destructive';
-    case 'In Progress': return 'default'; // primary
+    case 'In Progress': return 'default'; 
     case 'Pending': return 'outline'; 
     case 'Resolved': case 'Closed': return 'secondary';
     case 'Escalated': return 'default'; 
@@ -25,31 +24,34 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
 };
 
 export default function EmployeeTicketsPage() {
-  // Removed top-level useAuth and user-specific data derivation
 
   return (
     <ProtectedPage allowedRoles={['Employee']}>
       {(currentUser: User) => {
-          // currentUser is guaranteed by ProtectedPage to be an Employee
           const currentEmployeeUser = currentUser as Employee;
           const currentUserTickets = mockTickets.filter(ticket => ticket.psn === currentEmployeeUser.psn);
 
           return (
-            <div className="space-y-6">
+            <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 space-y-6">
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
                 <div className="flex justify-between items-center">
-                <h1 className="font-headline text-3xl font-bold">All My Tickets</h1>
-                <Button asChild>
-                    <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
-                </Button>
+                  <h1 className="font-headline text-3xl font-bold">All My Tickets</h1>
+                  <Button asChild>
+                      <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
+                  </Button>
                 </div>
-                 <div className="mb-4">
+              </ScrollReveal>
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+                <div className="mb-4">
                     <Button variant="outline" asChild>
                         <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4"/> Back to Dashboard</Link>
                     </Button>
                 </div>
+              </ScrollReveal>
 
+              <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
                 {currentUserTickets.length > 0 ? (
-                <Card className="shadow-lg">
+                <Card className="shadow-lg transition-shadow hover:shadow-xl">
                     <CardHeader>
                     <CardTitle>My Ticket History</CardTitle>
                     <CardDescription>A complete list of tickets you've raised.</CardDescription>
@@ -86,7 +88,7 @@ export default function EmployeeTicketsPage() {
                     </CardContent>
                 </Card>
                 ) : (
-                <Card className="text-center py-8 shadow-lg">
+                <Card className="text-center py-8 shadow-lg transition-shadow hover:shadow-xl">
                     <CardContent>
                         <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">You haven't raised any tickets yet.</p>
@@ -96,6 +98,7 @@ export default function EmployeeTicketsPage() {
                     </CardContent>
                 </Card>
                 )}
+              </ScrollReveal>
             </div>
           );
       }}
