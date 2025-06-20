@@ -80,18 +80,28 @@ export default function HomePage() {
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
             <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight">
-              Welcome to <span className="text-primary">L&amp;T Helpdesk</span>
+              {user ? (
+                <>Welcome, <span className="text-primary">{user.name}</span>!</>
+              ) : (
+                <>Welcome to <span className="text-primary">L&amp;T Helpdesk</span></>
+              )}
             </h1>
           </ScrollReveal>
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
-            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
-              <span className="text-primary">Efficient</span>. <span className="text-primary">Reliable</span>. Internal Support, <span className="text-primary">Reimagined</span> for Larsen & Toubro Employees.
-            </p>
+            {user ? (
+              <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
+                Your personalized helpdesk dashboard awaits. Manage your tickets and access support efficiently.
+              </p>
+            ) : (
+              <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
+                <span className="text-primary">Efficient</span>. <span className="text-primary">Reliable</span>. Internal Support, <span className="text-primary">Reimagined</span> for Larsen & Toubro Employees.
+              </p>
+            )}
           </ScrollReveal>
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={500}>
-            <div className="space-x-0 space-y-4 sm:space-x-4 sm:space-y-0">
+            <div className="space-y-4 sm:space-y-0 sm:space-x-4">
               {user ? (
-                   <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105">
+                   <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
                       <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-2 h-5 w-5"/></Link>
                   </Button>
               ) : (
