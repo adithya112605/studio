@@ -225,7 +225,7 @@ const SettingsPage = () => {
         <p className="text-muted-foreground">Manage feedback collection on ticket resolution (Admin Access).</p>
         <div className="p-6 border rounded-lg bg-card">
             <SupervisorSettingItem title="Enable Ticket Rating" description="Allow users to rate resolved tickets.">  <Switch checked={ticketRating} onCheckedChange={(checked) => {setTicketRating(checked); handleGenericSave("Feedback", `Ticket Rating ${checked ? 'Enabled' : 'Disabled'}`);}} /> </SupervisorSettingItem>
-            <SupervisorSettingItem title="Rating Scale" description="Define the scale for ticket ratings."> <Select onValueChange={(value) => handleGenericSave("Feedback", `Rating Scale: ${value}`)} defaultValue="5star"> <SelectTrigger className="w-[180px]"><SelectValue placeholder="1-5 Stars" /></SelectTrigger> <SelectContent> <SelectItem value="5star">1-5 Stars</SelectItem> <SelectItem value="thumbs">Thumbs Up/Down</SelectItem></SelectContent> </Select> </ŠupervisorSettingItem>
+            <SupervisorSettingItem title="Rating Scale" description="Define the scale for ticket ratings."> <Select onValueChange={(value) => handleGenericSave("Feedback", `Rating Scale: ${value}`)} defaultValue="5star"> <SelectTrigger className="w-[180px]"><SelectValue placeholder="1-5 Stars" /></SelectTrigger> <SelectContent> <SelectItem value="5star">1-5 Stars</SelectItem> <SelectItem value="thumbs">Thumbs Up/Down</SelectItem></SelectContent> </Select></SupervisorSettingItem>
             <SupervisorSettingItem title="General System Feedback" description="Allow users to submit general feedback."> <Switch checked={generalFeedback} onCheckedChange={(checked) => {setGeneralFeedback(checked); handleGenericSave("Feedback", `General Feedback ${checked ? 'Enabled' : 'Disabled'}`);}} /> </SupervisorSettingItem>
         </div>
     </div>
@@ -322,4 +322,3 @@ const SettingsPage = () => {
 }
 
 export default SettingsPage;
-
