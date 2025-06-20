@@ -3,20 +3,19 @@
 
 import ProtectedPage from "@/components/common/ProtectedPage";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, KeyRound, Palette, BellDot, ShieldAlert, MonitorSmartphone, Settings2, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle } from "lucide-react";
-import { ThemeToggle } from "@/components/common/ThemeToggle"; 
+import { User, KeyRound, Palette, BellDot, ShieldAlert, Settings2 as SettingsIcon, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle, UserCircle, Cog, SlidersHorizontal, Accessibility, FileText, Edit, CreditCard } from "lucide-react";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { User as AuthUser, Employee, Supervisor, JobCode } from "@/types"; 
+import type { User as AuthUser, Employee, Supervisor, JobCode } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from "react";
-import { mockJobCodes, mockProjects, mockEmployees } from "@/data/mockData"; 
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { mockJobCodes, mockProjects, mockEmployees } from "@/data/mockData";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ScrollReveal from "@/components/common/ScrollReveal";
-
+import { cn } from "@/lib/utils";
 
 const getActingRolesForSettingsDisplay = (supervisor: Supervisor): string => {
   const actingRoles = new Set<string>();
@@ -30,16 +29,18 @@ const getActingRolesForSettingsDisplay = (supervisor: Supervisor): string => {
   return rolesArray.length > 0 ? ` (also acts as: ${rolesArray.join(', ')})` : "";
 }
 
+type SettingsTab = 'profile' | 'security' | 'appearance' | 'notifications' | 'ticketSystem' | 'administrative' | 'feedback' | 'accessibility' | 'billing';
 
-export default function SettingsPage() {
+const SettingsPage = () => {
   const { toast } = useToast();
-  
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+
   const [emailNotif, setEmailNotif] = useState(true);
   const [inAppNotif, setInAppNotif] = useState(true);
   const [twoFa, setTwoFa] = useState(false);
-  const [smsNotif, setSmsNotif] = useState(false); 
-  const [digestEmails, setDigestEmails] = useState(false); 
-  const [ticketRating, setTicketRating] = useState(false); 
+  const [smsNotif, setSmsNotif] = useState(false);
+  const [digestEmails, setDigestEmails] = useState(false);
+  const [ticketRating, setTicketRating] = useState(false);
   const [generalFeedback, setGeneralFeedback] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
@@ -49,14 +50,13 @@ export default function SettingsPage() {
     }
   };
 
-
-  const handleGenericSave = (featureName: string) => {
+  const handleGenericSave = (featureName: string, specificSetting?: string) => {
     toast({
       title: "Settings Action (Simulated)",
-      description: `${featureName} preferences would be saved. This is a mock action.`,
+      description: `${featureName} ${specificSetting ? `(${specificSetting})` : ''} preferences would be saved. This is a mock action.`,
     });
   };
-  
+
   const handlePasswordUpdate = () => {
     toast({
       title: "Security Action (Simulated)",
@@ -64,175 +64,262 @@ export default function SettingsPage() {
     });
   };
 
-  const handleEditProfile = () => {
-     toast({
-      title: "Profile Action (Simulated)",
-      description: "Profile editing is a placeholder. Changes would typically be managed here or by administrators.",
-    });
+  const ProfileSection = ({ currentUser }: { currentUser: AuthUser }) => {
+    const isEmployee = currentUser.role === 'Employee';
+    const employeeUser = currentUser as Employee;
+    const supervisorUser = currentUser as Supervisor;
+
+    let jobCodeInfo: JobCode | undefined;
+    if(isEmployee && employeeUser.jobCodeId){
+        jobCodeInfo = mockJobCodes.find(jc => jc.id === employeeUser.jobCodeId);
+    }
+    let projectInfo;
+    if(isEmployee && employeeUser.project){
+        projectInfo = mockProjects.find(p => p.id === employeeUser.project);
+    }
+    let supervisorRoleDisplay = "";
+    if (!isEmployee) {
+        supervisorRoleDisplay = `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForSettingsDisplay(supervisorUser)}`;
+    }
+
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Public Profile</h2>
+        <p className="text-muted-foreground">This information will be displayed publicly so be careful what you share.</p>
+        <div className="space-y-4 p-6 border rounded-lg bg-card">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label>PSN</Label><Input value={currentUser.psn.toString()} readOnly className="mt-1"/></div>
+                <div><Label>Full Name</Label><Input value={currentUser.name} readOnly className="mt-1"/></div>
+                <div><Label>Business Email</Label><Input value={currentUser.businessEmail || 'N/A'} readOnly className="mt-1"/></div>
+                <div><Label>Role</Label><Input value={isEmployee ? currentUser.role : supervisorRoleDisplay} readOnly className="mt-1"/></div>
+                {isEmployee && projectInfo && <div><Label>Current Project</Label><Input value={`${projectInfo.name} (${projectInfo.city})`} readOnly className="mt-1"/></div>}
+                {isEmployee && jobCodeInfo && <div><Label>Job Code</Label><Input value={`${jobCodeInfo.code} - ${jobCodeInfo.description}`} readOnly className="mt-1"/></div>}
+                {isEmployee && employeeUser.grade && <div><Label>Grade</Label><Input value={employeeUser.grade} readOnly className="mt-1"/></div>}
+                {!isEmployee && supervisorUser.branchProject && <div><Label>Branch/Primary Project</Label><Input value={mockProjects.find(p=>p.id === supervisorUser.branchProject)?.name || supervisorUser.branchProject} readOnly className="mt-1"/></div>}
+            </div>
+            <Button variant="outline" onClick={() => handleGenericSave("Profile", "Edit Profile")} className="mt-4"><Edit className="mr-2"/>Edit Profile (Simulated)</Button>
+        </div>
+      </div>
+    );
   };
+
+  const SecuritySection = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Password</h2>
+        <p className="text-muted-foreground">Update your password. Choose a strong and unique password.</p>
+        <div className="space-y-4 p-6 border rounded-lg bg-card">
+            <div><Label htmlFor="current-password">Current Password</Label><Input id="current-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
+            <div><Label htmlFor="new-password">New Password</Label><Input id="new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
+            <div><Label htmlFor="confirm-new-password">Confirm New Password</Label><Input id="confirm-new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
+            {isCapsLockOn && <Alert variant="default" className="mt-2 p-3 text-sm bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700 flex items-center"><AlertTriangle className="h-5 w-5 mr-2 text-yellow-600 dark:text-yellow-400" /> <AlertDescription className="text-yellow-700 dark:text-yellow-300">Caps Lock is ON.</AlertDescription></Alert>}
+            <div className="pt-2"><p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p><ul className="text-xs text-muted-foreground list-disc list-inside"><li>At least 8 characters</li><li>Uppercase & lowercase letters</li><li>At least one number</li><li>At least one special character</li></ul></div>
+            <Button className="w-full mt-4" onClick={handlePasswordUpdate}>Update Password</Button>
+        </div>
+        <div className="p-6 border rounded-lg bg-card space-y-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <Label htmlFor="2fa-toggle" className="font-semibold">Two-Factor Authentication (2FA)</Label>
+                    <p className="text-sm text-muted-foreground">Enhance your account security (Simulated).</p>
+                </div>
+                <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={(checked) => {setTwoFa(checked); handleGenericSave("Security", `2FA ${checked ? 'Enabled' : 'Disabled'}`);}} />
+            </div>
+        </div>
+    </div>
+  );
+
+  const AppearanceSettingItem = ({ title, description, children }: {title: string, description: string, children: React.ReactNode}) => (
+    <div className="flex items-center justify-between py-3 border-b last:border-b-0">
+        <div>
+            <h4 className="font-medium text-foreground">{title}</h4>
+            <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+        {children}
+    </div>
+  );
+
+  const AppearanceSection = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Appearance</h2>
+        <p className="text-muted-foreground">Customize the look and feel of the application to your preference.</p>
+        <div className="p-6 border rounded-lg bg-card">
+            <AppearanceSettingItem title="Theme" description="Select your preferred light or dark mode."> <ThemeToggle /> </AppearanceSettingItem>
+            <AppearanceSettingItem title="Application Font" description="Choose the display font for the interface."> <Select disabled onValueChange={(value) => handleGenericSave("Appearance", `Font changed to ${value}`)}> <SelectTrigger className="w-[180px]"><SelectValue placeholder="Current (Inter)" /></SelectTrigger> <SelectContent> <SelectItem value="system">Inter (Default)</SelectItem> </SelectContent> </Select> </AppearanceSettingItem>
+            <AppearanceSettingItem title="Default Language" description="Set your preferred language."> <Select defaultValue="en-us" onValueChange={(value) => handleGenericSave("Appearance", `Language changed to ${value}`)} > <SelectTrigger className="w-[180px]"><SelectValue placeholder="English (US)" /></SelectTrigger> <SelectContent> <SelectItem value="en-us">English (US)</SelectItem> <SelectItem value="en-gb">English (UK)</SelectItem> <SelectItem value="hi-in">Hindi (India)</SelectItem></SelectContent> </Select> </AppearanceSettingItem>
+            <AppearanceSettingItem title="Timezone" description="Select your local timezone."> <Select defaultValue="ist" onValueChange={(value) => handleGenericSave("Appearance", `Timezone changed to ${value}`)}> <SelectTrigger className="w-[180px]"><SelectValue placeholder="Asia/Kolkata (IST)" /></SelectTrigger> <SelectContent> <SelectItem value="ist">Asia/Kolkata (IST)</SelectItem></SelectContent> </Select> </AppearanceSettingItem>
+            <AppearanceSettingItem title="Date Format" description="Choose how dates are displayed."> <Select defaultValue="ddmmyyyy" onValueChange={(value) => handleGenericSave("Appearance", `Date format to ${value}`)}> <SelectTrigger className="w-[180px]"><SelectValue placeholder="DD/MM/YYYY" /></SelectTrigger> <SelectContent> <SelectItem value="ddmmyyyy">DD/MM/YYYY</SelectItem><SelectItem value="mmddyyyy">MM/DD/YYYY</SelectItem> </SelectContent> </Select> </AppearanceSettingItem>
+        </div>
+    </div>
+  );
+
+  const NotificationSettingItem = ({ title, description, id, checked, onCheckedChange }: {title: string, description: string, id: string, checked: boolean, onCheckedChange: (checked: boolean) => void }) => (
+     <div className="flex items-center justify-between py-4 border-b last:border-b-0">
+        <div>
+            <Label htmlFor={id} className="font-semibold text-md">{title}</Label>
+            <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+        <Switch id={id} checked={checked} onCheckedChange={(val) => {onCheckedChange(val); handleGenericSave("Notifications", `${title} ${val ? 'Enabled' : 'Disabled'}`);}} />
+    </div>
+  );
+
+  const NotificationsSection = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Notifications</h2>
+        <p className="text-muted-foreground">Manage how you receive notifications from the helpdesk system.</p>
+        <div className="p-6 border rounded-lg bg-card">
+            <NotificationSettingItem title="Email Notifications" description="Receive updates via email for ticket activity." id="email-notif" checked={emailNotif} onCheckedChange={setEmailNotif} />
+            <NotificationSettingItem title="SMS Notifications" description="Receive critical alerts and updates via SMS." id="sms-notif" checked={smsNotif} onCheckedChange={setSmsNotif} />
+            <NotificationSettingItem title="In-App Notifications" description="Show banners and alerts within the application." id="inapp-notif" checked={inAppNotif} onCheckedChange={setInAppNotif} />
+            <NotificationSettingItem title="Digest Emails" description="Get daily or weekly summaries of ticket activity." id="summary-emails" checked={digestEmails} onCheckedChange={setDigestEmails} />
+            <div className="flex items-center justify-between py-4">
+                <div>
+                    <Label htmlFor="notif-freq" className="font-semibold text-md">Notification Frequency</Label>
+                    <p className="text-sm text-muted-foreground">Choose how often you receive digest notifications.</p>
+                </div>
+                <Select onValueChange={(value) => handleGenericSave("Notifications", `Frequency set to ${value}`)} defaultValue="immediate">
+                    <SelectTrigger id="notif-freq" className="w-[180px]"><SelectValue placeholder="Immediately" /></SelectTrigger>
+                    <SelectContent><SelectItem value="immediate">Immediately</SelectItem><SelectItem value="hourly">Hourly</SelectItem><SelectItem value="daily">Daily</SelectItem></SelectContent>
+                </Select>
+            </div>
+        </div>
+    </div>
+  );
+
+  const SupervisorSettingItem = ({ title, description, children }: { title: string, description: string, children: React.ReactNode}) => (
+    <div className="flex items-center justify-between py-3 border-b last:border-b-0">
+        <div>
+            <h4 className="font-medium text-foreground">{title}</h4>
+            <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+        <div className="min-w-[180px] flex justify-end">{children}</div>
+    </div>
+  );
   
-  const viewAuditTrail = () => {
-     toast({
-      title: "Admin Action (Simulated)",
-      description: "Viewing audit trail is a placeholder. This feature would allow tracking of system changes.",
-    });
-  };
+  const TicketSystemSection = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Ticket System Settings</h2>
+        <p className="text-muted-foreground">Configure ticket-related system parameters (Admin Access).</p>
+        <div className="p-6 border rounded-lg bg-card">
+            <SupervisorSettingItem title="Ticket ID Format" description="System-defined ticket identifier format."> <Input value="TKXXXXXXX (Alphanumeric)" readOnly className="w-[200px]"/> </SupervisorSettingItem>
+            <SupervisorSettingItem title="Default Ticket Priority" description="Set the initial priority for new tickets."> <Select onValueChange={(value) => handleGenericSave("Ticket System", `Default Priority: ${value}`)} defaultValue="Medium"> <SelectTrigger className="w-[180px]"><SelectValue placeholder="Medium" /></SelectTrigger> <SelectContent> <SelectItem value="Low">Low</SelectItem> <SelectItem value="Medium">Medium</SelectItem><SelectItem value="High">High</SelectItem> </SelectContent> </Select> </SupervisorSettingItem>
+            <SupervisorSettingItem title="Auto-close Resolved Tickets" description="Days after resolution to auto-close."> <Input type="number" placeholder="e.g., 7" className="w-[180px]" onChange={(e) => handleGenericSave("Ticket System", `Auto-close days: ${e.target.value}`)} /> </SupervisorSettingItem>
+        </div>
+    </div>
+  );
+
+  const AdministrativeSection = () => (
+     <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Administrative Settings</h2>
+        <p className="text-muted-foreground">Manage core system security and operations (IC Head Access).</p>
+        <div className="p-6 border rounded-lg bg-card">
+            <SupervisorSettingItem title="System Email Address" description="Email for automated notifications."> <Input type="email" placeholder="notifications@lnthelpdesk.com" className="w-[240px]" onChange={(e) => handleGenericSave("Administrative", `System Email: ${e.target.value}`)} /> </SupervisorSettingItem>
+            <SupervisorSettingItem title="Session Timeout (Minutes)" description="Idle time before auto-logout."> <Input type="number" placeholder="30" className="w-[180px]" onChange={(e) => handleGenericSave("Administrative", `Session Timeout: ${e.target.value}`)} /> </SupervisorSettingItem>
+            <SupervisorSettingItem title="Login Attempt Lockout" description="Attempts before account lockout."> <Input type="number" placeholder="5" className="w-[180px]" onChange={(e) => handleGenericSave("Administrative", `Login Attempts: ${e.target.value}`)} /> </SupervisorSettingItem>
+            <div className="pt-4"> <Button variant="outline" className="w-full" onClick={() => handleGenericSave("Administrative", "View Audit Trail")}> <Activity className="mr-2 h-4 w-4" /> View Audit Trail </Button> </div>
+        </div>
+    </div>
+  );
+
+  const FeedbackSection = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Feedback & Satisfaction</h2>
+        <p className="text-muted-foreground">Manage feedback collection on ticket resolution (Admin Access).</p>
+        <div className="p-6 border rounded-lg bg-card">
+            <SupervisorSettingItem title="Enable Ticket Rating" description="Allow users to rate resolved tickets.">  <Switch checked={ticketRating} onCheckedChange={(checked) => {setTicketRating(checked); handleGenericSave("Feedback", `Ticket Rating ${checked ? 'Enabled' : 'Disabled'}`);}} /> </SupervisorSettingItem>
+            <SupervisorSettingItem title="Rating Scale" description="Define the scale for ticket ratings."> <Select onValueChange={(value) => handleGenericSave("Feedback", `Rating Scale: ${value}`)} defaultValue="5star"> <SelectTrigger className="w-[180px]"><SelectValue placeholder="1-5 Stars" /></SelectTrigger> <SelectContent> <SelectItem value="5star">1-5 Stars</SelectItem> <SelectItem value="thumbs">Thumbs Up/Down</SelectItem></SelectContent> </Select> </ŠupervisorSettingItem>
+            <SupervisorSettingItem title="General System Feedback" description="Allow users to submit general feedback."> <Switch checked={generalFeedback} onCheckedChange={(checked) => {setGeneralFeedback(checked); handleGenericSave("Feedback", `General Feedback ${checked ? 'Enabled' : 'Disabled'}`);}} /> </SupervisorSettingItem>
+        </div>
+    </div>
+  );
+  
+  const AccessibilitySection = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Accessibility</h2>
+        <p className="text-muted-foreground">Adjust settings to improve your experience with the application.</p>
+        <div className="p-6 border rounded-lg bg-card">
+             <AppearanceSettingItem title="High Contrast Mode" description="Increase text and UI element contrast."> <Switch onCheckedChange={(val) => handleGenericSave("Accessibility", `High Contrast ${val ? 'On' : 'Off'}`)} /> </AppearanceSettingItem>
+             <AppearanceSettingItem title="Font Size" description="Adjust the global font size."> <Select defaultValue="medium" onValueChange={(val) => handleGenericSave("Accessibility", `Font Size: ${val}`)}> <SelectTrigger className="w-[180px]"><SelectValue placeholder="Medium" /></SelectTrigger><SelectContent><SelectItem value="small">Small</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="large">Large</SelectItem></SelectContent></Select> </AppearanceSettingItem>
+             <AppearanceSettingItem title="Keyboard Navigation" description="Enhance focus visibility for keyboard users."> <Switch defaultChecked onCheckedChange={(val) => handleGenericSave("Accessibility", `Keyboard Nav Focus ${val ? 'On' : 'Off'}`)} /> </AppearanceSettingItem>
+             <p className="text-sm text-muted-foreground pt-4">More accessibility features coming soon.</p>
+        </div>
+    </div>
+  );
+
+  const BillingSection = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Billing & Plans</h2>
+        <p className="text-muted-foreground">This is an internal L&T helpdesk. Billing and plans are not applicable.</p>
+        <div className="p-6 border rounded-lg bg-card">
+            <Info className="w-6 h-6 text-primary mb-2"/>
+            <p className="text-muted-foreground">This platform is provided for internal use by Larsen & Toubro employees and does not involve direct billing or subscription plans for individual users.</p>
+            <p className="text-muted-foreground mt-2">For departmental cost allocations or IT service inquiries, please contact your respective manager or the IT department.</p>
+        </div>
+    </div>
+  );
 
 
   return (
     <ProtectedPage>
      {(user: AuthUser) => {
-        const isEmployee = user.role === 'Employee';
-        const isSupervisor = ['IS', 'NS', 'DH', 'IC Head'].includes(user.role);
-        const employeeUser = user as Employee; 
-        const supervisorUser = user as Supervisor; 
+        const supervisorUser = user.role !== 'Employee' ? user as Supervisor : null;
 
-        let jobCodeInfo: JobCode | undefined;
-        if(isEmployee && employeeUser.jobCodeId){
-            jobCodeInfo = mockJobCodes.find(jc => jc.id === employeeUser.jobCodeId);
-        }
-        let projectInfo;
-        if(isEmployee && employeeUser.project){
-            projectInfo = mockProjects.find(p => p.id === employeeUser.project);
-        }
-        
-        let supervisorRoleDisplay = "";
-        if (isSupervisor) {
-            supervisorRoleDisplay = `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForSettingsDisplay(supervisorUser)}`;
-        }
+        const sidebarItems: {key: SettingsTab, label: string, icon: React.ElementType, adminOnly?: ('DH' | 'IC Head')[] }[] = [
+          { key: 'profile', label: 'Public Profile', icon: UserCircle },
+          { key: 'security', label: 'Password', icon: KeyRound },
+          { key: 'appearance', label: 'Appearance', icon: Palette },
+          { key: 'accessibility', label: 'Accessibility', icon: Accessibility },
+          { key: 'notifications', label: 'Notifications', icon: BellDot },
+          { key: 'billing', label: 'Billing and plans', icon: CreditCard },
+          { key: 'ticketSystem', label: 'Ticket System', icon: SettingsIcon, adminOnly: ['DH', 'IC Head'] },
+          { key: 'administrative', label: 'Administrative', icon: ShieldAlert, adminOnly: ['IC Head'] },
+          { key: 'feedback', label: 'Feedback', icon: ThumbsUp, adminOnly: ['DH', 'IC Head'] },
+        ];
 
+        const availableSidebarItems = sidebarItems.filter(item => {
+            if (!item.adminOnly) return true;
+            if (!supervisorUser) return false;
+            return item.adminOnly.includes(supervisorUser.functionalRole);
+        });
 
         return (
-            <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 space-y-8">
-            <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-              <h1 className="font-headline text-3xl font-bold text-center">Account & System Settings</h1>
-            </ScrollReveal>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {[
-                { 
-                  title: "Profile Information", 
-                  description: "View your profile details. Editing is a placeholder.", 
-                  icon: <User className="w-6 h-6 text-primary" />,
-                  content: (
-                    <>
-                      <div className="space-y-1"> <Label htmlFor="psn-settings">PSN</Label> <Input id="psn-settings" value={user.psn.toString()} readOnly /> </div>
-                      <div className="space-y-1"> <Label htmlFor="name-settings">Full Name</Label> <Input id="name-settings" value={user.name} readOnly /> </div>
-                      <div className="space-y-1"> <Label htmlFor="email-settings">Business Email</Label> <Input id="email-settings" value={user.businessEmail || 'N/A'} readOnly /> </div>
-                      <div className="space-y-1"> <Label htmlFor="role-settings">Role</Label> <Input id="role-settings" value={isSupervisor ? supervisorRoleDisplay : user.role} readOnly /> </div>
-                      {isEmployee && projectInfo && <div className="space-y-1"> <Label htmlFor="project-settings">Current Project</Label> <Input id="project-settings" value={`${projectInfo.name} (${projectInfo.city})`} readOnly /> </div>}
-                      {isEmployee && jobCodeInfo && <div className="space-y-1"> <Label htmlFor="jobcode-settings">Job Code</Label> <Input id="jobcode-settings" value={`${jobCodeInfo.code} - ${jobCodeInfo.description}`} readOnly /> </div>}
-                      {isEmployee && employeeUser.grade && <div className="space-y-1"> <Label htmlFor="grade-settings">Grade</Label> <Input id="grade-settings" value={employeeUser.grade} readOnly /> </div>}
-                      {isSupervisor && supervisorUser.branchProject && <div className="space-y-1"> <Label htmlFor="branch-project-settings">Branch/Primary Project</Label> <Input id="branch-project-settings" value={mockProjects.find(p => p.id === supervisorUser.branchProject)?.name || supervisorUser.branchProject} readOnly /> </div>}
-                      {isSupervisor && supervisorUser.cityAccess && supervisorUser.cityAccess.length > 0 && <div className="space-y-1"> <Label htmlFor="city-access-settings">City Access</Label> <Input id="city-access-settings" value={supervisorUser.cityAccess.join(', ')} readOnly /> </div>}
-                    </>
-                  ),
-                  footer: <Button variant="outline" onClick={handleEditProfile}>Edit Profile</Button>
-                },
-                {
-                  title: "Account Security",
-                  description: "Manage your account security settings.",
-                  icon: <KeyRound className="w-6 h-6 text-primary" />,
-                  content: (
-                    <>
-                      <div className="space-y-1"> <Label htmlFor="current-password">Current Password</Label> <Input id="current-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock}/> </div>
-                      <div className="space-y-1"> <Label htmlFor="new-password">New Password</Label> <Input id="new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock}/> </div>
-                      <div className="space-y-1"> <Label htmlFor="confirm-new-password">Confirm New Password</Label> <Input id="confirm-new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock}/> </div>
-                      {isCapsLockOn && <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700"> <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" /> <AlertDescription className="text-yellow-700 dark:text-yellow-300"> Caps Lock is ON. </AlertDescription> </Alert>}
-                      <div className="pt-2"> <p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p> <ul className="text-xs text-muted-foreground list-disc list-inside"> <li>At least 8 characters</li> <li>Uppercase & lowercase letters</li> <li>At least one number</li> <li>At least one special character</li> </ul> </div>
-                      <div className="flex items-center justify-between pt-4"> <Label htmlFor="2fa-toggle" className="flex flex-col space-y-1"><span>Two-Factor Authentication (2FA)</span><span className="font-normal leading-snug text-muted-foreground text-xs">Enhance your account security (Simulated).</span></Label> <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={(checked) => {setTwoFa(checked); handleGenericSave(`2FA ${checked ? 'Enabled' : 'Disabled'}`);}} /> </div>
-                    </>
-                  ),
-                  footer: <Button className="w-full" onClick={handlePasswordUpdate}>Update Password</Button>
-                },
-                {
-                  title: "Appearance",
-                  description: "Customize the look and feel of the application.",
-                  icon: <Palette className="w-6 h-6 text-primary" />,
-                  content: (
-                    <>
-                      <div className="flex items-center justify-between"> <Label>Theme</Label> <ThemeToggle /> </div>
-                      <div className="space-y-2 pt-2"> <Label htmlFor="font-select">Application Font</Label> <Select disabled onValueChange={(value) => handleGenericSave(`Font changed to ${value}`)}> <SelectTrigger id="font-select"><SelectValue placeholder="Current (Inter)" /></SelectTrigger> <SelectContent> <SelectItem value="system">Inter (Default)</SelectItem> <SelectItem value="arial">Arial</SelectItem> <SelectItem value="times">Times New Roman</SelectItem> </SelectContent> </Select> </div>
-                      <div className="space-y-2"> <Label htmlFor="language-select">Default Language</Label> <Select defaultValue="en-us" onValueChange={(value) => handleGenericSave(`Language changed to ${value}`)}> <SelectTrigger id="language-select"><SelectValue placeholder="English (US)" /></SelectTrigger> <SelectContent> <SelectItem value="en-us">English (US)</SelectItem> <SelectItem value="en-gb">English (UK)</SelectItem> <SelectItem value="hi-in">Hindi (India)</SelectItem> <SelectItem value="ta-in">Tamil (India)</SelectItem> </SelectContent> </Select> </div>
-                      <div className="space-y-2"> <Label htmlFor="timezone-select">Timezone</Label> <Select defaultValue="ist" onValueChange={(value) => handleGenericSave(`Timezone changed to ${value}`)}> <SelectTrigger id="timezone-select"><SelectValue placeholder="Asia/Kolkata (IST)" /></SelectTrigger> <SelectContent> <SelectItem value="ist">Asia/Kolkata (IST)</SelectItem> <SelectItem value="gmt">Greenwich Mean Time (GMT)</SelectItem> <SelectItem value="est">Eastern Standard Time (EST)</SelectItem> </SelectContent> </Select> </div>
-                      <div className="space-y-2"> <Label htmlFor="dateformat-select">Date Format</Label> <Select defaultValue="ddmmyyyy" onValueChange={(value) => handleGenericSave(`Date format changed to ${value}`)}> <SelectTrigger id="dateformat-select"><SelectValue placeholder="DD/MM/YYYY" /></SelectTrigger> <SelectContent> <SelectItem value="ddmmyyyy">DD/MM/YYYY</SelectItem> <SelectItem value="mmddyyyy">MM/DD/YYYY</SelectItem> <SelectItem value="yyyymmdd">YYYY-MM-DD</SelectItem> </SelectContent> </Select> </div>
-                    </>
-                  ),
-                  footer: <Button className="w-full" onClick={() => handleGenericSave("Appearance")}>Save Appearance Settings</Button>
-                },
-                {
-                  title: "Notification Preferences",
-                  description: "Manage how you receive notifications.",
-                  icon: <BellDot className="w-6 h-6 text-primary" />,
-                  content: (
-                    <>
-                      <div className="flex items-center justify-between"> <Label htmlFor="email-notif" className="flex flex-col space-y-1"><span>Email Notifications</span><span className="font-normal leading-snug text-muted-foreground text-xs">Receive updates via email.</span></Label> <Switch id="email-notif" checked={emailNotif} onCheckedChange={setEmailNotif} /> </div>
-                      <div className="flex items-center justify-between"> <Label htmlFor="sms-notif" className="flex flex-col space-y-1"><span>SMS Notifications</span><span className="font-normal leading-snug text-muted-foreground text-xs">Receive critical updates via SMS.</span></Label> <Switch id="sms-notif" checked={smsNotif} onCheckedChange={setSmsNotif} /> </div>
-                      <div className="flex items-center justify-between"> <Label htmlFor="inapp-notif" className="flex flex-col space-y-1"><span>In-App Notifications</span><span className="font-normal leading-snug text-muted-foreground text-xs">Show notifications within the app.</span></Label> <Switch id="inapp-notif" checked={inAppNotif} onCheckedChange={setInAppNotif} /> </div>
-                      <div className="flex items-center justify-between"> <Label htmlFor="summary-emails" className="flex flex-col space-y-1"><span>Digest Emails</span><span className="font-normal leading-snug text-muted-foreground text-xs">Receive daily/weekly ticket summaries.</span></Label> <Switch id="summary-emails" checked={digestEmails} onCheckedChange={setDigestEmails} /> </div>
-                      <div className="space-y-2 pt-2"> <Label htmlFor="notif-freq">Notification Frequency</Label> <Select onValueChange={(value) => handleGenericSave(`Notification Frequency set to ${value}`)} defaultValue="immediate"> <SelectTrigger id="notif-freq"><SelectValue placeholder="Immediately" /></SelectTrigger> <SelectContent> <SelectItem value="immediate">Immediately</SelectItem> <SelectItem value="hourly">Hourly Digest</SelectItem> <SelectItem value="daily">Daily Digest</SelectItem> <SelectItem value="weekly">Weekly Digest</SelectItem> </SelectContent> </Select> </div>
-                    </>
-                  ),
-                  footer: <Button className="w-full" onClick={() => handleGenericSave("Notification")}>Save Notification Preferences</Button>
-                },
-                (supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head')) && {
-                  title: "Ticket System Settings",
-                  description: "Configure ticket-related system parameters.",
-                  icon: <Settings2 className="w-6 h-6 text-primary" />,
-                  content: (
-                    <>
-                      <div className="space-y-1"> <Label htmlFor="ticket-id-format">Ticket ID Format</Label> <Input id="ticket-id-format" value="TKXXXXXXX (Alphanumeric)" readOnly /> </div>
-                      <div className="space-y-2"> <Label htmlFor="default-priority">Default Ticket Priority</Label> <Select onValueChange={(value) => handleGenericSave(`Default Priority set to ${value}`)} defaultValue="Medium"> <SelectTrigger id="default-priority"><SelectValue placeholder="Medium" /></SelectTrigger> <SelectContent> <SelectItem value="Low">Low</SelectItem> <SelectItem value="Medium">Medium</SelectItem> <SelectItem value="High">High</SelectItem> <SelectItem value="Urgent">Urgent</SelectItem> </SelectContent> </Select> </div>
-                      <div className="space-y-1"> <Label htmlFor="auto-close-days">Auto-close Resolved Tickets (Days)</Label> <Input id="auto-close-days" type="number" placeholder="e.g., 7" /> <p className="text-xs text-muted-foreground">Days after resolution to auto-close a ticket.</p> </div>
-                    </>
-                  ),
-                  footer: <Button className="w-full" onClick={() => handleGenericSave("Ticket System")}>Save Ticket Settings</Button>
-                },
-                (supervisorUser && supervisorUser.functionalRole === 'IC Head') && {
-                  title: "Administrative Settings",
-                  description: "Manage core system security and operations.",
-                  icon: <ShieldAlert className="w-6 h-6 text-primary" />,
-                  content: (
-                    <>
-                      <div className="space-y-1"> <Label htmlFor="system-email">System Email Address</Label> <Input id="system-email" type="email" placeholder="notifications@lnthelpdesk.com" /> <p className="text-xs text-muted-foreground">Email for sending automated notifications.</p> </div>
-                      <div className="space-y-1"> <Label htmlFor="session-timeout">Session Timeout (Minutes)</Label> <Input id="session-timeout" type="number" placeholder="30" /> </div>
-                      <div className="space-y-1"> <Label htmlFor="login-attempts">Login Attempt Lockout (Attempts)</Label> <Input id="login-attempts" type="number" placeholder="5" /> </div>
-                      <Button variant="outline" className="w-full" onClick={viewAuditTrail}> <Activity className="mr-2 h-4 w-4" /> View Audit Trail </Button>
-                    </>
-                  ),
-                  footer: <Button className="w-full" onClick={() => handleGenericSave("Administrative")}>Save Admin Settings</Button>
-                },
-                (supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head')) && {
-                  title: "Feedback & Satisfaction",
-                  description: "Manage feedback collection on ticket resolution.",
-                  icon: <ThumbsUp className="w-6 h-6 text-primary" />,
-                  content: (
-                    <>
-                      <div className="flex items-center justify-between"> <Label htmlFor="ticket-rating" className="flex flex-col space-y-1"><span>Enable Ticket Rating</span><span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to rate resolved tickets.</span></Label> <Switch id="ticket-rating" checked={ticketRating} onCheckedChange={(checked) => {setTicketRating(checked); handleGenericSave(`Ticket Rating ${checked ? 'Enabled' : 'Disabled'}`);}} /> </div>
-                      <div className="space-y-2"> <Label htmlFor="rating-scale">Rating Scale</Label> <Select onValueChange={(value) => handleGenericSave(`Rating Scale set to ${value}`)} defaultValue="5star"> <SelectTrigger id="rating-scale"><SelectValue placeholder="1-5 Stars" /></SelectTrigger> <SelectContent> <SelectItem value="5star">1-5 Stars</SelectItem> <SelectItem value="10scale">1-10 Scale</SelectItem> <SelectItem value="thumbs">Thumbs Up/Down</SelectItem> </SelectContent> </Select> </div>
-                      <div className="flex items-center justify-between pt-2"> <Label htmlFor="general-feedback" className="flex flex-col space-y-1"><span>General System Feedback</span><span className="font-normal leading-snug text-muted-foreground text-xs">Allow users to submit general feedback.</span></Label> <Switch id="general-feedback" checked={generalFeedback} onCheckedChange={(checked) => {setGeneralFeedback(checked); handleGenericSave(`General Feedback ${checked ? 'Enabled' : 'Disabled'}`);}} /> </div>
-                    </>
-                  ),
-                  footer: <Button className="w-full" onClick={() => handleGenericSave("Feedback")}>Save Feedback Settings</Button>
-                }
-              ].filter(Boolean).map((cardItem, index) => (
-                cardItem && (
-                <ScrollReveal key={cardItem.title} animationInClass="animate-fadeInUp" once={false} delayIn={index * 100}>
-                  <Card className="shadow-lg transition-shadow hover:shadow-xl h-full flex flex-col">
-                    <CardHeader>
-                      <div className="flex items-center space-x-3"> {cardItem.icon} <CardTitle className="font-headline text-xl">{cardItem.title}</CardTitle> </div>
-                      <CardDescription>{cardItem.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 flex-grow"> {cardItem.content} </CardContent>
-                    <CardFooter> {cardItem.footer} </CardFooter>
-                  </Card>
-                </ScrollReveal>
-                )
-              ))}
+            <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                <nav className="md:w-60 lg:w-72 shrink-0 space-y-1 md:sticky md:top-24">
+                    {availableSidebarItems.map(item => (
+                        <Button
+                            key={item.key}
+                            variant="ghost"
+                            className={cn(
+                                "w-full justify-start text-md px-3 py-2.5 h-auto",
+                                activeTab === item.key ? "bg-accent text-accent-foreground font-semibold" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            )}
+                            onClick={() => setActiveTab(item.key)}
+                        >
+                            <item.icon className={cn("mr-3 h-5 w-5", activeTab === item.key ? "text-primary" : "")} />
+                            {item.label}
+                        </Button>
+                    ))}
+                </nav>
+
+                <main className="flex-1 min-w-0">
+                  <ScrollReveal key={activeTab} animationInClass="animate-fadeInUp" once={false}>
+                    {activeTab === 'profile' && <ProfileSection currentUser={user} />}
+                    {activeTab === 'security' && <SecuritySection />}
+                    {activeTab === 'appearance' && <AppearanceSection />}
+                    {activeTab === 'notifications' && <NotificationsSection />}
+                    {activeTab === 'accessibility' && <AccessibilitySection />}
+                    {activeTab === 'billing' && <BillingSection />}
+                    {activeTab === 'ticketSystem' && supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') && <TicketSystemSection />}
+                    {activeTab === 'administrative' && supervisorUser && supervisorUser.functionalRole === 'IC Head' && <AdministrativeSection />}
+                    {activeTab === 'feedback' && supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') && <FeedbackSection />}
+                  </ScrollReveal>
+                </main>
+              </div>
             </div>
-            </div>
-        )
+        );
       }}
     </ProtectedPage>
   );
 }
+
+export default SettingsPage;
+
