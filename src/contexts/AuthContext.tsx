@@ -11,7 +11,7 @@ import {
   signOut, 
   type User as FirebaseUser 
 } from "firebase/auth";
-import { auth as firebaseAuth } from '@/lib/firebase'; // Use the initialized auth instance
+import { auth as firebaseAuth } from '@/lib/firebase'; // This can now be undefined
 import { mockEmployees, mockSupervisors, allMockUsers } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,10 +21,17 @@ interface AuthContextType {
   signup: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   loading: boolean;
-  checkPSNExists: (psn: number) => Promise<boolean>; // To check if L&T PSN is valid for signup
+  checkPSNExists: (psn: number) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const firebaseDisabledMessage = {
+    title: "Authentication Service Unavailable",
+    description: "Firebase is not configured correctly. Please check server logs and set up your .env.local file.",
+    variant: "destructive",
+    duration: 8000,
+} as const;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -32,19 +39,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // If firebaseAuth is undefined, it means initialization failed in firebase.ts
+    if (!firebaseAuth) {
+        console.error("AuthContext: Firebase Auth is not initialized. Disabling all authentication features.");
+        setLoading(false);
+        return; // Do not set up the listener
+    }
+
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       setLoading(true);
       if (firebaseUser && firebaseUser.email) {
-        // Firebase user is authenticated, now find the corresponding L&T user from mockData
         const lntUser = allMockUsers.find(u => u.businessEmail?.toLowerCase() === firebaseUser.email?.toLowerCase());
         if (lntUser) {
           setUser(lntUser);
           localStorage.setItem('currentUser', JSON.stringify(lntUser));
         } else {
-          // This case means a Firebase user exists but no matching L&T record was found via email
-          // This shouldn't happen if signup logic correctly uses L&T emails.
-          // For safety, clear the local user and log out from Firebase.
-          console.error("Firebase user authenticated, but no matching L&T user found in mockData for email:", firebaseUser.email);
+          console.error("Firebase user authenticated, but no matching L&T user found for email:", firebaseUser.email);
           setUser(null);
           localStorage.removeItem('currentUser');
           await signOut(firebaseAuth); 
@@ -55,22 +65,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       } else {
-        // No Firebase user or email missing
         setUser(null);
         localStorage.removeItem('currentUser');
       }
       setLoading(false);
     });
 
-    // Check for locally stored user on initial load (before onAuthStateChanged fires)
-    // This helps reduce flicker if the user is already logged in.
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         if (parsedUser && parsedUser.psn && parsedUser.name && parsedUser.role) {
-          // We'll let onAuthStateChanged confirm this user with Firebase
-          // setUser(parsedUser); // Potentially set here, but onAuthStateChanged will overwrite.
+          // This will be confirmed or denied by onAuthStateChanged
         } else {
           localStorage.removeItem('currentUser');
         }
@@ -78,23 +84,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('currentUser');
       }
     }
-    // Initial loading is true until onAuthStateChanged fires for the first time
-    // or local storage check is complete.
 
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    return () => {
+        if (unsubscribe) unsubscribe();
+    };
   }, [toast]);
 
 
-  // Checks if PSN is a valid L&T PSN from mock data before allowing signup password step
   const checkPSNExists = async (psn: number): Promise<boolean> => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 300)); // Simulate check
+    await new Promise(resolve => setTimeout(resolve, 300));
     const userExistsInMockData = allMockUsers.some(u => u.psn === psn);
     setLoading(false);
     return userExistsInMockData;
   };
 
   const login = async (psn: number, password?: string): Promise<boolean> => {
+    if (!firebaseAuth) {
+        toast(firebaseDisabledMessage);
+        return false;
+    }
     setLoading(true);
     const lntUser = allMockUsers.find(u => u.psn === psn);
 
@@ -119,9 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       await signInWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
-      // onAuthStateChanged will handle setting the user context
-      // setLoading(false) will be handled by onAuthStateChanged
-      return true; // Indicates Firebase sign-in attempt was successful
+      return true;
     } catch (error: any) {
       console.error("Firebase login error:", error);
       let errorMessage = "An unknown error occurred during login.";
@@ -150,6 +157,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
+    if (!firebaseAuth) {
+        toast(firebaseDisabledMessage);
+        return { success: false, message: "Authentication service unavailable. Check configuration." };
+    }
     setLoading(true);
     const lntUser = allMockUsers.find(u => u.psn === psn);
 
@@ -164,8 +175,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       await createUserWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
-      // onAuthStateChanged will handle setting the user context and localStorage
-      // setLoading(false) will be handled by onAuthStateChanged
       return { success: true, message: "Account created successfully! You are now logged in." };
     } catch (error: any) {
       console.error("Firebase signup error:", error);
@@ -191,10 +200,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
+    if (!firebaseAuth) {
+        toast(firebaseDisabledMessage);
+        return;
+    }
     setLoading(true);
     try {
       await signOut(firebaseAuth);
-      // onAuthStateChanged will clear user and localStorage
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({
@@ -203,7 +215,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     }
-    // setLoading(false) will be handled by onAuthStateChanged
   };
 
   return (
