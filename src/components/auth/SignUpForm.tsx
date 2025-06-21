@@ -16,7 +16,7 @@ import PasswordStrength from './PasswordStrength';
 import type { PasswordStrengthResult } from '@/types';
 import { Loader2, Eye, EyeOff, AlertTriangle, Sparkles } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import ScrollReveal from '@/components/common/ScrollReveal';
 
 const signUpStep1Schema = z.object({
@@ -37,19 +37,27 @@ const signUpStep2Schema = z.object({
 type SignUpStep1Values = z.infer<typeof signUpStep1Schema>;
 type SignUpStep2Values = z.infer<typeof signUpStep2Schema>;
 
-const generatePassword = (length = 12): string => {
-  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
-  let retVal = "";
-  for (let i = 0, n = charset.length; i < length; ++i) {
-    retVal += charset.charAt(Math.floor(Math.random() * n));
+const generatePassword = (length = 14): string => {
+  const lower = "abcdefghijklmnopqrstuvwxyz";
+  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const digits = "0123456789";
+  const symbols = "!@#$%^&*()_+~`|}{[]:;?><,./-=";
+  const allChars = lower + upper + digits + symbols;
+
+  let password = "";
+  // Ensure at least one of each character type
+  password += lower[Math.floor(Math.random() * lower.length)];
+  password += upper[Math.floor(Math.random() * upper.length)];
+  password += digits[Math.floor(Math.random() * digits.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+
+  // Fill the rest of the password length with random characters from all sets
+  for (let i = password.length; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
   }
-  // Ensure all character types are present if generated string is too short or unlucky
-  if (!/[a-z]/.test(retVal)) retVal += 'a';
-  if (!/[A-Z]/.test(retVal)) retVal += 'Z';
-  if (!/[0-9]/.test(retVal)) retVal += '1';
-  if (!/[!@#$%^&*()_+~`|}{[\]:;?><,./-=]/.test(retVal)) retVal += '!';
-  
-  return retVal.slice(0, length); 
+
+  // Shuffle the password string to avoid predictable patterns (e.g., 'aZ1!...')
+  return password.split('').sort(() => 0.5 - Math.random()).join('');
 };
 
 export default function SignUpForm() {

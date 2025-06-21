@@ -1,7 +1,7 @@
 
 "use client"
 
-import type { User } from '@/types';
+import type { User, Supervisor, Employee } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { 
   getAuth, 
@@ -12,7 +12,7 @@ import {
   type User as FirebaseUser 
 } from "firebase/auth";
 import { auth as firebaseAuth } from '@/lib/firebase';
-import { allMockUsers } from '@/data/mockData';
+import { allMockUsers, mockEmployees, mockSupervisors } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -40,18 +40,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!firebaseAuth) {
-        // The warning is already logged in firebase.ts, so no need to log again.
-        // Just set loading to false so the app can render.
         setLoading(false);
         return;
     }
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser && firebaseUser.email) {
-        const lntUser = allMockUsers.find(u => u.businessEmail?.toLowerCase() === firebaseUser.email?.toLowerCase());
+        let lntUser = allMockUsers.find(u => u.businessEmail?.toLowerCase() === firebaseUser.email?.toLowerCase());
         
         if (lntUser) {
+          // Dynamic Role Promotion Logic
+          const isSupervisorForSomeone = mockEmployees.some(emp => 
+            emp.isPSN === lntUser!.psn || emp.nsPSN === lntUser!.psn || emp.dhPSN === lntUser!.psn
+          );
+
+          if (isSupervisorForSomeone) {
+            let supervisorProfile = mockSupervisors.find(s => s.psn === lntUser!.psn);
+            if (supervisorProfile) {
+              // If a formal supervisor profile exists, use it.
+              lntUser = supervisorProfile;
+            } else {
+              // If no formal supervisor profile exists, but they manage people,
+              // create a temporary supervisor object for the session.
+              let functionalRole: 'IS' | 'NS' | 'DH' = 'IS';
+              if (mockEmployees.some(e => e.dhPSN === lntUser!.psn)) functionalRole = 'DH';
+              else if (mockEmployees.some(e => e.nsPSN === lntUser!.psn)) functionalRole = 'NS';
+
+              const tempSupervisor: Supervisor = {
+                ...lntUser,
+                role: functionalRole,
+                functionalRole: functionalRole,
+                title: `${functionalRole} (Acting)`,
+              };
+              lntUser = tempSupervisor;
+            }
+          }
           setUser(lntUser);
+
         } else {
           console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found. Logging out.`);
           toast({
@@ -197,6 +222,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(firebaseAuth);
+      setUser(null);
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({

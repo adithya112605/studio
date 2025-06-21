@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TicketResolutionSuggestions from "@/components/hr/TicketResolutionSuggestions";
 import Link from "next/link";
-import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock, BadgePercent, Activity } from "lucide-react";
+import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock, BadgePercent, Activity, Info } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useParams } from "next/navigation";
@@ -356,7 +356,10 @@ const TicketDetailPage = () => {
 
   return (
     <ProtectedPage>
-      {(user: User) => (
+      {(user: User) => {
+        const isTicketOwner = user.psn === ticket.psn;
+        
+        return (
         <div className="container mx-auto max-w-4xl py-6 px-4 md:px-6 lg:px-8 space-y-8">
           <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
             <Button variant="outline" onClick={() => router.back()} className="mb-6">
@@ -453,7 +456,19 @@ const TicketDetailPage = () => {
             </Card>
           </ScrollReveal>
 
-          {(user.role !== 'Employee' && user.psn === ticket.currentAssigneePSN && !['Resolved', 'Closed'].includes(ticket.status)) && (
+          {user.role !== 'Employee' && isTicketOwner && (
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
+              <Alert variant="default" className="bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700">
+                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <AlertTitle className="text-blue-800 dark:text-blue-300">Information</AlertTitle>
+                <AlertDescription className="text-blue-700 dark:text-blue-400">
+                  This is your own ticket. You cannot perform management actions (respond, change status, escalate) on tickets you have raised yourself.
+                </AlertDescription>
+              </Alert>
+            </ScrollReveal>
+          )}
+
+          {(user.role !== 'Employee' && user.psn === ticket.currentAssigneePSN && !isTicketOwner && !['Resolved', 'Closed'].includes(ticket.status)) && (
             <>
               <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
                 <TicketResolutionSuggestions ticketQuery={ticket.query} />
@@ -542,7 +557,8 @@ const TicketDetailPage = () => {
             </ScrollReveal>
           )}
         </div>
-      )}
+        );
+      }}
     </ProtectedPage>
   );
 };
