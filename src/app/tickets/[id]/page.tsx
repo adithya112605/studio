@@ -15,7 +15,7 @@ import Link from "next/link";
 import { AlertTriangle, ShieldAlert, Paperclip, ArrowLeft, Edit3, Send, Clock, BadgePercent, Activity } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ScrollReveal from "@/components/common/ScrollReveal";
 
@@ -40,8 +40,9 @@ interface OverdueInfoType {
 }
 
 
-const TicketDetailPage = ({ params }: { params: { id: string } }) => {
-  const { id } = params;
+const TicketDetailPage = () => {
+  const params = useParams();
+  const id = params.id as string;
   const { toast } = useToast();
   const router = useRouter();
   const supervisorResponseFileRef = useRef<HTMLInputElement>(null);
@@ -62,6 +63,7 @@ const TicketDetailPage = ({ params }: { params: { id: string } }) => {
 
 
   useEffect(() => {
+    if (!id) return;
     const currentTicket = mockTickets.find(t => t.id === id);
     setTicket(currentTicket);
     if (currentTicket) {
