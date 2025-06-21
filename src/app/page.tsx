@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import React from 'react';
 import ScrollReveal from '@/components/common/ScrollReveal';
+import ScrollTypewriter from '@/components/common/ScrollTypewriter';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -78,15 +79,25 @@ export default function HomePage() {
             />
         </div>
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+          <div className="min-h-[8rem] md:min-h-[10rem]">
             <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight">
               {user ? (
-                <>Welcome, <span className="text-primary">{user.name}</span>!</>
+                <>
+                  <ScrollTypewriter text="Welcome, " tag="span" speed={50} className="inline-block" once={true} delay={200}/>
+                  <span className="text-primary">
+                    <ScrollTypewriter text={`${user.name}!`} tag="span" speed={50} delay={200 + (9 * 50)} className="inline-block" once={true}/>
+                  </span>
+                </>
               ) : (
-                <>Welcome to <span className="text-primary">L&amp;T Helpdesk</span></>
+                <>
+                  <ScrollTypewriter text="Welcome to " tag="span" speed={50} className="inline-block" once={true} delay={200}/>
+                  <span className="text-primary">
+                    <ScrollTypewriter text="L&T Helpdesk" tag="span" speed={50} delay={200 + (11 * 50)} className="inline-block" once={true}/>
+                  </span>
+                </>
               )}
             </h1>
-          </ScrollReveal>
+          </div>
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
             {user ? (
               <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
