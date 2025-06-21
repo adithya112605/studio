@@ -142,6 +142,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           case 'auth/invalid-email':
             errorMessage = "The associated email address is not valid.";
             break;
+          case 'auth/configuration-not-found':
+            errorMessage = "Authentication is not configured. Please enable Email/Password sign-in in your Firebase project console.";
+            break;
           default:
             errorMessage = error.message || "Failed to login. Please try again.";
         }
@@ -189,6 +192,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             break;
           case 'auth/invalid-email':
             errorMessage = "The associated email address for this PSN is not valid.";
+            break;
+          case 'auth/configuration-not-found':
+            errorMessage = "Authentication is not configured. Please enable Email/Password sign-in in your Firebase project console.";
             break;
           default:
             errorMessage = error.message || "Failed to create account. Please try again.";
