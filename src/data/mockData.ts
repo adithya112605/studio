@@ -252,7 +252,7 @@ const rawNewEmployeeData = [
     { psnStr: "136178", name: "KOLHALE HIRALAL BAPU", grade: "M1-C", department: "Patna Metro PC-03", email: "hiralalk@lntecc.com", is_name: "CHANDRA TRIPATHI, LAL", is_psn_str: "81954", ns_name: "CHANDRA TRIPATHI, LAL", ns_psn_str: "81954", dh_name: "CHANDRA TRIPATHI, LAL", dh_psn_str: "81954" },
     { psnStr: "136774", name: "SUBRATA CHATTOPADHYAY", grade: "M2-C", department: "DMRC DC09", email: "Schatterjee@lntecc.com", is_name: "S, Padmanabhan", is_psn_str: "81240", ns_name: "S, Padmanabhan", ns_psn_str: "81240", dh_name: "S, Padmanabhan", dh_psn_str: "81240" },
     { psnStr: "15081", name: "SANKARANARAYANAN N", grade: "M3-B", department: "CMRL PH-2 TU-02", email: "NSANKAR@lntecc.com", is_name: "S, Padmanabhan", is_psn_str: "81240", ns_name: "S, Padmanabhan", ns_psn_str: "81240", dh_name: "S, Padmanabhan", dh_psn_str: "81240" },
-    { psnStr: "164174", name: "NIRAJ HASMUKHRAY PATHAK", grade: "M1-C", department: "MAHSR C3 TFL", email: "pathaknh@lntecc.com", is_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", ns_name: "PATRAWALA, ABOOZAR MOIZ", ns_psn_str: "81233", dh_name: "PATRAWALA, ABOOZAR MOIZ", dh_psn_str: "81233" },
+    { psnStr: "164174", name: "NIRAJ HASMUKHRAY PATHAK", grade: "M1-C", department: "MAHSR C3 TFL", email: "pathaknh@lntecc.com", is_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", ns_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", dh_name: "PATRAWALA, ABOOZAR MOIZ", dh_psn_str: "81233" },
     { psnStr: "164280", name: "AMRITA GOPAL BANERJEE", grade: "M2-C", department: "MAHSR C3 Section-2", email: "Agbanerjee@lntecc.com", is_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", ns_name: "PATRAWALA, ABOOZAR MOIZ", ns_psn_str: "81233", dh_name: "PATRAWALA, ABOOZAR MOIZ", dh_psn_str: "81233" },
     { psnStr: "164340", name: "GOURANGA CHANDRA MISHRA", grade: "M1-B", department: "KOL METRO UG1", email: "gcmishra@lntecc.com", is_name: "Banerjee, Subrato", is_psn_str: "81987", ns_name: "Banerjee, Subrato", ns_psn_str: "81987", dh_name: "Banerjee, Subrato", dh_psn_str: "81987" },
     { psnStr: "20112444", name: "VINAY KUMAR TIWARI", grade: "M1-A", department: "Agra Metro AGCC-07", email: "vktiwarip@lntecc.com", is_name: "M, Thiruvengadam", is_psn_str: "243028", ns_name: "M, Thiruvengadam", ns_psn_str: "243028", dh_name: "M, Thiruvengadam", dh_psn_str: "243028" },
@@ -344,7 +344,7 @@ rawNewEmployeeData.forEach((empData, index) => {
 
 
 const basePsnForNewEmployees = 30000000;
-const maxTotalUsers = 150;
+const maxTotalUsers = 50;
 const currentTempEmployeeCount = tempEmployees.length;
 const currentSupervisorCount = supervisorMap.size;
 
@@ -435,7 +435,7 @@ const generateTicketIdForMock = (): string => {
 
 export let mockTickets: Ticket[] = [];
 if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
-    const ticketsToGenerate = Math.min(mockEmployees.length * 2, 100);
+    const ticketsToGenerate = Math.min(mockEmployees.length, 40);
     for (let i = 0; i < ticketsToGenerate; i++) {
         const employee = mockEmployees[i % mockEmployees.length];
         if (!employee || !employee.project) continue;
