@@ -28,7 +28,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const firebaseDisabledMessage = {
     title: "Authentication Service Unavailable",
-    description: "Firebase is not configured correctly. Authentication features are disabled.",
+    description: "Firebase is not configured correctly. Please check your .env.local file and restart the server.",
     variant: "destructive",
     duration: 8000,
 } as const;
@@ -40,7 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!firebaseAuth) {
-        console.warn("AuthContext: Firebase Auth is not initialized. Authentication is disabled.");
+        // The error is already logged in firebase.ts, so no need to log again.
+        // Just set loading to false.
         setLoading(false);
         return;
     }
@@ -119,8 +120,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             errorMessage = "The business email associated with this PSN is invalid.";
             break;
           case 'auth/configuration-not-found':
-            errorMessage = "Action Required in Firebase Console: The 'Email/Password' sign-in provider is not enabled in your Firebase project. Please open your Firebase console, go to Authentication > Sign-in method, and enable it.";
-            break;
+            toast({
+              title: "Action Required in Firebase",
+              description: "To fix this, go to your Firebase Console -> Authentication -> Sign-in method -> and Enable the Email/Password provider. This is a one-time setup.",
+              variant: "destructive",
+              duration: 9000
+            });
+            return false;
           default:
             errorMessage = error.message;
         }
@@ -129,7 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login Failed",
         description: errorMessage,
         variant: "destructive",
-        duration: 9000
       });
       return false;
     }
@@ -170,8 +175,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             errorMessage = "The business email associated with this PSN is invalid.";
             break;
           case 'auth/configuration-not-found':
-            errorMessage = "Action Required in Firebase Console: The 'Email/Password' sign-in provider is not enabled in your Firebase project. Please open your Firebase console, go to Authentication > Sign-in method, and enable it.";
-            break;
+             toast({
+              title: "Action Required in Firebase",
+              description: "To fix this, go to your Firebase Console -> Authentication -> Sign-in method -> and Enable the Email/Password provider. This is a one-time setup.",
+              variant: "destructive",
+              duration: 9000
+            });
+            return { success: false, message: "Server configuration needed." };
           default:
             errorMessage = error.message;
         }
