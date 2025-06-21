@@ -40,7 +40,8 @@ interface OverdueInfoType {
 }
 
 
-const TicketDetailPage = ({ params: { id } }: { params: { id: string } }) => {
+const TicketDetailPage = ({ params }: { params: { id: string } }) => {
+  const { id } = params;
   const { toast } = useToast();
   const router = useRouter();
   const supervisorResponseFileRef = useRef<HTMLInputElement>(null);
@@ -545,4 +546,3 @@ const TicketDetailPage = ({ params: { id } }: { params: { id: string } }) => {
 };
 
 export default TicketDetailPage;
-

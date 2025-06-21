@@ -291,9 +291,9 @@ rawNewEmployeeData.forEach((empData, index) => {
     };
 
     const departmentProjectName = empData.department?.trim();
-    let projectObj = mockProjects.find(p => p.name.toLowerCase() === departmentProjectName?.toLowerCase() || p.id.toLowerCase() === departmentProjectName?.toLowerCase());
+    let projectObj = departmentProjectName ? mockProjects.find(p => p.name.toLowerCase() === departmentProjectName.toLowerCase() || p.id.toLowerCase() === departmentProjectName.toLowerCase()) : undefined;
     if (!projectObj) {
-        const cityMatch = mockCities.find(city => departmentProjectName?.toLowerCase().includes(city.name.toLowerCase()));
+        const cityMatch = departmentProjectName ? mockCities.find(city => departmentProjectName.toLowerCase().includes(city.name.toLowerCase())) : undefined;
         projectObj = (cityMatch && cityMatch.projects.length > 0) ? cityMatch.projects[0] : (mockProjects.find(p => p.id === 'P001') || mockProjects[0]);
     }
 
@@ -489,3 +489,5 @@ if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
 }
 
 export const allMockUsers: User[] = [...mockEmployees, ...mockSupervisors];
+
+    
