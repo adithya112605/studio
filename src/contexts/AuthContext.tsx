@@ -40,8 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!firebaseAuth) {
-        // The error is already logged in firebase.ts, so no need to log again.
-        // Just set loading to false.
+        // The warning is already logged in firebase.ts, so no need to log again.
+        // Just set loading to false so the app can render.
         setLoading(false);
         return;
     }
