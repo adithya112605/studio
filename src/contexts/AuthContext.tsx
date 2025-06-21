@@ -35,13 +35,12 @@ const firebaseDisabledMessage = {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // True until the first auth check is complete
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // If firebaseAuth is not initialized, authentication is disabled.
     if (!firebaseAuth) {
-        console.warn("AuthContext: Firebase Auth is not initialized. Disabling all authentication features.");
+        console.warn("AuthContext: Firebase Auth is not initialized. Authentication is disabled.");
         setLoading(false);
         return;
     }
@@ -53,9 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (lntUser) {
           setUser(lntUser);
         } else {
-          // This is a critical state: Firebase user exists, but no matching L&T profile.
-          // Log them out of Firebase to prevent being stuck in this state.
-          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found.`);
+          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found. Logging out.`);
           toast({
             title: "Profile Mismatch",
             description: "Your authentication was successful, but we could not find a matching L&T user profile. Please contact IT support.",
@@ -66,19 +63,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(null);
         }
       } else {
-        // No Firebase user, so no L&T user.
         setUser(null);
       }
-      // The first time this runs, the initial loading is complete.
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [toast]);
 
   const checkPSNExists = async (psn: number): Promise<boolean> => {
-    // This is a mock check and can stay as is.
     await new Promise(resolve => setTimeout(resolve, 300));
     return allMockUsers.some(u => u.psn === psn);
   };
@@ -111,7 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       await signInWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
-      // onAuthStateChanged will handle setting the user state and redirecting.
       return true;
     } catch (error: any) {
       console.error("Firebase login error:", error);
@@ -127,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             errorMessage = "The business email associated with this PSN is invalid.";
             break;
           case 'auth/configuration-not-found':
-            errorMessage = "Authentication is not configured correctly. Please enable Email/Password sign-in in your Firebase project console.";
+            errorMessage = "Action Required in Firebase Console: The 'Email/Password' sign-in provider is not enabled in your Firebase project. Please open your Firebase console, go to Authentication > Sign-in method, and enable it.";
             break;
           default:
             errorMessage = error.message;
@@ -137,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login Failed",
         description: errorMessage,
         variant: "destructive",
+        duration: 9000
       });
       return false;
     }
@@ -177,7 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             errorMessage = "The business email associated with this PSN is invalid.";
             break;
           case 'auth/configuration-not-found':
-            errorMessage = "Authentication is not configured correctly. Please enable Email/Password sign-in in your Firebase project console.";
+            errorMessage = "Action Required in Firebase Console: The 'Email/Password' sign-in provider is not enabled in your Firebase project. Please open your Firebase console, go to Authentication > Sign-in method, and enable it.";
             break;
           default:
             errorMessage = error.message;
@@ -194,7 +187,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(firebaseAuth);
-      // onAuthStateChanged will set user to null.
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({
