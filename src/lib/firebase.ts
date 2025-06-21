@@ -49,10 +49,11 @@ if (criticalConfigParts.length === 0) {
     }
   }
 } else {
-  const errorMsg = `Critical Firebase config (${criticalConfigParts.join(', ')}) is missing or a placeholder. Firebase initialization has been SKIPPED. The app will run, but authentication will NOT work.`;
+  const warningMsg = `Critical Firebase config (${criticalConfigParts.join(', ')}) is missing or a placeholder. Firebase initialization has been SKIPPED. The app will run, but authentication will NOT work.`;
   const context = typeof window === "undefined" ? "Server-Side" : "Client-Side";
-  console.error(`[Firebase Setup Error - ${context}] ${errorMsg}`);
-  console.error(`[Firebase Setup Error - ${context}] Please ensure all NEXT_PUBLIC_FIREBASE_... variables are correctly set in your .env.local file and the server has been restarted.`);
+  // Use console.warn to be less alarming than console.error for configuration issues.
+  console.warn(`[Firebase Config Warning - ${context}] ${warningMsg}`);
+  console.warn(`[Firebase Config Warning - ${context}] Please ensure all NEXT_PUBLIC_FIREBASE_... variables are correctly set in your .env.local file and the server has been restarted.`);
 }
 
 export { app, auth };

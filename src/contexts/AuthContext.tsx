@@ -1,7 +1,7 @@
 
 "use client"
 
-import type { User, Employee, Supervisor } from '@/types';
+import type { User } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { 
   getAuth, 
@@ -11,8 +11,8 @@ import {
   signOut, 
   type User as FirebaseUser 
 } from "firebase/auth";
-import { auth as firebaseAuth } from '@/lib/firebase'; // This can now be undefined
-import { mockEmployees, mockSupervisors, allMockUsers } from '@/data/mockData';
+import { auth as firebaseAuth } from '@/lib/firebase';
+import { allMockUsers } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -28,75 +28,59 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const firebaseDisabledMessage = {
     title: "Authentication Service Unavailable",
-    description: "Firebase is not configured correctly. Please check server logs and set up your .env.local file.",
+    description: "Firebase is not configured correctly. Authentication features are disabled.",
     variant: "destructive",
     duration: 8000,
 } as const;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // True until the first auth check is complete
   const { toast } = useToast();
 
   useEffect(() => {
-    // If firebaseAuth is undefined, it means initialization failed in firebase.ts
+    // If firebaseAuth is not initialized, authentication is disabled.
     if (!firebaseAuth) {
-        console.error("AuthContext: Firebase Auth is not initialized. Disabling all authentication features.");
+        console.warn("AuthContext: Firebase Auth is not initialized. Disabling all authentication features.");
         setLoading(false);
-        return; // Do not set up the listener
+        return;
     }
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
-      setLoading(true);
       if (firebaseUser && firebaseUser.email) {
         const lntUser = allMockUsers.find(u => u.businessEmail?.toLowerCase() === firebaseUser.email?.toLowerCase());
+        
         if (lntUser) {
           setUser(lntUser);
-          localStorage.setItem('currentUser', JSON.stringify(lntUser));
         } else {
-          console.error("Firebase user authenticated, but no matching L&T user found for email:", firebaseUser.email);
-          setUser(null);
-          localStorage.removeItem('currentUser');
-          await signOut(firebaseAuth); 
+          // This is a critical state: Firebase user exists, but no matching L&T profile.
+          // Log them out of Firebase to prevent being stuck in this state.
+          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found.`);
           toast({
-            title: "Login Issue",
-            description: "Associated L&T user profile not found. Please contact support.",
+            title: "Profile Mismatch",
+            description: "Your authentication was successful, but we could not find a matching L&T user profile. Please contact IT support.",
             variant: "destructive",
+            duration: 8000,
           });
+          await signOut(firebaseAuth);
+          setUser(null);
         }
       } else {
+        // No Firebase user, so no L&T user.
         setUser(null);
-        localStorage.removeItem('currentUser');
       }
+      // The first time this runs, the initial loading is complete.
       setLoading(false);
     });
 
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser && parsedUser.psn && parsedUser.name && parsedUser.role) {
-          // This will be confirmed or denied by onAuthStateChanged
-        } else {
-          localStorage.removeItem('currentUser');
-        }
-      } catch (error) {
-        localStorage.removeItem('currentUser');
-      }
-    }
-
-    return () => {
-        if (unsubscribe) unsubscribe();
-    };
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, [toast]);
 
-
   const checkPSNExists = async (psn: number): Promise<boolean> => {
-    setLoading(true);
+    // This is a mock check and can stay as is.
     await new Promise(resolve => setTimeout(resolve, 300));
-    const userExistsInMockData = allMockUsers.some(u => u.psn === psn);
-    setLoading(false);
-    return userExistsInMockData;
+    return allMockUsers.some(u => u.psn === psn);
   };
 
   const login = async (psn: number, password?: string): Promise<boolean> => {
@@ -104,30 +88,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast(firebaseDisabledMessage);
         return false;
     }
-    setLoading(true);
+
     const lntUser = allMockUsers.find(u => u.psn === psn);
 
     if (!lntUser || !lntUser.businessEmail) {
       toast({
         title: "Login Failed",
-        description: "PSN not found or no business email associated. Contact Admin.",
+        description: "PSN not found or no business email is associated with it. Please contact Admin.",
         variant: "destructive",
       });
-      setLoading(false);
       return false;
     }
+
     if (!password) {
-         toast({
+        toast({
             title: "Login Failed",
             description: "Password is required.",
             variant: "destructive",
         });
-        setLoading(false);
         return false;
     }
 
     try {
       await signInWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
+      // onAuthStateChanged will handle setting the user state and redirecting.
       return true;
     } catch (error: any) {
       console.error("Firebase login error:", error);
@@ -137,16 +121,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           case 'auth/user-not-found':
           case 'auth/wrong-password':
           case 'auth/invalid-credential':
-            errorMessage = "Invalid PSN (email) or password.";
+            errorMessage = "Invalid PSN or password.";
             break;
           case 'auth/invalid-email':
-            errorMessage = "The associated email address is not valid.";
+            errorMessage = "The business email associated with this PSN is invalid.";
             break;
           case 'auth/configuration-not-found':
-            errorMessage = "Authentication is not configured. Please enable Email/Password sign-in in your Firebase project console.";
+            errorMessage = "Authentication is not configured correctly. Please enable Email/Password sign-in in your Firebase project console.";
             break;
           default:
-            errorMessage = error.message || "Failed to login. Please try again.";
+            errorMessage = error.message;
         }
       }
       toast({
@@ -154,7 +138,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: errorMessage,
         variant: "destructive",
       });
-      setLoading(false);
       return false;
     }
   };
@@ -162,45 +145,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
     if (!firebaseAuth) {
         toast(firebaseDisabledMessage);
-        return { success: false, message: "Authentication service unavailable. Check configuration." };
+        return { success: false, message: "Authentication service is unavailable." };
     }
-    setLoading(true);
+
     const lntUser = allMockUsers.find(u => u.psn === psn);
 
     if (!lntUser || !lntUser.businessEmail) {
-      setLoading(false);
-      return { success: false, message: "PSN not found or no business email associated. Cannot create account." };
+      return { success: false, message: "PSN not found or no business email is associated with it. Cannot create account." };
     }
-     if (!password) {
-        setLoading(false);
+
+    if (!password) {
         return { success: false, message: "Password is required for signup." };
     }
 
     try {
       await createUserWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
+      // onAuthStateChanged will handle setting the user state and redirecting.
       return { success: true, message: "Account created successfully! You are now logged in." };
     } catch (error: any) {
       console.error("Firebase signup error:", error);
       let errorMessage = "An unknown error occurred during signup.";
-       if (error.code) {
+      if (error.code) {
         switch (error.code) {
           case 'auth/email-already-in-use':
-            errorMessage = "This account (PSN/email) is already registered. Please try signing in.";
+            errorMessage = "This account (based on your PSN) has already been registered. Please try signing in instead.";
             break;
           case 'auth/weak-password':
             errorMessage = "The password is too weak. Please choose a stronger one.";
             break;
           case 'auth/invalid-email':
-            errorMessage = "The associated email address for this PSN is not valid.";
+            errorMessage = "The business email associated with this PSN is invalid.";
             break;
           case 'auth/configuration-not-found':
-            errorMessage = "Authentication is not configured. Please enable Email/Password sign-in in your Firebase project console.";
+            errorMessage = "Authentication is not configured correctly. Please enable Email/Password sign-in in your Firebase project console.";
             break;
           default:
-            errorMessage = error.message || "Failed to create account. Please try again.";
+            errorMessage = error.message;
         }
       }
-      setLoading(false);
       return { success: false, message: errorMessage };
     }
   };
@@ -210,9 +192,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast(firebaseDisabledMessage);
         return;
     }
-    setLoading(true);
     try {
       await signOut(firebaseAuth);
+      // onAuthStateChanged will set user to null.
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({
