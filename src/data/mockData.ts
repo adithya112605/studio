@@ -252,12 +252,15 @@ const rawNewEmployeeData = [
     { psnStr: "136178", name: "KOLHALE HIRALAL BAPU", grade: "M1-C", department: "Patna Metro PC-03", email: "hiralalk@lntecc.com", is_name: "CHANDRA TRIPATHI, LAL", is_psn_str: "81954", ns_name: "CHANDRA TRIPATHI, LAL", ns_psn_str: "81954", dh_name: "CHANDRA TRIPATHI, LAL", dh_psn_str: "81954" },
     { psnStr: "136774", name: "SUBRATA CHATTOPADHYAY", grade: "M2-C", department: "DMRC DC09", email: "Schatterjee@lntecc.com", is_name: "S, Padmanabhan", is_psn_str: "81240", ns_name: "S, Padmanabhan", ns_psn_str: "81240", dh_name: "S, Padmanabhan", dh_psn_str: "81240" },
     { psnStr: "15081", name: "SANKARANARAYANAN N", grade: "M3-B", department: "CMRL PH-2 TU-02", email: "NSANKAR@lntecc.com", is_name: "S, Padmanabhan", is_psn_str: "81240", ns_name: "S, Padmanabhan", ns_psn_str: "81240", dh_name: "S, Padmanabhan", dh_psn_str: "81240" },
-    { psnStr: "164174", name: "NIRAJ HASMUKHRAY PATHAK", grade: "M1-C", department: "MAHSR C3 TFL", email: "pathaknh@lntecc.com", is_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", ns_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", dh_name: "PATRAWALA, ABOOZAR MOIZ", dh_psn_str: "81233" },
+    { psnStr: "164174", name: "NIRAJ HASMUKHRAY PATHAK", grade: "M1-C", department: "MAHSR C3 TFL", email: "pathaknh@lntecc.com", is_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", ns_name: "PATRAWALA, ABOOZAR MOIZ", ns_psn_str: "81233", dh_name: "PATRAWALA, ABOOZAR MOIZ", dh_psn_str: "81233" },
     { psnStr: "164280", name: "AMRITA GOPAL BANERJEE", grade: "M2-C", department: "MAHSR C3 Section-2", email: "Agbanerjee@lntecc.com", is_name: "PATRAWALA, ABOOZAR MOIZ", is_psn_str: "81233", ns_name: "PATRAWALA, ABOOZAR MOIZ", ns_psn_str: "81233", dh_name: "PATRAWALA, ABOOZAR MOIZ", dh_psn_str: "81233" },
     { psnStr: "164340", name: "GOURANGA CHANDRA MISHRA", grade: "M1-B", department: "KOL METRO UG1", email: "gcmishra@lntecc.com", is_name: "Banerjee, Subrato", is_psn_str: "81987", ns_name: "Banerjee, Subrato", ns_psn_str: "81987", dh_name: "Banerjee, Subrato", dh_psn_str: "81987" },
     { psnStr: "20112444", name: "VINAY KUMAR TIWARI", grade: "M1-A", department: "Agra Metro AGCC-07", email: "vktiwarip@lntecc.com", is_name: "M, Thiruvengadam", is_psn_str: "243028", ns_name: "M, Thiruvengadam", ns_psn_str: "243028", dh_name: "M, Thiruvengadam", dh_psn_str: "243028" },
     { psnStr: "173796", name: "PRANAV DUBEY", grade: "M1-B", department: "Patna PC 08R", email: "pranavdubey@lntecc.com", is_name: "CHANDRA TRIPATHI, LAL", is_psn_str: "81954", ns_name: "CHANDRA TRIPATHI, LAL", ns_psn_str: "81954", dh_name: "CHANDRA TRIPATHI, LAL", dh_psn_str: "81954" }
 ];
+
+// Create a map for quick lookups to improve performance
+const rawEmployeeDataMap = new Map(rawNewEmployeeData.map(e => [parseInt(e.psnStr, 10), e]));
 
 let tempEmployees: Employee[] = [];
 const supervisorMap = new Map<number, { name: string, psn: number, roles: Set<User['role']>, email?: string, title?: string, citySet: Set<string>, projectSet: Set<string>, grade?: string }>();
@@ -314,7 +317,7 @@ rawNewEmployeeData.forEach((empData, index) => {
                 sup.citySet.add(projectObj.city);
                 sup.projectSet.add(projectObj.id);
             }
-            const employeeRecordForSupTitle = rawNewEmployeeData.find(e => parseInt(e.psnStr,10) === psnVal);
+            const employeeRecordForSupTitle = rawEmployeeDataMap.get(psnVal);
             if (employeeRecordForSupTitle?.grade && (!sup.title || sup.title === role || sup.title === "IS" || sup.title === "NS" || sup.title === "DH")) {
                  sup.title = employeeRecordForSupTitle.grade;
             }
@@ -344,7 +347,7 @@ rawNewEmployeeData.forEach((empData, index) => {
 
 
 const basePsnForNewEmployees = 30000000;
-const maxTotalUsers = 50;
+const maxTotalUsers = 30; // Reduced for faster startup
 const currentTempEmployeeCount = tempEmployees.length;
 const currentSupervisorCount = supervisorMap.size;
 
@@ -398,7 +401,7 @@ supervisorMap.forEach(supData => {
         finalRole = 'IS'; finalFunctionalRole = 'IS'; finalTitle = supData.title || "Immediate Supervisor";
     }
 
-    const employeeRecord = rawNewEmployeeData.find(e => parseInt(e.psnStr, 10) === supData.psn);
+    const employeeRecord = rawEmployeeDataMap.get(supData.psn);
     if(employeeRecord?.grade && (finalTitle === finalFunctionalRole || finalTitle === "Supervisor" || finalTitle === "IS" || finalTitle === "NS" || finalTitle === "DH")){
         finalTitle = employeeRecord.grade;
     }
@@ -435,7 +438,7 @@ const generateTicketIdForMock = (): string => {
 
 export let mockTickets: Ticket[] = [];
 if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
-    const ticketsToGenerate = Math.min(mockEmployees.length, 40);
+    const ticketsToGenerate = Math.min(mockEmployees.length, 20); // Reduced for faster startup
     for (let i = 0; i < ticketsToGenerate; i++) {
         const employee = mockEmployees[i % mockEmployees.length];
         if (!employee || !employee.project) continue;
@@ -489,5 +492,3 @@ if (mockEmployees.length > 0 && mockSupervisors.length > 0) {
 }
 
 export const allMockUsers: User[] = [...mockEmployees, ...mockSupervisors];
-
-    
