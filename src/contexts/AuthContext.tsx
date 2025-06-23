@@ -7,7 +7,7 @@ import {
   signOut,
   type User as FirebaseUser
 } from "firebase/auth";
-import { auth as firebaseAuth } from '@/lib/firebase';
+import { getAuthInstance } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
   checkPSNExistsAction,
@@ -33,26 +33,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!firebaseAuth) {
+    const auth = getAuthInstance();
+    if (!auth) {
+        // This case handles if Firebase config is completely missing.
+        // A toast is already shown from firebase.ts, so we just stop loading.
         setLoading(false);
         return;
     }
 
-    const unsubscribe = firebaseAuth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser && firebaseUser.email) {
-        const { user: lntUser } = await getUserByEmailAction(firebaseUser.email);
+        const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
         
         if (lntUser) {
           setUser(lntUser);
         } else {
-          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found in Firestore. Logging out.`);
+          const errorMessage = error || "Your authentication was successful, but we could not find a matching user profile. Please run `npm run db:seed` or contact IT support.";
+          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found. Logging out. Error: ${errorMessage}`);
           toast({
             title: "Profile Mismatch",
-            description: "Your authentication was successful, but we could not find a matching L&T user profile. Please run 'npm run db:seed' or contact IT support.",
+            description: errorMessage,
             variant: "destructive",
             duration: 8000,
           });
-          await signOut(firebaseAuth);
+          await signOut(auth);
           setUser(null);
         }
       } else {
@@ -68,17 +72,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { exists, error } = await checkPSNExistsAction(psn);
       
       if (error) {
-          let title = "Error Checking PSN";
-          let description = error;
-
-          if (error.includes("offline")) {
-              title = "Firebase Connection Error";
-              description = "The app could not connect to Firestore. This is usually a configuration issue. Please check: 1) Your .env.local file has the correct Firebase project details. 2) Firestore database is created and enabled in your Firebase project console. 3) Your Firestore security rules allow reads.";
-          }
-
           toast({
-              title: title,
-              description: description,
+              title: "Error Verifying PSN",
+              description: error, // The action now provides a user-friendly error.
               variant: "destructive",
               duration: 12000,
           });
@@ -88,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!exists) {
         toast({
           title: "PSN Not Found",
-          description: "This PSN is not found in our database. Please run 'npm run db:seed' or contact admin if you believe this is an error.",
+          description: "This PSN is not found in our database. Please run `npm run db:seed` or contact admin if you believe this is an error.",
           variant: "destructive",
           duration: 8000
         });
@@ -101,17 +97,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (psn: number, password?: string): Promise<boolean> => {
     const result = await loginAction(psn, password);
     if (!result.success) {
-      let title = "Login Failed";
-      let description = result.message;
-
-      if (result.message.includes("offline")) {
-        title = "Firebase Connection Error";
-        description = "Could not connect to Firestore to verify user. Please check your Firebase project setup (see toast from previous screen for details) and refresh.";
-      }
-      
       toast({
-        title: title,
-        description: description,
+        title: "Login Failed",
+        description: result.message, // The action provides a user-friendly error.
         variant: "destructive",
         duration: 10000,
       });
@@ -123,17 +111,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
     const result = await signupAction(psn, password);
     if (!result.success) {
-       let title = "Signup Failed";
-       let description = result.message;
-
-       if (result.message.includes("offline")) {
-           title = "Firebase Connection Error";
-           description = "Could not connect to Firestore to verify user. Please check your Firebase project setup (see toast from previous screen for details) and refresh.";
-       }
-       
        toast({
-        title: title,
-        description: description,
+        title: "Signup Failed",
+        description: result.message, // The action provides a user-friendly error.
         variant: "destructive",
         duration: 10000
       });
@@ -145,7 +125,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    if (!firebaseAuth) {
+    const auth = getAuthInstance();
+    if (!auth) {
         toast({
             title: "Authentication Service Unavailable",
             description: "Firebase is not configured correctly. Please check your .env.local file and restart the server.",
@@ -155,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
     try {
-      await signOut(firebaseAuth);
+      await signOut(auth);
       setUser(null);
     } catch (error) {
       console.error("Firebase logout error: ", error);

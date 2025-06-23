@@ -5,7 +5,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
-import { auth as firebaseAuth } from '@/lib/firebase';
+import { getAuthInstance } from '@/lib/firebase';
 import {
   getUserByPsn,
   getAllEmployees as getAllEmployeesQuery,
@@ -27,6 +27,23 @@ import {
 import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket, TicketAttachment } from '@/types';
 import { revalidatePath } from 'next/cache';
 
+function formatFirebaseError(error: any): string {
+    const FIREBASE_CONNECTION_ERROR_MSG = "The app could not connect to Firestore. This is usually a configuration issue. Please check: 1) Your .env.local file has the correct Firebase project details. 2) Firestore database is created and enabled in your Firebase project console. 3) Your Firestore security rules allow reads from the application.";
+    const GENERIC_ERROR_MSG = "An unexpected database error occurred. Please try again later.";
+
+    if (error && typeof error.message === 'string') {
+        const message = error.message.toLowerCase();
+        if (message.includes('offline') || message.includes('failed to connect') || message.includes('network request failed')) {
+            return FIREBASE_CONNECTION_ERROR_MSG;
+        }
+        if (message.includes('permission-denied') || message.includes('missing or insufficient permissions')) {
+            return "Permission Denied. The database security rules are preventing access. Please check your Firestore rules.";
+        }
+        return error.message; // Return the original specific error if it's not a connection issue.
+    }
+    return GENERIC_ERROR_MSG;
+}
+
 // Action to check if a PSN exists
 export async function checkPSNExistsAction(psn: number): Promise<{ exists: boolean; error?: string }> {
   try {
@@ -34,13 +51,14 @@ export async function checkPSNExistsAction(psn: number): Promise<{ exists: boole
     return { exists: !!user };
   } catch (error: any) {
     console.error("[Action Error] checkPSNExistsAction:", error.message);
-    return { exists: false, error: error.message || "An unknown database error occurred." };
+    return { exists: false, error: formatFirebaseError(error) };
   }
 }
 
 // Action for user login
 export async function loginAction(psn: number, password?: string): Promise<{ success: boolean; message: string; user?: any }> {
-  if (!firebaseAuth) {
+  const auth = getAuthInstance();
+  if (!auth) {
     return { success: false, message: "Authentication service is unavailable." };
   }
   let lntUser;
@@ -48,7 +66,7 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
     console.error("[Action Error] loginAction fetching user:", error.message);
-    return { success: false, message: error.message || "A database connection error occurred." };
+    return { success: false, message: formatFirebaseError(error) };
   }
 
   if (!lntUser || !lntUser.businessEmail) {
@@ -59,7 +77,7 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
   }
 
   try {
-    await signInWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
+    await signInWithEmailAndPassword(auth, lntUser.businessEmail, password);
     return { success: true, message: "Login successful.", user: lntUser };
   } catch (error: any) {
     let errorMessage = "An unknown error occurred.";
@@ -86,7 +104,8 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
 
 // Action for user signup
 export async function signupAction(psn: number, password?: string): Promise<{ success: boolean; message: string }> {
-  if (!firebaseAuth) {
+  const auth = getAuthInstance();
+  if (!auth) {
     return { success: false, message: "Authentication service is unavailable." };
   }
 
@@ -95,7 +114,7 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
     console.error("[Action Error] signupAction fetching user:", error.message);
-    return { success: false, message: error.message || "A database connection error occurred." };
+    return { success: false, message: formatFirebaseError(error) };
   }
 
   if (!lntUser || !lntUser.businessEmail) {
@@ -106,7 +125,7 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
   }
 
   try {
-    await createUserWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
+    await createUserWithEmailAndPassword(auth, lntUser.businessEmail, password);
     return { success: true, message: "Account created successfully! You are now logged in." };
   } catch (error: any)
   {
@@ -134,13 +153,13 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
 }
 
 // Action to get user from DB based on email (for onAuthStateChanged)
-export async function getUserByEmailAction(email: string): Promise<{user: User | null}> {
+export async function getUserByEmailAction(email: string): Promise<{user: User | null, error?: string}> {
     try {
         const user = await getUserByEmailQuery(email);
         return { user };
     } catch (error: any) {
         console.error("[Action Error] getUserByEmailAction:", error.message);
-        return { user: null }; // Return null on error, log it.
+        return { user: null, error: formatFirebaseError(error) }; 
     }
 }
 
@@ -155,6 +174,8 @@ export async function getUserForPasswordResetAction(psn: number): Promise<{ busi
     return null;
   } catch (error: any) {
     console.error("[Action Error] getUserForPasswordResetAction:", error.message);
+    // In a real app, you might want to return an error object here
+    // but for this flow, failing silently is acceptable.
     return null;
   }
 }
@@ -202,7 +223,6 @@ export async function createTicketAction(ticketData: Omit<Ticket, 'id' | 'attach
 }
 
 export async function updateTicketAction(ticketId: string, data: Partial<Ticket>, attachments?: File[]) {
-    const firestore = require('@/lib/firebase').db;
     const { updateTicket, addTicketAttachments } = require('@/lib/queries');
     
     await updateTicket(ticketId, data);

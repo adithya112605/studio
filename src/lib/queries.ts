@@ -1,10 +1,11 @@
 
-import { db } from './firebase';
+import { getFirestoreInstance } from './firebase';
 import type { User, Employee, Supervisor, Ticket, Project, JobCode, AddEmployeeFormData, AddSupervisorFormData, TicketAttachment } from '@/types';
 import { collection, doc, getDoc, getDocs, setDoc, query, where, addDoc, writeBatch } from "firebase/firestore";
 import { format } from 'date-fns';
 
-function checkDb() {
+function getDb() {
+    const db = getFirestoreInstance();
     if (!db) {
         throw new Error("Firestore is not initialized. Please check that your Firebase project configuration is correctly set in the .env.local file and that you have restarted the development server.");
     }
@@ -14,7 +15,7 @@ function checkDb() {
 // === USER QUERIES ===
 
 export async function getUserByPsn(psn: number): Promise<User | null> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const psnString = psn.toString();
     
     const supervisorRef = doc(firestore, 'supervisors', psnString);
@@ -34,7 +35,7 @@ export async function getUserByPsn(psn: number): Promise<User | null> {
 
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const lcEmail = email.toLowerCase();
     
     const empQuery = query(collection(firestore, 'employees'), where("businessEmail", "==", lcEmail));
@@ -53,7 +54,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function getAllUsers(): Promise<User[]> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const employeesSnap = await getDocs(collection(firestore, 'employees'));
     const supervisorsSnap = await getDocs(collection(firestore, 'supervisors'));
 
@@ -64,27 +65,27 @@ export async function getAllUsers(): Promise<User[]> {
 }
 
 export async function getEmployeeByPsn(psn: number): Promise<Employee | null> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const docRef = doc(firestore, 'employees', psn.toString());
     const docSnap = await getDoc(docRef);
     return docSnap.exists() ? docSnap.data() as Employee : null;
 }
 
 export async function getSupervisorByPsn(psn: number): Promise<Supervisor | null> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const docRef = doc(firestore, 'supervisors', psn.toString());
     const docSnap = await getDoc(docRef);
     return docSnap.exists() ? docSnap.data() as Supervisor : null;
 }
 
 export async function getAllSupervisors(): Promise<Supervisor[]> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const supervisorsSnap = await getDocs(collection(firestore, 'supervisors'));
     return supervisorsSnap.docs.map(doc => doc.data() as Supervisor);
 }
 
 export async function getAllEmployees(): Promise<Employee[]> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const employeesSnap = await getDocs(collection(firestore, 'employees'));
     return employeesSnap.docs.map(doc => doc.data() as Employee);
 }
@@ -93,7 +94,7 @@ export async function getAllEmployees(): Promise<Employee[]> {
 // === TICKET QUERIES ===
 
 export async function getTicketById(id: string): Promise<Ticket | null> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const ticketRef = doc(firestore, 'tickets', id);
     const ticketSnap = await getDoc(ticketRef);
 
@@ -101,50 +102,50 @@ export async function getTicketById(id: string): Promise<Ticket | null> {
         const ticketData = ticketSnap.data() as Omit<Ticket, 'attachments'>;
         const attachmentsSnap = await getDocs(collection(firestore, `tickets/${id}/attachments`));
         const attachments = attachmentsSnap.docs.map(d => d.data() as TicketAttachment);
-        return { ...ticketData, attachments };
+        return { ...ticketData, id, attachments }; // ensure id is part of the returned object
     }
     return null;
 }
 
 export async function getTicketsByEmployeePsn(psn: number): Promise<Ticket[]> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const ticketsRef = collection(firestore, 'tickets');
     // NOTE: This query requires a composite index in Firestore on (psn, dateOfQuery).
     // The Firebase console will provide a link to create this index the first time the query fails.
     const q = query(ticketsRef, where("psn", "==", psn));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data() as Ticket);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
 }
 
 export async function getAllTickets(): Promise<Ticket[]> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const ticketsSnap = await getDocs(collection(firestore, 'tickets'));
-    return ticketsSnap.docs.map(doc => doc.data() as Ticket);
+    return ticketsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
 }
 
 // === PROJECT & JOB CODE QUERIES ===
 
 export async function getAllProjects(): Promise<Project[]> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const projectsSnap = await getDocs(collection(firestore, 'projects'));
     return projectsSnap.docs.map(doc => doc.data() as Project);
 }
 
 export async function getProjectById(id: string): Promise<Project | null> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const docRef = doc(firestore, 'projects', id);
     const docSnap = await getDoc(docRef);
     return docSnap.exists() ? docSnap.data() as Project : null;
 }
 
 export async function getAllJobCodes(): Promise<JobCode[]> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const jobCodesSnap = await getDocs(collection(firestore, 'job_codes'));
     return jobCodesSnap.docs.map(doc => doc.data() as JobCode);
 }
 
 export async function getJobCodeById(id: string): Promise<JobCode | null> {
-    const firestore = checkDb();
+    const firestore = getDb();
     const docRef = doc(firestore, 'job_codes', id);
     const docSnap = await getDoc(docRef);
     return docSnap.exists() ? docSnap.data() as JobCode : null;
@@ -161,7 +162,7 @@ export async function getAllGrades(): Promise<string[]> {
 // === DATA MUTATION QUERIES ===
 
 export async function addEmployee(data: AddEmployeeFormData) {
-    const firestore = checkDb();
+    const firestore = getDb();
     const isName = data.isPSN ? (await getUserByPsn(Number(data.isPSN)))?.name : undefined;
     const nsName = data.nsPSN ? (await getUserByPsn(Number(data.nsPSN)))?.name : undefined;
     const dhName = data.dhPSN ? (await getUserByPsn(Number(data.dhPSN)))?.name : undefined;
@@ -187,7 +188,7 @@ export async function addEmployee(data: AddEmployeeFormData) {
 }
 
 export async function addSupervisor(data: AddSupervisorFormData) {
-    const firestore = checkDb();
+    const firestore = getDb();
     
     const newSupervisor: Supervisor = {
         psn: Number(data.psn),
@@ -208,14 +209,15 @@ export async function addSupervisor(data: AddSupervisorFormData) {
 }
 
 export async function createTicket(ticketData: Omit<Ticket, 'id' | 'attachments'>) {
-    const firestore = checkDb();
+    const firestore = getDb();
     const ticketsCollection = collection(firestore, 'tickets');
     const docRef = await addDoc(ticketsCollection, ticketData);
+    await setDoc(docRef, { id: docRef.id }, { merge: true });
     return docRef.id;
 }
 
 export async function updateTicket(ticketId: string, data: Partial<Ticket>) {
-    const firestore = checkDb();
+    const firestore = getDb();
     if (Object.keys(data).length === 0) return;
 
     const ticketRef = doc(firestore, 'tickets', ticketId);
@@ -223,7 +225,7 @@ export async function updateTicket(ticketId: string, data: Partial<Ticket>) {
 }
 
 export async function addTicketAttachments(ticketId: string, attachments: File[]) {
-    const firestore = checkDb();
+    const firestore = getDb();
     const batch = writeBatch(firestore);
 
     for (const file of attachments) {

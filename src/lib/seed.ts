@@ -1,18 +1,46 @@
 
-import { db } from './firebase';
+import { getFirestoreInstance } from './firebase';
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from '@/data/mockData';
-import { doc, writeBatch } from "firebase/firestore";
+import { doc, writeBatch, deleteDoc, collection, getDocs, query } from "firebase/firestore";
+
+async function clearCollection(collectionName: string) {
+    const db = getFirestoreInstance();
+    if (!db) throw new Error("Firestore not initialized for clearing collection.");
+
+    const q = query(collection(db, collectionName));
+    const querySnapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    querySnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+    });
+    if(!querySnapshot.empty){
+        await batch.commit();
+        console.log(`  - Cleared all documents from '${collectionName}' collection.`);
+    } else {
+        console.log(`  - '${collectionName}' collection is already empty.`);
+    }
+}
+
 
 async function seedFirestore() {
+  const db = getFirestoreInstance();
   if (!db) {
     throw new Error("\n\n❌ Firestore is not initialized. Please check your Firebase config in .env.local and ensure the server has restarted.\n\n");
   }
+  
   console.log('🔄 Starting Firestore seed process...');
-  const batch = writeBatch(db);
-
+  
   try {
-    // Note: We are not deleting old data. Seeding is an additive process here.
-    // For a production app, you might want a separate script to clear collections.
+    // Clear existing data to ensure a fresh start
+    console.log('  - Clearing existing data...');
+    await clearCollection('tickets');
+    await clearCollection('projects');
+    await clearCollection('job_codes');
+    await clearCollection('employees');
+    await clearCollection('supervisors');
+
+    const batch = writeBatch(db);
+
     console.log('  - Preparing Projects...');
     mockProjects.forEach(p => {
       const docRef = doc(db, 'projects', p.id);

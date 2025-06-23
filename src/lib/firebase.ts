@@ -1,5 +1,5 @@
 
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
@@ -10,54 +10,41 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  // Conditionally add measurementId if it exists
   ...(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID && {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   }),
 };
 
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let db: Firestore | undefined;
-
-const criticalConfigParts: string[] = [];
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_") || firebaseConfig.apiKey.length < 10) {
-  criticalConfigParts.push("apiKey is a placeholder or too short");
-}
-if (!firebaseConfig.authDomain || firebaseConfig.authDomain.includes("YOUR_")) {
-  criticalConfigParts.push("authDomain is a placeholder");
-}
-if (!firebaseConfig.projectId || firebaseConfig.projectId.includes("YOUR_")) {
-  criticalConfigParts.push("projectId is a placeholder");
-}
-
-if (criticalConfigParts.length === 0) {
-  if (!getApps().length) {
-    try {
-      app = initializeApp(firebaseConfig);
-    } catch (e: any) {
-      const context = typeof window === "undefined" ? "Server-Side" : "Client-Side";
-      console.error(`[Firebase Setup Error - ${context}] Firebase initializeApp error:`, e.message || e);
-    }
-  } else {
-    app = getApps()[0];
+// This function checks if the essential Firebase config values are present and not placeholders.
+function isFirebaseConfigured(): boolean {
+  if (
+    !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR_") ||
+    !firebaseConfig.projectId || firebaseConfig.projectId.startsWith("YOUR_")
+  ) {
+    const context = typeof window === "undefined" ? "Server-Side" : "Client-Side";
+    console.warn(`[Firebase Config Warning - ${context}] Critical Firebase config (apiKey or projectId) is missing or a placeholder. Firebase will not be initialized. Please ensure all NEXT_PUBLIC_FIREBASE_... variables are correctly set in your .env.local file and the server has been restarted.`);
+    return false;
   }
-
-  if (app) {
-    try {
-      auth = getAuth(app);
-      db = getFirestore(app);
-    } catch (e: any) {
-      const context = typeof window === "undefined" ? "Server-Side" : "Client-Side";
-      console.error(`[Firebase Setup Error - ${context}] Firebase getAuth/getFirestore error:`, e.message || e);
-    }
-  }
-} else {
-  const warningMsg = `Critical Firebase config (${criticalConfigParts.join(', ')}) is missing or a placeholder. Firebase initialization has been SKIPPED. The app will run, but authentication and database features will NOT work.`;
-  const context = typeof window === "undefined" ? "Server-Side" : "Client-Side";
-  // Use console.warn to be less alarming than console.error for configuration issues.
-  console.warn(`[Firebase Config Warning - ${context}] ${warningMsg}`);
-  console.warn(`[Firebase Config Warning - ${context}] Please ensure all NEXT_PUBLIC_FIREBASE_... variables are correctly set in your .env.local file and the server has been restarted.`);
+  return true;
 }
 
-export { app, auth, db };
+// Singleton pattern to get the Firebase app instance
+const getAppInstance = (): FirebaseApp | null => {
+  if (!isFirebaseConfigured()) return null;
+  return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+};
+
+// Singleton pattern to get the Auth instance
+const getAuthInstance = (): Auth | null => {
+  const app = getAppInstance();
+  return app ? getAuth(app) : null;
+};
+
+// Singleton pattern to get the Firestore instance
+const getFirestoreInstance = (): Firestore | null => {
+  const app = getAppInstance();
+  return app ? getFirestore(app) : null;
+};
+
+// Export the singleton getter functions
+export { getAppInstance, getAuthInstance, getFirestoreInstance };
