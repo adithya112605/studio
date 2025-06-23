@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Loader2 } from 'lucide-react';
 import ScrollReveal from '@/components/common/ScrollReveal';
-import { getUserByPsn } from '@/lib/queries';
+import { getUserForPasswordResetAction } from '@/lib/actions';
 
 const forgotPasswordSchema = z.object({
   psn: z.string() 
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     
     const psnNumber = Number(data.psn);
-    const userAccount = await getUserByPsn(psnNumber);
+    const userAccount = await getUserForPasswordResetAction(psnNumber);
 
     if (userAccount && userAccount.businessEmail) {
       toast({

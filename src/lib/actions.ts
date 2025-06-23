@@ -168,6 +168,25 @@ export async function getUserByEmailAction(email: string): Promise<{user: User |
     }
 }
 
+// Action for forgot password page
+export async function getUserForPasswordResetAction(psn: number): Promise<{ businessEmail: string | undefined } | null> {
+  try {
+    const user = await getUserByPsn(psn);
+    if (user) {
+      // Return only the necessary data to the client
+      return { businessEmail: user.businessEmail };
+    }
+    return null;
+  } catch (error: any) {
+    if (error.message.includes('no such table')) {
+        await invalidateDb();
+        // Don't leak db state, just treat as not found
+    }
+    console.error("Error in getUserForPasswordResetAction:", error);
+    return null;
+  }
+}
+
 
 // --- Form and Data Loading Actions ---
 
