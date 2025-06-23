@@ -35,42 +35,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const auth = getAuthInstance();
     if (!auth) {
-        setLoading(false);
-        return;
+      setLoading(false);
+      return;
     }
 
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
-      try {
-        if (firebaseUser && firebaseUser.email) {
-          const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
-          
-          if (lntUser) {
-            setUser(lntUser);
-          } else {
-            const errorMessage = error || "Your authentication was successful, but we could not find a matching user profile. Please check your Firestore indexes or run `npm run db:seed`.";
-            console.error(`[AuthContext] Firebase user ${firebaseUser.email} authenticated, but no L&T profile found. Error: ${errorMessage}`);
-            toast({
-              title: "Profile Mismatch",
-              description: errorMessage,
-              variant: "destructive",
-              duration: 10000,
-            });
-            await signOut(auth);
-            setUser(null);
-          }
+      if (firebaseUser && firebaseUser.email) {
+        // We have a Firebase user. Let's try to find their profile in our DB.
+        const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+        
+        if (lntUser) {
+          // Success! We found the matching profile.
+          setUser(lntUser);
+          setLoading(false);
         } else {
-          setUser(null);
-        }
-      } catch (e: any) {
-        console.error("[AuthContext] A critical error occurred during authentication state change:", e);
-        toast({
-            title: "Authentication Error",
-            description: "A critical error occurred while verifying your profile. Please try again.",
+          // Firebase user exists, but no profile in our DB. This is an error state.
+          // Log them out of Firebase and let the listener run again with a null user.
+          const errorMessage = error || "Your authentication was successful, but we could not find a matching user profile. Please check your Firestore indexes or run `npm run db:seed`.";
+          console.error(`[AuthContext] Firebase user ${firebaseUser.email} authenticated, but no L&T profile found. Error: ${errorMessage}`);
+          toast({
+            title: "Profile Not Found",
+            description: errorMessage,
             variant: "destructive",
             duration: 10000,
-        });
+          });
+          // This signOut will re-trigger this listener with a null user,
+          // which will then correctly set loading to false in the `else` block below.
+          await signOut(auth);
+        }
+      } else {
+        // No Firebase user, so we are definitely not logged in.
         setUser(null);
-      } finally {
         setLoading(false);
       }
     });
