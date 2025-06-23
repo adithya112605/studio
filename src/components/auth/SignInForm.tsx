@@ -28,11 +28,10 @@ const signInSchema = z.object({
 type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignInForm() {
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
@@ -61,10 +60,10 @@ export default function SignInForm() {
     });
   };
 
-  const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
-    setIsLoading(true);
-    await login(Number(data.psn), data.password);
-    setIsLoading(false);
+  const onSubmit: SubmitHandler<SignInFormValues> = (data) => {
+    // The loading state is now handled globally by the AuthContext.
+    // We just need to call the login function.
+    login(Number(data.psn), data.password);
   };
 
   return (
@@ -127,8 +126,8 @@ export default function SignInForm() {
                 </Alert>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>

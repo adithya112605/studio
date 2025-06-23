@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
       const { exists, error } = await checkPSNExistsAction(psn);
@@ -93,12 +93,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (psn: number, password?: string): Promise<void> => {
+    setLoading(true); // Set loading at the beginning of the login attempt.
     const result = await loginAction(psn, password);
     if (result.success) {
       toast({
         title: "Login Successful",
-        description: "Redirecting to your dashboard...",
+        description: "Finalizing authentication...",
       });
+      // On success, we DON'T set loading to false.
+      // The onAuthStateChanged listener will do that once the user profile is fetched.
     } else {
       toast({
         title: "Login Failed",
@@ -106,10 +109,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
         duration: 10000,
       });
+      setLoading(false); // On failure, we must reset the loading state.
     }
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
+    setLoading(true);
     const result = await signupAction(psn, password);
     if (!result.success) {
        toast({
@@ -118,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
         duration: 10000
       });
+      setLoading(false);
     } else {
         toast({ title: "Account Created", description: result.message });
     }
