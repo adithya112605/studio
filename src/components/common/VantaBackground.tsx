@@ -31,10 +31,9 @@ const VantaBackground = () => {
         minWidth: 200.00,
         scale: 1.00,
         scaleMobile: 1.00,
-        color: 0xff3b9e,
+        color: 0x3175ff,
         backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa, // Match theme background colors
-        points: 12.00,
-        maxDistance: 25.00,
+        points: 13.00,
         spacing: 17.00
       });
       setVantaEffect(effect);
