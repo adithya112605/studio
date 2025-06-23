@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 
 function checkDb() {
     if (!db) {
-        throw new Error("Firestore is not initialized. Please check your Firebase config.");
+        throw new Error("Firestore is not initialized. Please check that your Firebase project configuration is correctly set in the .env.local file and that you have restarted the development server.");
     }
     return db;
 }

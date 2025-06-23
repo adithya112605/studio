@@ -65,7 +65,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
-      return await checkPSNExistsAction(psn);
+      const { exists, error } = await checkPSNExistsAction(psn);
+      
+      if (error) {
+        if (error.includes("Firestore is not initialized")) {
+            toast({
+                title: "Firebase Connection Error",
+                description: error, // Show the detailed error from the action
+                variant: "destructive",
+                duration: 9000
+            });
+        } else {
+             toast({
+                title: "Error Checking PSN",
+                description: "A database error occurred.",
+                variant: "destructive",
+            });
+        }
+        return { exists: false, error };
+      }
+
+      // In the original check, if it exists, it returns true, which is correct.
+      // If it doesn't exist, it returns false. So we should check for that case.
+      if (!exists) {
+        toast({
+          title: "PSN Not Found",
+          description: "This PSN is not found in our database. Please run 'npm run db:seed' or contact admin if you believe this is an error.",
+          variant: "destructive",
+          duration: 8000
+        });
+        return { exists: false, error: "PSN not found in database." };
+      }
+
+      return { exists: true, error: undefined };
   };
 
   const login = async (psn: number, password?: string): Promise<boolean> => {
