@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import React from 'react';
 import ScrollReveal from '@/components/common/ScrollReveal';
 import ScrollTypewriter from '@/components/common/ScrollTypewriter';
+import VantaBackground from '@/components/common/VantaBackground';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -68,16 +69,7 @@ export default function HomePage() {
     <div className="flex flex-col items-center bg-background text-foreground min-h-screen overflow-x-hidden">
       {/* Hero Section */}
       <section className="w-full py-24 lg:py-40 relative overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-10 dark:opacity-5">
-            <Image
-                src="https://placehold.co/1920x1080.png"
-                alt="Abstract Background"
-                fill
-                priority
-                className="object-cover animate-pulse"
-                data-ai-hint="abstract tech background"
-            />
-        </div>
+        <VantaBackground />
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="min-h-[8rem] md:min-h-[10rem]">
             <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight">
