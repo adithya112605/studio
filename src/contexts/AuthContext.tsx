@@ -68,11 +68,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { exists, error } = await checkPSNExistsAction(psn);
       
       if (error) {
+          let title = "Error Checking PSN";
+          let description = error;
+
+          if (error.includes("offline")) {
+              title = "Firebase Connection Error";
+              description = "The app could not connect to Firestore. This is usually a configuration issue. Please check: 1) Your .env.local file has the correct Firebase project details. 2) Firestore database is created and enabled in your Firebase project console. 3) Your Firestore security rules allow reads.";
+          }
+
           toast({
-              title: "Error Checking PSN",
-              description: error, // Show the detailed error from the action
+              title: title,
+              description: description,
               variant: "destructive",
-              duration: 9000
+              duration: 12000,
           });
           return { exists: false, error };
       }
@@ -93,10 +101,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (psn: number, password?: string): Promise<boolean> => {
     const result = await loginAction(psn, password);
     if (!result.success) {
+      let title = "Login Failed";
+      let description = result.message;
+
+      if (result.message.includes("offline")) {
+        title = "Firebase Connection Error";
+        description = "Could not connect to Firestore to verify user. Please check your Firebase project setup (see toast from previous screen for details) and refresh.";
+      }
+      
       toast({
-        title: "Login Failed",
-        description: result.message,
+        title: title,
+        description: description,
         variant: "destructive",
+        duration: 10000,
       });
     }
     // onAuthStateChanged will handle setting the user state.
@@ -106,10 +123,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
     const result = await signupAction(psn, password);
     if (!result.success) {
+       let title = "Signup Failed";
+       let description = result.message;
+
+       if (result.message.includes("offline")) {
+           title = "Firebase Connection Error";
+           description = "Could not connect to Firestore to verify user. Please check your Firebase project setup (see toast from previous screen for details) and refresh.";
+       }
+       
        toast({
-        title: "Signup Failed",
-        description: result.message,
+        title: title,
+        description: description,
         variant: "destructive",
+        duration: 10000
       });
     } else {
         toast({ title: "Account Created", description: result.message });
