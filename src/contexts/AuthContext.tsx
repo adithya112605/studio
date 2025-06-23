@@ -40,27 +40,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser && firebaseUser.email) {
-        const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
-        
-        if (lntUser) {
-          setUser(lntUser);
+      try {
+        if (firebaseUser && firebaseUser.email) {
+          const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+          
+          if (lntUser) {
+            setUser(lntUser);
+          } else {
+            const errorMessage = error || "Your authentication was successful, but we could not find a matching user profile. Please check your Firestore indexes or run `npm run db:seed`.";
+            console.error(`[AuthContext] Firebase user ${firebaseUser.email} authenticated, but no L&T profile found. Error: ${errorMessage}`);
+            toast({
+              title: "Profile Mismatch",
+              description: errorMessage,
+              variant: "destructive",
+              duration: 10000,
+            });
+            await signOut(auth);
+            setUser(null);
+          }
         } else {
-          const errorMessage = error || "Your authentication was successful, but we could not find a matching user profile. Please run `npm run db:seed` or contact IT support.";
-          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found. Logging out. Error: ${errorMessage}`);
-          toast({
-            title: "Profile Mismatch",
-            description: errorMessage,
-            variant: "destructive",
-            duration: 8000,
-          });
-          await signOut(auth);
           setUser(null);
         }
-      } else {
+      } catch (e: any) {
+        console.error("[AuthContext] A critical error occurred during authentication state change:", e);
+        toast({
+            title: "Authentication Error",
+            description: "A critical error occurred while verifying your profile. Please try again.",
+            variant: "destructive",
+            duration: 10000,
+        });
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

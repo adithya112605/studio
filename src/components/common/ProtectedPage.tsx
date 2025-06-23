@@ -35,15 +35,8 @@ const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, allowedRoles })
   if (loading || !user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-        <dotlottie-player
-            src="https://lottie.host/9f6bb697-7e60-4d75-a238-224ffbcec9e0/f3SUaqz2Lp.lottie"
-            background="transparent"
-            speed="1"
-            style={{ width: '300px', height: '300px' }}
-            loop
-            autoplay
-        ></dotlottie-player>
-        <p className="text-muted-foreground -mt-8">Loading your experience...</p>
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Verifying your session...</p>
       </div>
     );
   }
