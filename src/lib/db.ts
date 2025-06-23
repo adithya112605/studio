@@ -1,4 +1,3 @@
-
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
 
@@ -21,15 +20,4 @@ export async function getDb() {
     }
   }
   return dbInstance;
-}
-
-// This new function will be called by our server actions when a "no such table"
-// error is detected. It closes the stale connection and clears the instance,
-// forcing the next call to getDb() to re-open the file from disk.
-export async function resetDbConnection() {
-    if (dbInstance) {
-        await dbInstance.close();
-        dbInstance = null;
-        console.log("Database connection has been reset due to a detected schema change.");
-    }
 }
