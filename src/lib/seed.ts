@@ -138,7 +138,6 @@ async function seedDatabase() {
   console.log(`Seeded ${mockTickets.length} tickets and their attachments.`);
 
   console.log("Database seeding completed successfully!");
-  await db.close();
 }
 
 seedDatabase().catch(err => {
