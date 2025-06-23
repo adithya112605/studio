@@ -34,13 +34,6 @@ const firebaseDisabledMessage = {
     duration: 8000,
 } as const;
 
-const dbNotSeededMessage = {
-    title: "Database Not Ready",
-    description: "Database tables not found. Please run `npm run db:seed` in your terminal and then refresh the page.",
-    variant: "destructive",
-    duration: 10000,
-} as const;
-
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -58,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
         
         if (error === 'db_not_seeded') {
-          toast(dbNotSeededMessage);
+          console.error("Database not seeded. Please run `npm run db:seed` and refresh the page.");
           setUser(null);
         } else if (error) {
           toast({ title: "Database Error", description: "An unexpected error occurred while fetching user data.", variant: "destructive" });
@@ -88,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkPSNExists = async (psn: number): Promise<boolean | 'db_error'> => {
     const result = await checkPSNExistsAction(psn);
     if (result === 'db_error') {
-      toast(dbNotSeededMessage);
+      console.error("Database not seeded. Please run `npm run db:seed`.");
     }
     return result;
   };

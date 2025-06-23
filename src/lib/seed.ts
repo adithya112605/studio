@@ -77,27 +77,11 @@ async function seedDatabase() {
       console.log('✅ Database connection closed by seed script.');
     }
   }
-
-  // Final Step: Trigger a server restart in development by "touching" a watched file.
-  // This is the most reliable way to make the Next.js dev server discard its
-  // old, stale database connection and connect to the new, correct one.
-  try {
-    const configPath = path.resolve('./next.config.ts');
-    const time = new Date();
-    // This updates the file's modification time, which Next.js watches.
-    fs.utimesSync(configPath, time, time);
-    console.log('\n\n✅ Touched next.config.ts to trigger a server restart.');
-    console.log('🟢 Your app is now ready. The server is restarting in the background.');
-    console.log('✨ Please refresh your browser in a few moments. ✨\n');
-  } catch (err) {
-    console.warn('\n⚠️ Could not touch next.config.ts to trigger server restart.', err);
-    console.warn('You may need to manually restart the dev server or refresh the browser for changes to take effect.\n');
-  }
 }
 
 // This guard is crucial. It ensures the seed script ONLY runs when you
 // explicitly execute `npm run db:seed` from the terminal. It will NOT run on
-// every server change or restart, which was the cause of the crash loop.
+// every server change or restart.
 if (require.main === module) {
   seedDatabase().catch(err => {
     console.error("Seeding script failed to execute:", err);
