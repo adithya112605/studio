@@ -5,18 +5,25 @@ import fs from 'fs';
 import path from 'path';
 
 async function seedDatabase() {
-  const db = await getDb();
-  
-  console.log("Starting database seeding process...");
+  const dbPath = path.resolve('./db.sqlite');
 
-  // Drop existing tables to ensure a clean slate
-  await db.exec('DROP TABLE IF EXISTS employees;');
-  await db.exec('DROP TABLE IF EXISTS supervisors;');
-  await db.exec('DROP TABLE IF EXISTS tickets;');
-  await db.exec('DROP TABLE IF EXISTS projects;');
-  await db.exec('DROP TABLE IF EXISTS job_codes;');
-  await db.exec('DROP TABLE IF EXISTS ticket_attachments;');
-  console.log("Dropped existing tables.");
+  // Delete the existing database file to ensure a clean slate and break any stale connections.
+  if (fs.existsSync(dbPath)) {
+      try {
+        // First, ensure any existing connection is closed if the DB object is a singleton.
+        // For our `getDb` which opens fresh, this is less critical but good practice.
+        // Then, delete the file.
+        fs.unlinkSync(dbPath);
+        console.log("Successfully deleted existing database file to ensure a fresh start.");
+      } catch (err) {
+        console.error("Error deleting existing database file:", err);
+        // If we can't delete it, we should stop to avoid unpredictable behavior.
+        return;
+      }
+  }
+
+  const db = await getDb();
+  console.log("Starting database seeding process...");
 
   // Create tables
   await db.exec(`
@@ -139,17 +146,12 @@ async function seedDatabase() {
   }
   console.log(`Seeded ${mockTickets.length} tickets and their attachments.`);
 
-  // Close the database connection once seeding is complete
   await db.close();
   console.log("Database connection closed.");
 
   console.log("Database seeding completed successfully!");
 }
 
-// This check ensures the seed script only runs when executed directly from the
-// command line (e.g., `npm run db:seed`) and not when imported by the
-// Next.js server during development.
-// @ts-ignore
 if (require.main === module) {
   seedDatabase().catch(err => {
     console.error("Error seeding database:", err);
