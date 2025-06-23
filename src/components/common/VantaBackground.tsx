@@ -35,7 +35,7 @@ const VantaBackground = () => {
           scaleMobile: 1.00,
           points: 13.00,
           spacing: 17.00,
-          color: resolvedTheme === 'dark' ? 0x3175ff : 0x071029, // Use dark color for light theme
+          color: resolvedTheme === 'dark' ? 0x1b2851 : 0xc4ccd3, // Subtle dark blue for dark theme, light gray for light theme
           backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa,
         });
         setVantaEffect(effect);
