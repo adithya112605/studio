@@ -14,6 +14,7 @@ import {
 import { auth as firebaseAuth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { getUserByPsn, getEmployeeByPsn, getAllEmployees } from '@/lib/queries';
+import { invalidateDb } from '@/lib/db';
 
 interface AuthContextType {
   user: User | null;
@@ -79,7 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error: any) {
             if (error.message.includes('no such table')) {
                 console.warn("[DB WARNING] Database not seeded. Tables are missing. Run `npm run db:seed`.");
-                // We can't find a user if tables don't exist, so treat as logged out.
+                toast(dbNotSeededMessage);
+                await invalidateDb();
                 setUser(null);
             } else {
                 console.error("Database error in AuthContext:", error);
@@ -102,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
         if (error.message.includes('no such table')) {
             toast(dbNotSeededMessage);
+            await invalidateDb();
             return 'db_error';
         }
         throw error; // Re-throw other errors
@@ -120,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
         if (error.message.includes('no such table')) {
             toast(dbNotSeededMessage);
+            await invalidateDb();
             return false;
         }
         toast({ title: "Database Error", description: "An unexpected database error occurred.", variant: "destructive" });
@@ -195,6 +199,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch(error: any) {
         if (error.message.includes('no such table')) {
             toast(dbNotSeededMessage);
+            await invalidateDb();
             return { success: false, message: "Database is not set up." };
         }
         return { success: false, message: "An unexpected database error occurred." };

@@ -1,3 +1,4 @@
+'use server';
 
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
@@ -15,4 +16,16 @@ export async function getDb() {
     });
   }
   return db;
+}
+
+
+/**
+ * Invalidates and closes the current database connection.
+ * This is useful in development if the database file is changed by an external process (e.g., seeding).
+ */
+export async function invalidateDb() {
+    if (db) {
+        await db.close();
+        db = null;
+    }
 }
