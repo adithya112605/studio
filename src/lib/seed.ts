@@ -41,31 +41,31 @@ async function seedFirestore() {
 
     const batch = writeBatch(db);
 
-    console.log('  - Preparing Projects...');
+    console.log(`  - Preparing to seed ${mockProjects.length} projects...`);
     mockProjects.forEach(p => {
       const docRef = doc(db, 'projects', p.id);
       batch.set(docRef, p);
     });
 
-    console.log('  - Preparing Job Codes...');
+    console.log(`  - Preparing to seed ${mockJobCodes.length} job codes...`);
     mockJobCodes.forEach(jc => {
       const docRef = doc(db, 'job_codes', jc.id);
       batch.set(docRef, jc);
     });
 
-    console.log('  - Preparing Employees...');
+    console.log(`  - Preparing to seed ${mockEmployees.length} employees...`);
     mockEmployees.forEach(emp => {
       const docRef = doc(db, 'employees', emp.psn.toString());
       batch.set(docRef, { ...emp, businessEmail: emp.businessEmail?.toLowerCase() });
     });
 
-    console.log('  - Preparing Supervisors...');
+    console.log(`  - Preparing to seed ${mockSupervisors.length} supervisors...`);
     mockSupervisors.forEach(sup => {
       const docRef = doc(db, 'supervisors', sup.psn.toString());
       batch.set(docRef, { ...sup, businessEmail: sup.businessEmail?.toLowerCase() });
     });
     
-    console.log('  - Preparing Tickets...');
+    console.log(`  - Preparing to seed ${mockTickets.length} tickets...`);
     mockTickets.forEach(ticket => {
         const docRef = doc(db, "tickets", ticket.id);
         const { attachments, ...ticketData } = ticket;

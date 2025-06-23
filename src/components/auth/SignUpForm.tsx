@@ -157,7 +157,7 @@ export default function SignUpForm() {
       <Card className="w-full max-w-md shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
-          {step === 1 && <CardDescription>Enter your L&T PSN (up to 8 digits) to begin.</CardDescription>}
+          {step === 1 && <CardDescription>Enter your L&T PSN to begin. For a demo, try PSNs like <strong className="text-primary">10004703</strong> (Employee) or <strong className="text-primary">20192584</strong> (Supervisor).</CardDescription>}
           {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}). Your associated L&T business email will be used for registration.</CardDescription>}
         </CardHeader>
         <CardContent>
@@ -171,7 +171,7 @@ export default function SignUpForm() {
                   {...formStep1.register("psn")} 
                   onInput={handlePsnInput}
                   maxLength={8}
-                  placeholder="e.g., 10000001" 
+                  placeholder="e.g., 10004703" 
                 />
                 {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
               </div>

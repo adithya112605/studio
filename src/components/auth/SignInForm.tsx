@@ -64,14 +64,11 @@ export default function SignInForm() {
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     setIsLoading(true);
     const success = await login(Number(data.psn), data.password);
-    setIsLoading(false); // setLoading(false) is handled in AuthContext onAuthStateChanged, but for immediate button state
+    setIsLoading(false); 
     if (success) {
       toast({ title: "Login Attempted", description: "Checking credentials... Redirecting if successful." });
-      // Redirect is handled by AuthContext listener or ProtectedPage
       const redirectPath = searchParams.get('redirect') || '/dashboard';
       router.push(redirectPath);
-    } else {
-      // Error toast is shown by login function in AuthContext
     }
   };
 
@@ -80,7 +77,7 @@ export default function SignInForm() {
       <Card className="w-full max-w-md shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Sign In</CardTitle>
-          <CardDescription>Enter your PSN and password to access your L&T Helpdesk account.</CardDescription>
+          <CardDescription>Enter your PSN and password. For a demo, you can use PSN <code className="font-bold text-primary">10004703</code> with password <code className="font-bold text-primary">password</code>.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -92,7 +89,7 @@ export default function SignInForm() {
                 {...register("psn")} 
                 onInput={handlePsnInput} 
                 maxLength={8} 
-                placeholder="e.g., 10000001" 
+                placeholder="e.g., 10004703" 
               />
               {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
             </div>
