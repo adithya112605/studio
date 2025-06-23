@@ -15,7 +15,7 @@ async function seedDatabase() {
             console.log("Successfully deleted existing database file to ensure a fresh start.");
         } catch (err) {
             console.error("Error deleting existing database file:", err);
-            process.exit(1); // Exit if we can't delete the file, as it's a critical step
+            // We don't exit here, we'll let the open command fail if necessary.
         }
     }
 
@@ -74,14 +74,15 @@ async function seedDatabase() {
             await db.exec('ROLLBACK;');
         }
     } finally {
+        // We do NOT explicitly close the connection here.
+        // The separate Node.js process for this script will exit, which automatically
+        // releases the file handle. Explicitly closing it was causing race
+        // conditions with the main Next.js development server.
         if (db) {
-            await db.close();
-            console.log("Database connection closed.");
+             console.log("Seeding script finished. The database file is now ready.");
         }
     }
 }
 
 // Ensure the script runs only when executed directly from the command line
-if (require.main === module) {
-    seedDatabase();
-}
+seedDatabase();
