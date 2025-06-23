@@ -18,7 +18,7 @@ export default function SignInPage() {
   }, [user, loading, router]);
   
   // This will now show a loader ONLY when auth state is being checked,
-  // or after login while redirecting.
+  // or after a successful login while redirecting.
   if (loading || user) { 
       return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">

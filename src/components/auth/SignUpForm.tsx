@@ -61,16 +61,16 @@ const generatePassword = (length = 14): string => {
 };
 
 export default function SignUpForm() {
-  const { checkPSNExists, signup } = useAuth();
+  const { checkPSNExists, signup, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [psnForStep2, setPsnForStep2] = useState<number>(0);
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthResult | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const formStep1 = useForm<SignUpStep1Values>({
     resolver: zodResolver(signUpStep1Schema),
@@ -103,28 +103,22 @@ export default function SignUpForm() {
   };
 
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
-    setIsLoading(true);
+    setIsVerifying(true);
     const psnNumber = Number(data.psn);
     const { exists, error } = await checkPSNExists(psnNumber);
-    setIsLoading(false);
-
-    if (error) {
-        toast({
-            title: "Error Checking PSN",
-            description: error,
-            variant: "destructive",
-        });
-    } else if (exists) {
+    
+    if (exists) {
       setPsnForStep2(psnNumber);
       setStep(2);
     } else {
       toast({
         title: "PSN Not Found",
-        description: "This PSN is not found in our database. Please run 'npm run db:seed' or contact admin if you believe this is an error.",
+        description: error || "This PSN is not found in our database. Please contact an administrator.",
         variant: "destructive",
         duration: 8000
       });
     }
+    setIsVerifying(false);
   };
 
   const handlePasswordSubmit: SubmitHandler<SignUpStep2Values> = async (data) => {
@@ -136,20 +130,8 @@ export default function SignUpForm() {
       });
       return;
     }
-    setIsLoading(true);
-    const result = await signup(psnForStep2, data.password);
-    setIsLoading(false);
-    
-    if (result.success) {
-      toast({ title: "Account Creation Attempted", description: result.message });
-      router.push('/dashboard');
-    } else {
-      toast({
-        title: "Signup Failed",
-        description: result.message,
-        variant: "destructive",
-      });
-    }
+    // AuthContext's signup function now handles loading state and redirection via context changes.
+    await signup(psnForStep2, data.password);
   };
 
   return (
@@ -175,8 +157,8 @@ export default function SignUpForm() {
                 />
                 {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isVerifying}>
+                {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Verify PSN
               </Button>
             </form>
@@ -249,8 +231,8 @@ export default function SignUpForm() {
                 </div>
                 {formStep2.formState.errors.confirmPassword && <p className="text-sm text-destructive">{formStep2.formState.errors.confirmPassword.message}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading || !passwordStrength?.isValid}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={loading || !passwordStrength?.isValid}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account & Sign In
               </Button>
               <Button variant="outline" onClick={() => setStep(1)} className="w-full" type="button">

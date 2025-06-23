@@ -48,7 +48,10 @@ function formatFirebaseError(error: any): string {
 export async function checkPSNExistsAction(psn: number): Promise<{ exists: boolean; error?: string }> {
   try {
     const user = await getUserByPsn(psn);
-    return { exists: !!user };
+    if (!user) {
+        return { exists: false, error: "This PSN is not found in the database. Please contact an administrator or run the db:seed script." };
+    }
+    return { exists: true };
   } catch (error: any) {
     console.error("[Action Error] checkPSNExistsAction:", error.message);
     return { exists: false, error: formatFirebaseError(error) };
@@ -56,7 +59,7 @@ export async function checkPSNExistsAction(psn: number): Promise<{ exists: boole
 }
 
 // Action for user login
-export async function loginAction(psn: number, password?: string): Promise<{ success: boolean; message: string; user?: any }> {
+export async function loginAction(psn: number, password?: string): Promise<{ success: boolean; message: string; user?: User }> {
   const auth = getAuthInstance();
   if (!auth) {
     return { success: false, message: "Authentication service is unavailable." };
@@ -103,7 +106,7 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
 }
 
 // Action for user signup
-export async function signupAction(psn: number, password?: string): Promise<{ success: boolean; message: string }> {
+export async function signupAction(psn: number, password?: string): Promise<{ success: boolean; message: string, user?: User }> {
   const auth = getAuthInstance();
   if (!auth) {
     return { success: false, message: "Authentication service is unavailable." };
@@ -126,7 +129,7 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
 
   try {
     await createUserWithEmailAndPassword(auth, lntUser.businessEmail, password);
-    return { success: true, message: "Account created successfully! You are now logged in." };
+    return { success: true, message: "Account created successfully! You are now logged in.", user: lntUser };
   } catch (error: any)
   {
     let errorMessage = "An unknown error occurred during signup.";
