@@ -139,18 +139,11 @@ async function seedDatabase() {
   }
   console.log(`Seeded ${mockTickets.length} tickets and their attachments.`);
 
-  console.log("Database seeding completed successfully!");
+  // Close the database connection once seeding is complete
+  await db.close();
+  console.log("Database connection closed.");
 
-  // Touch a file that the Next.js dev server watches to trigger a restart.
-  // This ensures the server picks up the newly created database.
-  try {
-    const configPath = path.join(process.cwd(), 'next.config.ts');
-    const time = new Date();
-    fs.utimesSync(configPath, time, time);
-    console.log("Triggered server restart to load new database.");
-  } catch (err) {
-    console.warn("Could not trigger server restart. You may need to manually restart the development server.", err);
-  }
+  console.log("Database seeding completed successfully!");
 }
 
 // This check ensures the seed script only runs when executed directly from the
