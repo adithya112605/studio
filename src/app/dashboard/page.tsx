@@ -2,15 +2,23 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Ticket, Supervisor, Employee, JobCode } from "@/types";
+import type { User, Ticket, Supervisor, Employee, JobCode, Project } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { mockTickets, mockEmployees, mockSupervisors, mockJobCodes, mockProjects } from "@/data/mockData";
-import { FileText, PlusCircle, Users, BarChart2, CheckCircle, UserSquare2, Eye, ArrowRight } from "lucide-react";
+import { FileText, PlusCircle, Users, BarChart2, CheckCircle, UserSquare2, Eye, ArrowRight, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import { useState, useEffect } from 'react';
+import { 
+    getTicketsByEmployeePsnAction, 
+    getAllTicketsAction,
+    getAllEmployeesAction, 
+    getProjectByIdAction, 
+    getJobCodeByIdAction, 
+    getSupervisorByPsnAction 
+} from "@/lib/actions";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
@@ -24,8 +32,40 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
 };
 
 const EmployeeDashboard = ({ user }: { user: Employee }) => {
-  const userTickets = mockTickets.filter(ticket => ticket.psn === user.psn);
-  const jobCode = mockJobCodes.find(jc => jc.id === user.jobCodeId);
+  const [userTickets, setUserTickets] = useState<Ticket[]>([]);
+  const [jobCode, setJobCode] = useState<JobCode | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const [ticketsData, jobCodeData, projectData] = await Promise.all([
+                getTicketsByEmployeePsnAction(user.psn),
+                user.jobCodeId ? getJobCodeByIdAction(user.jobCodeId) : Promise.resolve(null),
+                user.project ? getProjectByIdAction(user.project) : Promise.resolve(null)
+            ]);
+            setUserTickets(ticketsData);
+            setJobCode(jobCodeData);
+            setProject(projectData);
+        } catch (error) {
+            console.error("Failed to fetch employee dashboard data:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchData();
+  }, [user]);
+  
+  if (isLoading) {
+      return (
+          <div className="flex justify-center items-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="ml-2">Loading Dashboard...</p>
+          </div>
+      )
+  }
 
   return (
     <div className="space-y-6">
@@ -41,7 +81,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
           <p><strong>PSN:</strong> {user.psn}</p>
           <p><strong>Name:</strong> {user.name}</p>
           <p><strong>Business Email:</strong> {user.businessEmail}</p>
-          <p><strong>Project:</strong> {mockProjects.find(p => p.id === user.project)?.name || user.project}</p>
+          <p><strong>Project:</strong> {project?.name || user.project}</p>
           <p><strong>Job Code:</strong> {jobCode?.code} ({jobCode?.description})</p>
           <p><strong>Grade:</strong> {user.grade}</p>
           <p><strong>Immediate Supervisor (IS):</strong> {user.isName || 'N/A'} ({user.isPSN || 'N/A'})</p>
@@ -121,27 +161,57 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
 };
 
 const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
-  let relevantTickets: Ticket[] = [];
-  let managedEmployees: Employee[] = [];
+  const [relevantTickets, setRelevantTickets] = useState<Ticket[]>([]);
+  const [managedEmployees, setManagedEmployees] = useState<Employee[]>([]);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (user.functionalRole === 'IC Head') {
-    relevantTickets = mockTickets;
-    managedEmployees = mockEmployees;
-  } else if (user.functionalRole === 'DH') {
-    const dhProjects = mockProjects.filter(p => user.cityAccess?.includes(p.city));
-    const dhProjectIds = dhProjects.map(p => p.id);
-    relevantTickets = mockTickets.filter(ticket => dhProjectIds.includes(ticket.project));
-    managedEmployees = mockEmployees.filter(emp => emp.dhPSN === user.psn || (emp.project && dhProjectIds.includes(emp.project)));
-  } else if (user.functionalRole === 'NS') {
-    relevantTickets = mockTickets.filter(ticket => 
-        (mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === user.psn) || ticket.currentAssigneePSN === user.psn
-    );
-    managedEmployees = mockEmployees.filter(emp => emp.nsPSN === user.psn);
-  } else if (user.functionalRole === 'IS') {
-    relevantTickets = mockTickets.filter(ticket => 
-        (mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === user.psn) || ticket.currentAssigneePSN === user.psn
-    );
-     managedEmployees = mockEmployees.filter(emp => emp.isPSN === user.psn);
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [allTickets, allEmployees] = await Promise.all([
+            getAllTicketsAction(),
+            getAllEmployeesAction()
+        ]);
+
+        let supervisorRelevantTickets: Ticket[] = [];
+        let supervisorManagedEmployees: Employee[] = [];
+        
+        if (user.functionalRole === 'IC Head') {
+            supervisorRelevantTickets = allTickets;
+            supervisorManagedEmployees = allEmployees;
+        } else if (user.functionalRole === 'DH') {
+            supervisorRelevantTickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === user.psn);
+            supervisorManagedEmployees = allEmployees.filter(emp => emp.dhPSN === user.psn);
+        } else if (user.functionalRole === 'NS') {
+            supervisorRelevantTickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.nsPSN === user.psn);
+            supervisorManagedEmployees = allEmployees.filter(emp => emp.nsPSN === user.psn);
+        } else if (user.functionalRole === 'IS') {
+            supervisorRelevantTickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.isPSN === user.psn);
+            supervisorManagedEmployees = allEmployees.filter(emp => emp.isPSN === user.psn);
+        }
+
+        setRelevantTickets(supervisorRelevantTickets);
+        setManagedEmployees(supervisorManagedEmployees);
+        setTotalEmployees(allEmployees.length);
+
+      } catch (error) {
+        console.error("Failed to fetch supervisor dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  if (isLoading) {
+      return (
+          <div className="flex justify-center items-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="ml-2">Loading Dashboard...</p>
+          </div>
+      )
   }
   
   const openTicketsCount = relevantTickets.filter(t => ['Open', 'In Progress', 'Pending', 'Escalated to NS', 'Escalated to DH', 'Escalated to IC Head'].includes(t.status)).length;
@@ -156,7 +226,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
         {[
           { title: "Active Tickets", value: openTicketsCount, icon: <FileText className="h-4 w-4 text-muted-foreground" />, desc: "Tickets requiring attention" },
           { title: "Resolved Today", value: resolvedTodayCount, icon: <CheckCircle className="h-4 w-4 text-muted-foreground" />, desc: "Tickets closed today" },
-          { title: "Total Employees", value: mockEmployees.length, icon: <Users className="h-4 w-4 text-muted-foreground" />, desc: "Employees in the system" }
+          { title: "Total Employees", value: totalEmployees, icon: <Users className="h-4 w-4 text-muted-foreground" />, desc: "Employees in the system" }
         ].map((item, index) => (
           <ScrollReveal key={item.title} animationInClass="animate-fadeInUp" once={false} delayIn={100 + index * 100}>
             <Card className="shadow-md hover:shadow-xl dark:hover:shadow-primary/20 transform transition-all duration-300 ease-in-out hover:-translate-y-1">

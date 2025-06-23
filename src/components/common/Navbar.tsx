@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PanelLeft, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserCog, ChevronDown, Building, LogIn, Info, Sparkles, Sun, Moon } from 'lucide-react';
+import { PanelLeft, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserCog, ChevronDown, Building, LogIn, Info, Sparkles, Sun, Moon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
-import type { User, Supervisor } from '@/types';
+import type { User, Supervisor, Employee } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,9 +24,9 @@ import {
 import { useRouter, usePathname } from 'next/navigation';
 import LTLogo from './LTLogo';
 import { cn } from '@/lib/utils';
-import { mockEmployees } from '@/data/mockData';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getAllEmployeesAction } from '@/lib/actions';
 
 
 const Navbar = () => {
@@ -297,11 +297,11 @@ const Navbar = () => {
   );
 };
 
-const getActingRoles = (supervisor: Supervisor): string[] => {
+const getActingRoles = (supervisor: Supervisor, allEmployees: Employee[]): string[] => {
   const actingRoles = new Set<string>();
-  if (!mockEmployees || mockEmployees.length === 0) return [];
+  if (!allEmployees || allEmployees.length === 0) return [];
 
-  mockEmployees.forEach(emp => {
+  allEmployees.forEach(emp => {
     if (emp.isPSN === supervisor.psn && supervisor.functionalRole !== 'IS') actingRoles.add('IS');
     if (emp.nsPSN === supervisor.psn && supervisor.functionalRole !== 'NS') actingRoles.add('NS');
     if (emp.dhPSN === supervisor.psn && supervisor.functionalRole !== 'DH') actingRoles.add('DH');
@@ -313,11 +313,26 @@ const DropdownMenuUser = ({ user, logout }: {
     user: User;
     logout: () => void;
 }) => {
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const supervisorUser = user.role !== 'Employee' ? user as Supervisor : null;
+
+  useEffect(() => {
+    if (supervisorUser) {
+        setIsLoading(true);
+        getAllEmployeesAction()
+            .then(data => setAllEmployees(data))
+            .catch(err => console.error("Failed to fetch employees for navbar", err))
+            .finally(() => setIsLoading(false));
+    } else {
+        setIsLoading(false);
+    }
+  }, [supervisorUser]);
+
   let roleDisplay = user.role === 'Employee' ? 'Employee' : `${supervisorUser?.title} (${supervisorUser?.functionalRole})`;
 
-  if (supervisorUser) {
-    const acting = getActingRoles(supervisorUser);
+  if (supervisorUser && !isLoading) {
+    const acting = getActingRoles(supervisorUser, allEmployees);
     if (acting.length > 0) {
       roleDisplay += ` (acts as ${acting.join(', ')})`;
     }
@@ -349,9 +364,16 @@ const DropdownMenuUser = ({ user, logout }: {
             <p className="text-xs leading-none text-muted-foreground">
               PSN: {user.psn.toString()}
             </p>
-            <p className="text-xs leading-none text-muted-foreground pt-0.5 truncate" title={roleDisplay}>
-              {roleDisplay}
-            </p>
+            {isLoading && supervisorUser ? (
+                <div className="flex items-center pt-1">
+                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                    <span className="text-xs text-muted-foreground">Loading role details...</span>
+                </div>
+            ) : (
+                <p className="text-xs leading-none text-muted-foreground pt-0.5 truncate" title={roleDisplay}>
+                {roleDisplay}
+                </p>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-border" />

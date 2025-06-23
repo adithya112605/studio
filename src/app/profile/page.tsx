@@ -6,12 +6,18 @@ import type { User, Employee, Supervisor, JobCode, Project as ProjectType } from
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Mail, Briefcase, Building, Users, CalendarDays, Edit, ShieldCheck, BarChart3, Activity, BadgePercent } from "lucide-react";
-import { mockJobCodes, mockProjects, mockSupervisors, mockEmployees } from "@/data/mockData";
+import { Mail, Briefcase, Building, Users, CalendarDays, Edit, ShieldCheck, BarChart3, Activity, BadgePercent, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import { useState, useEffect } from 'react';
+import { 
+    getAllEmployeesAction, 
+    getJobCodeByIdAction, 
+    getProjectByIdAction, 
+    getSupervisorByPsnAction 
+} from "@/lib/actions";
 
 const getInitials = (name: string = "") => {
   const names = name.split(' ');
@@ -22,11 +28,11 @@ const getInitials = (name: string = "") => {
   return initials || 'U'; 
 };
 
-const getActingRolesForDisplay = (supervisor: Supervisor): string => {
+const getActingRolesForDisplay = (supervisor: Supervisor, allEmployees: Employee[]): string => {
   const actingRoles = new Set<string>();
-  if (!mockEmployees || mockEmployees.length === 0) return "";
+  if (!allEmployees || allEmployees.length === 0) return "";
 
-  mockEmployees.forEach(emp => {
+  allEmployees.forEach(emp => {
     if (emp.isPSN === supervisor.psn && supervisor.functionalRole !== 'IS') actingRoles.add('IS');
     if (emp.nsPSN === supervisor.psn && supervisor.functionalRole !== 'NS') actingRoles.add('NS');
     if (emp.dhPSN === supervisor.psn && supervisor.functionalRole !== 'DH') actingRoles.add('DH');
@@ -38,6 +44,11 @@ const getActingRolesForDisplay = (supervisor: Supervisor): string => {
 
 export default function MyProfilePage() {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [jobCodeInfo, setJobCodeInfo] = useState<JobCode | null>(null);
+  const [projectInfo, setProjectInfo] = useState<ProjectType | null>(null);
+  const [supervisorChain, setSupervisorChain] = useState<{is?: Supervisor | null, ns?: Supervisor | null, dh?: Supervisor | null}>({});
 
   const handleEditProfile = () => {
     toast({
@@ -50,39 +61,61 @@ export default function MyProfilePage() {
   return (
     <ProtectedPage>
       {(currentUser: User) => {
+        useEffect(() => {
+            const fetchData = async () => {
+                setIsLoading(true);
+                try {
+                    const isEmployee = currentUser.role === 'Employee';
+                    const employeeUser = isEmployee ? currentUser as Employee : null;
+                    const supervisorUser = !isEmployee ? currentUser as Supervisor : null;
+
+                    const [employeesData] = await Promise.all([getAllEmployeesAction()]);
+                    setAllEmployees(employeesData);
+
+                    if (employeeUser) {
+                        const [jobCodeData, projectData, isData, nsData, dhData] = await Promise.all([
+                            employeeUser.jobCodeId ? getJobCodeByIdAction(employeeUser.jobCodeId) : Promise.resolve(null),
+                            employeeUser.project ? getProjectByIdAction(employeeUser.project) : Promise.resolve(null),
+                            employeeUser.isPSN ? getSupervisorByPsnAction(employeeUser.isPSN) : Promise.resolve(null),
+                            employeeUser.nsPSN ? getSupervisorByPsnAction(employeeUser.nsPSN) : Promise.resolve(null),
+                            employeeUser.dhPSN ? getSupervisorByPsnAction(employeeUser.dhPSN) : Promise.resolve(null),
+                        ]);
+                        setJobCodeInfo(jobCodeData);
+                        setProjectInfo(projectData);
+                        setSupervisorChain({ is: isData, ns: nsData, dh: dhData });
+                    } else if (supervisorUser) {
+                        if (supervisorUser.branchProject) {
+                            const foundProject = await getProjectByIdAction(supervisorUser.branchProject);
+                             if (foundProject) setProjectInfo(foundProject);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch profile data:", error);
+                    toast({ title: "Error", description: "Could not load detailed profile information.", variant: "destructive" });
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchData();
+        }, [currentUser, toast]);
+
         const isEmployee = currentUser.role === 'Employee';
         const employeeUser = isEmployee ? currentUser as Employee : null;
         const supervisorUser = !isEmployee ? currentUser as Supervisor : null;
 
-        let jobCodeInfo: JobCode | undefined;
-        let projectInfo: ProjectType | undefined;
-        let supervisorChain: {is?: Supervisor, ns?: Supervisor, dh?: Supervisor} = {};
-
-        if (employeeUser) {
-          jobCodeInfo = mockJobCodes.find(jc => jc.id === employeeUser.jobCodeId);
-          projectInfo = mockProjects.find(p => p.id === employeeUser.project);
-          supervisorChain.is = mockSupervisors.find(s => s.psn === employeeUser.isPSN);
-          supervisorChain.ns = mockSupervisors.find(s => s.psn === employeeUser.nsPSN);
-          supervisorChain.dh = mockSupervisors.find(s => s.psn === employeeUser.dhPSN);
-        } else if (supervisorUser) {
-          if (supervisorUser.branchProject) { 
-             const foundProject = mockProjects.find(p => p.id === supervisorUser.branchProject);
-             if (foundProject) {
-                projectInfo = foundProject;
-             } else if (supervisorUser.projectsHandledIds && supervisorUser.projectsHandledIds.length > 0) {
-                projectInfo = mockProjects.find(p => p.id === supervisorUser.projectsHandledIds![0]);
-             }
-          } else if (supervisorUser.projectsHandledIds && supervisorUser.projectsHandledIds.length > 0) {
-             projectInfo = mockProjects.find(p => p.id === supervisorUser.projectsHandledIds![0]);
-          }
-        }
-
-
         const supervisorRoleTitle = supervisorUser 
-          ? `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForDisplay(supervisorUser)}` 
+          ? `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForDisplay(supervisorUser, allEmployees)}` 
           : '';
 
-
+        if (isLoading) {
+            return (
+                <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="ml-2">Loading Your Profile...</p>
+                </div>
+            )
+        }
+        
         return (
           <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
             <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
@@ -176,10 +209,11 @@ export default function MyProfilePage() {
                             <Users className="w-5 h-5 mr-3 text-primary shrink-0 mt-0.5" />
                             <div><strong className="text-sm">Projects Overseen:</strong>
                                 <div className="flex flex-wrap gap-1 mt-1">
-                                {supervisorUser.projectsHandledIds.map(id => {
-                                    const p = mockProjects.find(mp => mp.id === id);
-                                    return p ? <Badge key={id} variant="outline" className="text-xs">{p.name}</Badge> : null;
+                                {/* This is a placeholder as we don't fetch all projects here for performance */}
+                                {supervisorUser.projectsHandledIds.slice(0,5).map(id => {
+                                    return <Badge key={id} variant="outline" className="text-xs">{id}</Badge> ;
                                 })}
+                                {supervisorUser.projectsHandledIds.length > 5 && <Badge variant="outline" className="text-xs">...and more</Badge>}
                                 </div>
                             </div>
                         </div>

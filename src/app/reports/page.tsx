@@ -2,23 +2,23 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { Supervisor, User, Ticket } from "@/types";
+import type { Supervisor, User, Ticket, Employee } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart, XCircle } from "lucide-react";
+import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart, XCircle, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
-import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from "@/data/mockData";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer, PieChart as RechartsPieChart, Pie } from 'recharts'; 
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import { getAllTicketsAction, getAllEmployeesAction } from "@/lib/actions";
 
 const filterOptions = [
   { label: "Agent (Supervisor)", value: "agent", icon: <UserIcon className="mr-2 h-4 w-4" /> },
@@ -66,6 +66,28 @@ export default function ReportsPage() {
   const { toast } = useToast();
   const [openFilterPopover, setOpenFilterPopover] = useState(false);
   const [activeFilters, setActiveFilters] = useState(initialFilterState);
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const [tickets, employees] = await Promise.all([
+                getAllTicketsAction(),
+                getAllEmployeesAction()
+            ]);
+            setAllTickets(tickets);
+            setAllEmployees(employees);
+        } catch (e) {
+            toast({ title: "Error", description: "Could not load report data.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchData();
+  }, [toast]);
 
   const handleSelectFilter = (value: string) => {
     toast({
@@ -116,24 +138,24 @@ export default function ReportsPage() {
     let tickets: Ticket[] = [];
     
     if (currentUser.functionalRole === 'IC Head') {
-        tickets = mockTickets;
+        tickets = allTickets;
     } else if (currentUser.functionalRole === 'DH') {
-        const dhManagedEmployeePSNs = mockEmployees.filter(e => e.dhPSN === currentUser.psn).map(e => e.psn);
-        tickets = mockTickets.filter(ticket => 
+        const dhManagedEmployeePSNs = allEmployees.filter(e => e.dhPSN === currentUser.psn).map(e => e.psn);
+        tickets = allTickets.filter(ticket => 
             ticket.currentAssigneePSN === currentUser.psn ||
             (ticket.status === 'Escalated to DH' && dhManagedEmployeePSNs.includes(ticket.psn)) ||
-            (currentUser.cityAccess?.some(city => mockProjects.find(p => p.id === ticket.project)?.city === city)) 
+            (allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn)
         );
     } else if (currentUser.functionalRole === 'NS') {
-        const nsManagedEmployeePSNs = mockEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn);
-        tickets = mockTickets.filter(ticket =>
+        const nsManagedEmployeePSNs = allEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn);
+        tickets = allTickets.filter(ticket =>
             ticket.currentAssigneePSN === currentUser.psn ||
             (ticket.status === 'Escalated to NS' && nsManagedEmployeePSNs.includes(ticket.psn))
         );
     } else if (currentUser.functionalRole === 'IS') {
-         tickets = mockTickets.filter(ticket =>
+         tickets = allTickets.filter(ticket =>
             ticket.currentAssigneePSN === currentUser.psn ||
-            (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
+            (ticket.status === 'Open' && allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
         );
     }
     
@@ -167,6 +189,15 @@ export default function ReportsPage() {
             }, {} as Record<string, number>)
         ).map(([name, value]) => ({ name, tickets: value, fill: `var(--color-${name})` }));
 
+
+        if (isLoading) {
+            return (
+                <div className="flex justify-center items-center h-full min-h-[60vh]">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="ml-2">Loading Report Data...</p>
+                </div>
+            )
+        }
 
         return (
             <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 space-y-8">

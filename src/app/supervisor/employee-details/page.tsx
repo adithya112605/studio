@@ -2,46 +2,70 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Supervisor, Employee, JobCode } from "@/types"; 
+import type { User, Supervisor, Employee, JobCode, Project } from "@/types"; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { mockEmployees, mockJobCodes, mockProjects, mockGrades } from "@/data/mockData";
-import { Users, ArrowLeft } from "lucide-react";
+import { Users, ArrowLeft, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ScrollReveal from "@/components/common/ScrollReveal";
-
+import { getAllEmployeesAction, getAllProjectsAction, getAllJobCodesAction, getAllGradesAction } from "@/lib/actions";
 
 export default function SupervisorEmployeeDetailsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState<string | "all">("all");
   const [selectedJobCode, setSelectedJobCode] = useState<string | "all">("all"); 
   const [selectedGrade, setSelectedGrade] = useState<string | "all">("all");
-
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [allJobCodes, setAllJobCodes] = useState<JobCode[]>([]);
+  const [allGrades, setAllGrades] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <ProtectedPage allowedRoles={['IS', 'NS', 'DH', 'IC Head']}>
       {(currentUser: User) => {
         const currentSupervisorUser = currentUser as Supervisor;
 
+        useEffect(() => {
+          const fetchData = async () => {
+            setIsLoading(true);
+            try {
+              const [employees, projects, jobCodes, grades] = await Promise.all([
+                getAllEmployeesAction(),
+                getAllProjectsAction(),
+                getAllJobCodesAction(),
+                getAllGradesAction(),
+              ]);
+              setAllEmployees(employees);
+              setAllProjects(projects);
+              setAllJobCodes(jobCodes);
+              setAllGrades(grades);
+            } catch (error) {
+              console.error("Failed to load employee details data:", error);
+            } finally {
+              setIsLoading(false);
+            }
+          };
+          fetchData();
+        }, []);
+
         const managedEmployeesForFiltering = useMemo(() => {
           let employees: Employee[] = [];
           if (currentSupervisorUser.functionalRole === 'IC Head') {
-            employees = mockEmployees;
+            employees = allEmployees;
           } else if (currentSupervisorUser.functionalRole === 'DH') {
-            const dhProjects = mockProjects.filter(p => currentSupervisorUser.cityAccess?.includes(p.city));
-            const dhProjectIds = dhProjects.map(p => p.id);
-            employees = mockEmployees.filter(emp => emp.dhPSN === currentSupervisorUser.psn || (emp.project && dhProjectIds.includes(emp.project)));
+            employees = allEmployees.filter(emp => emp.dhPSN === currentSupervisorUser.psn);
           } else if (currentSupervisorUser.functionalRole === 'NS') {
-            employees = mockEmployees.filter(emp => emp.nsPSN === currentSupervisorUser.psn);
+            employees = allEmployees.filter(emp => emp.nsPSN === currentSupervisorUser.psn);
           } else if (currentSupervisorUser.functionalRole === 'IS') {
-            employees = mockEmployees.filter(emp => emp.isPSN === currentSupervisorUser.psn);
+            employees = allEmployees.filter(emp => emp.isPSN === currentSupervisorUser.psn);
           }
           return employees;
-        }, [currentSupervisorUser]);
+        }, [currentSupervisorUser, allEmployees]);
         
         const filteredAndSearchedEmployees = useMemo(() => {
           return managedEmployeesForFiltering.filter(emp => {
@@ -57,19 +81,28 @@ export default function SupervisorEmployeeDetailsPage() {
         
         const availableProjects = useMemo(() => {
             const projectIds = new Set(managedEmployeesForFiltering.map(emp => emp.project));
-            return mockProjects.filter(p => projectIds.has(p.id)).sort((a,b) => a.name.localeCompare(b.name));
-        }, [managedEmployeesForFiltering]);
+            return allProjects.filter(p => projectIds.has(p.id)).sort((a,b) => a.name.localeCompare(b.name));
+        }, [managedEmployeesForFiltering, allProjects]);
 
         const availableJobCodes = useMemo(() => {
             const jobCodeIdsInUse = new Set(managedEmployeesForFiltering.map(emp => emp.jobCodeId));
-            return mockJobCodes.filter(jc => jobCodeIdsInUse.has(jc.id)).sort((a,b) => a.description.localeCompare(b.description));
-        }, [managedEmployeesForFiltering]);
+            return allJobCodes.filter(jc => jobCodeIdsInUse.has(jc.id)).sort((a,b) => a.description.localeCompare(b.description));
+        }, [managedEmployeesForFiltering, allJobCodes]);
 
         const availableGrades = useMemo(() => {
             const gradesInUse = new Set(managedEmployeesForFiltering.map(emp => emp.grade));
-            return mockGrades.filter(g => gradesInUse.has(g)); 
-        }, [managedEmployeesForFiltering]);
+            return allGrades.filter(g => gradesInUse.has(g)); 
+        }, [managedEmployeesForFiltering, allGrades]);
 
+
+        if (isLoading) {
+            return (
+              <div className="flex justify-center items-center h-full min-h-[60vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-2">Loading Employee Data...</p>
+              </div>
+            )
+        }
 
         return (
             <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 space-y-6">
@@ -151,8 +184,8 @@ export default function SupervisorEmployeeDetailsPage() {
                             </TableHeader>
                             <TableBody>
                             {filteredAndSearchedEmployees.map(emp => {
-                                const project = mockProjects.find(p => p.id === emp.project);
-                                const jobCode = mockJobCodes.find(jc => jc.id === emp.jobCodeId);
+                                const project = allProjects.find(p => p.id === emp.project);
+                                const jobCode = allJobCodes.find(jc => jc.id === emp.jobCodeId);
                                 return (
                                     <TableRow key={emp.psn}>
                                         <TableCell className="font-medium">{emp.psn}</TableCell>

@@ -5,22 +5,22 @@ import ProtectedPage from "@/components/common/ProtectedPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, KeyRound, Palette, BellDot, ShieldAlert, Settings2 as SettingsIcon, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle, UserCircle, Cog, SlidersHorizontal, Accessibility, FileText, Edit, CreditCard } from "lucide-react";
+import { User, KeyRound, Palette, BellDot, ShieldAlert, Settings2 as SettingsIcon, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle, UserCircle, Cog, SlidersHorizontal, Accessibility, FileText, Edit, CreditCard, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { User as AuthUser, Employee, Supervisor, JobCode } from "@/types";
+import type { User as AuthUser, Employee, Supervisor, JobCode, Project } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from "react";
-import { mockJobCodes, mockProjects, mockEmployees } from "@/data/mockData";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ScrollReveal from "@/components/common/ScrollReveal";
 import { cn } from "@/lib/utils";
+import { getAllEmployeesAction, getJobCodeByIdAction, getProjectByIdAction } from "@/lib/actions";
 
-const getActingRolesForSettingsDisplay = (supervisor: Supervisor): string => {
+const getActingRolesForSettingsDisplay = (supervisor: Supervisor, allEmployees: Employee[]): string => {
   const actingRoles = new Set<string>();
-   if (!mockEmployees || mockEmployees.length === 0) return "";
-  mockEmployees.forEach(emp => {
+   if (!allEmployees || allEmployees.length === 0) return "";
+  allEmployees.forEach(emp => {
     if (emp.isPSN === supervisor.psn && supervisor.functionalRole !== 'IS') actingRoles.add('IS');
     if (emp.nsPSN === supervisor.psn && supervisor.functionalRole !== 'NS') actingRoles.add('NS');
     if (emp.dhPSN === supervisor.psn && supervisor.functionalRole !== 'DH') actingRoles.add('DH');
@@ -65,21 +65,60 @@ const SettingsPage = () => {
   };
 
   const ProfileSection = ({ currentUser }: { currentUser: AuthUser }) => {
+    const [jobCodeInfo, setJobCodeInfo] = useState<JobCode | null>(null);
+    const [projectInfo, setProjectInfo] = useState<Project | null>(null);
+    const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    
     const isEmployee = currentUser.role === 'Employee';
     const employeeUser = currentUser as Employee;
     const supervisorUser = currentUser as Supervisor;
 
-    let jobCodeInfo: JobCode | undefined;
-    if(isEmployee && employeeUser.jobCodeId){
-        jobCodeInfo = mockJobCodes.find(jc => jc.id === employeeUser.jobCodeId);
-    }
-    let projectInfo;
-    if(isEmployee && employeeUser.project){
-        projectInfo = mockProjects.find(p => p.id === employeeUser.project);
-    }
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoading(true);
+            try {
+                if (!isEmployee) {
+                    const employees = await getAllEmployeesAction();
+                    setAllEmployees(employees);
+                }
+                if (isEmployee && employeeUser.jobCodeId) {
+                    const jc = await getJobCodeByIdAction(employeeUser.jobCodeId);
+                    setJobCodeInfo(jc);
+                }
+                if (isEmployee && employeeUser.project) {
+                    const p = await getProjectByIdAction(employeeUser.project);
+                    setProjectInfo(p);
+                }
+                if (!isEmployee && supervisorUser.branchProject) {
+                    const p = await getProjectByIdAction(supervisorUser.branchProject);
+                    setProjectInfo(p);
+                }
+            } catch (error) {
+                console.error("Error fetching profile details", error);
+                toast({title: "Error", description: "Could not load detailed profile info.", variant: "destructive"})
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [currentUser, isEmployee, employeeUser, supervisorUser, toast]);
+
     let supervisorRoleDisplay = "";
     if (!isEmployee) {
-        supervisorRoleDisplay = `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForSettingsDisplay(supervisorUser)}`;
+        supervisorRoleDisplay = `${supervisorUser.title} (${supervisorUser.functionalRole})${getActingRolesForSettingsDisplay(supervisorUser, allEmployees)}`;
+    }
+
+    if (isLoading) {
+        return (
+            <div className="space-y-6">
+                 <h2 className="text-2xl font-semibold text-foreground">Public Profile</h2>
+                 <div className="p-6 border rounded-lg bg-card space-y-4">
+                    <Loader2 className="h-6 w-6 animate-spin"/>
+                    <p>Loading profile details...</p>
+                 </div>
+            </div>
+        )
     }
 
     return (
@@ -95,7 +134,7 @@ const SettingsPage = () => {
                 {isEmployee && projectInfo && <div><Label>Current Project</Label><Input value={`${projectInfo.name} (${projectInfo.city})`} readOnly className="mt-1"/></div>}
                 {isEmployee && jobCodeInfo && <div><Label>Job Code</Label><Input value={`${jobCodeInfo.code} - ${jobCodeInfo.description}`} readOnly className="mt-1"/></div>}
                 {isEmployee && employeeUser.grade && <div><Label>Grade</Label><Input value={employeeUser.grade} readOnly className="mt-1"/></div>}
-                {!isEmployee && supervisorUser.branchProject && <div><Label>Branch/Primary Project</Label><Input value={mockProjects.find(p=>p.id === supervisorUser.branchProject)?.name || supervisorUser.branchProject} readOnly className="mt-1"/></div>}
+                {!isEmployee && projectInfo && <div><Label>Branch/Primary Project</Label><Input value={projectInfo.name} readOnly className="mt-1"/></div>}
             </div>
             <Button variant="outline" onClick={() => handleGenericSave("Profile", "Edit Profile")} className="mt-4"><Edit className="mr-2"/>Edit Profile (Simulated)</Button>
         </div>

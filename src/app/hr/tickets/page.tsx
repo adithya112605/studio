@@ -6,14 +6,14 @@ import type { User, Ticket, Supervisor, Employee } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { mockTickets, mockEmployees, mockProjects, mockSupervisors } from "@/data/mockData";
-import { FileText, ArrowLeft, Filter, Search, ArrowRight } from "lucide-react";
+import { FileText, ArrowLeft, Filter, Search, ArrowRight, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import { getAllTicketsAction, getAllSupervisorsAction, getAllEmployeesAction } from "@/lib/actions";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
@@ -31,32 +31,38 @@ interface SupervisorTicketsPageContentProps {
   searchTerm: string;
   statusFilter: Ticket['status'] | "all";
   priorityFilter: Ticket['priority'] | "all";
+  allTickets: Ticket[];
+  allEmployees: Employee[];
+  allSupervisors: Supervisor[];
 }
 
 const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> = ({
   currentUser,
   searchTerm,
   statusFilter,
-  priorityFilter
+  priorityFilter,
+  allTickets,
+  allEmployees,
+  allSupervisors,
 }) => {
   const filteredTickets = useMemo(() => {
     let tickets: Ticket[] = [];
     if (currentUser.functionalRole === 'IC Head') {
-        tickets = mockTickets;
+        tickets = allTickets;
     } else if (currentUser.functionalRole === 'DH') {
-        tickets = mockTickets.filter(ticket => 
+        tickets = allTickets.filter(ticket => 
             ticket.currentAssigneePSN === currentUser.psn || 
-            (ticket.status === 'Escalated to DH' && mockEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn)
+            (ticket.status === 'Escalated to DH' && allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn)
         );
     } else if (currentUser.functionalRole === 'NS') {
-        tickets = mockTickets.filter(ticket => 
+        tickets = allTickets.filter(ticket => 
             ticket.currentAssigneePSN === currentUser.psn || 
-            (ticket.status === 'Escalated to NS' && mockEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn)
+            (ticket.status === 'Escalated to NS' && allEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn)
         );
     } else if (currentUser.functionalRole === 'IS') {
-         tickets = mockTickets.filter(ticket => 
+         tickets = allTickets.filter(ticket => 
             ticket.currentAssigneePSN === currentUser.psn || 
-            (ticket.status === 'Open' && mockEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
+            (ticket.status === 'Open' && allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
         );
     }
     return tickets.filter(ticket => {
@@ -68,7 +74,7 @@ const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> 
         const priorityMatch = priorityFilter === "all" || ticket.priority === priorityFilter;
         return searchMatch && statusMatch && priorityMatch;
     });
-  }, [currentUser, searchTerm, statusFilter, priorityFilter]);
+  }, [currentUser, searchTerm, statusFilter, priorityFilter, allTickets, allEmployees]);
 
   return (
     <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
@@ -95,7 +101,7 @@ const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> 
                 </TableHeader>
                 <TableBody>
                   {filteredTickets.map(ticket => {
-                    const assignee = mockSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
+                    const assignee = allSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
                     return (
                       <TableRow key={ticket.id}>
                         <TableCell className="font-medium">{ticket.id}</TableCell>
@@ -134,6 +140,31 @@ export default function SupervisorTicketsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Ticket['status'] | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<Ticket['priority'] | "all">("all");
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [allSupervisors, setAllSupervisors] = useState<Supervisor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [tickets, employees, supervisors] = await Promise.all([
+          getAllTicketsAction(),
+          getAllEmployeesAction(),
+          getAllSupervisorsAction(),
+        ]);
+        setAllTickets(tickets);
+        setAllEmployees(employees);
+        setAllSupervisors(supervisors);
+      } catch (error) {
+        console.error("Failed to load ticket data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <ProtectedPage allowedRoles={['IS', 'NS', 'DH', 'IC Head']}>
@@ -191,12 +222,22 @@ export default function SupervisorTicketsPage() {
                 </Card>
               </ScrollReveal>
 
-                <SupervisorTicketsPageContent
-                    currentUser={currentSupervisorUser}
-                    searchTerm={searchTerm}
-                    statusFilter={statusFilter}
-                    priorityFilter={priorityFilter}
-                />
+                {isLoading ? (
+                    <div className="flex justify-center items-center py-10">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="ml-2">Loading Tickets...</p>
+                    </div>
+                ) : (
+                    <SupervisorTicketsPageContent
+                        currentUser={currentSupervisorUser}
+                        searchTerm={searchTerm}
+                        statusFilter={statusFilter}
+                        priorityFilter={priorityFilter}
+                        allTickets={allTickets}
+                        allEmployees={allEmployees}
+                        allSupervisors={allSupervisors}
+                    />
+                )}
             </div>
         );
       }}

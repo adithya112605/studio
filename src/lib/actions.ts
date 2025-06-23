@@ -8,8 +8,8 @@ import {
 import { auth as firebaseAuth } from '@/lib/firebase';
 import {
   getUserByPsn,
-  getAllEmployees,
-  getAllSupervisors,
+  getAllEmployees as getAllEmployeesQuery,
+  getAllSupervisors as getAllSupervisorsQuery,
   getAllProjects as getAllProjectsQuery,
   getAllJobCodes as getAllJobCodesQuery,
   getAllGrades as getAllGradesQuery,
@@ -18,8 +18,13 @@ import {
   createTicket as createTicketQuery,
   getSupervisorByPsn as getSupervisorByPsnQuery,
   getUserByEmail as getUserByEmailQuery,
+  getTicketById as getTicketByIdQuery,
+  getTicketsByEmployeePsn as getTicketsByEmployeePsnQuery,
+  getAllTickets as getAllTicketsQuery,
+  getProjectById as getProjectByIdQuery,
+  getJobCodeById as getJobCodeByIdQuery,
 } from '@/lib/queries';
-import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket } from '@/types';
+import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket, TicketAttachment } from '@/types';
 import { revalidatePath } from 'next/cache';
 
 // Action to check if a PSN exists
@@ -173,6 +178,7 @@ export async function getAllGradesAction() {
 export async function addEmployeeAction(data: AddEmployeeFormData) {
     await addEmployeeQuery(data);
     revalidatePath('/dashboard'); // Revalidate dashboard to show new data potentially
+    revalidatePath('/supervisor/employee-details');
 }
 
 export async function addSupervisorAction(data: AddSupervisorFormData) {
@@ -192,5 +198,57 @@ export async function createTicketAction(ticketData: Omit<Ticket, 'id' | 'attach
     }
     revalidatePath('/dashboard');
     revalidatePath('/employee/tickets');
+    revalidatePath(`/tickets/${newTicketId}`);
     return { ticketId: newTicketId, supervisorName };
+}
+
+export async function updateTicketAction(ticketId: string, data: Partial<Ticket>, attachments?: File[]) {
+    const firestore = require('@/lib/firebase').db;
+    const { updateTicket, addTicketAttachments } = require('@/lib/queries');
+    
+    await updateTicket(ticketId, data);
+    
+    if (attachments && attachments.length > 0) {
+        await addTicketAttachments(ticketId, attachments);
+    }
+
+    revalidatePath(`/tickets/${ticketId}`);
+    revalidatePath('/dashboard');
+    revalidatePath('/hr/tickets');
+    revalidatePath('/employee/tickets');
+}
+
+
+// --- Data Fetching Actions for UI ---
+
+export async function getTicketByIdAction(id: string) {
+    return await getTicketByIdQuery(id);
+}
+
+export async function getTicketsByEmployeePsnAction(psn: number) {
+    return await getTicketsByEmployeePsnQuery(psn);
+}
+
+export async function getAllTicketsAction() {
+    return await getAllTicketsQuery();
+}
+
+export async function getAllEmployeesAction() {
+    return await getAllEmployeesQuery();
+}
+
+export async function getAllSupervisorsAction() {
+    return await getAllSupervisorsQuery();
+}
+
+export async function getProjectByIdAction(id: string) {
+    return await getProjectByIdQuery(id);
+}
+
+export async function getJobCodeByIdAction(id: string) {
+    return await getJobCodeByIdQuery(id);
+}
+
+export async function getSupervisorByPsnAction(psn: number) {
+    return await getSupervisorByPsnQuery(psn);
 }
