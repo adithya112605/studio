@@ -39,7 +39,7 @@ function formatFirebaseError(error: any): string {
         if (message.includes('permission-denied') || message.includes('missing or insufficient permissions')) {
             return "Permission Denied. The database security rules are preventing access. Please check your Firestore rules.";
         }
-        return error.message; // Return the original specific error if it's not a connection issue.
+        return error.message; 
     }
     return GENERIC_ERROR_MSG;
 }
@@ -168,14 +168,11 @@ export async function getUserForPasswordResetAction(psn: number): Promise<{ busi
   try {
     const user = await getUserByPsn(psn);
     if (user) {
-      // Return only the necessary data to the client
       return { businessEmail: user.businessEmail };
     }
     return null;
   } catch (error: any) {
     console.error("[Action Error] getUserForPasswordResetAction:", error.message);
-    // In a real app, you might want to return an error object here
-    // but for this flow, failing silently is acceptable.
     return null;
   }
 }
@@ -197,7 +194,7 @@ export async function getAllGradesAction() {
 
 export async function addEmployeeAction(data: AddEmployeeFormData) {
     await addEmployeeQuery(data);
-    revalidatePath('/dashboard'); // Revalidate dashboard to show new data potentially
+    revalidatePath('/dashboard'); 
     revalidatePath('/supervisor/employee-details');
 }
 

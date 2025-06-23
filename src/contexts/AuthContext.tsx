@@ -35,8 +35,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const auth = getAuthInstance();
     if (!auth) {
-        // This case handles if Firebase config is completely missing.
-        // A toast is already shown from firebase.ts, so we just stop loading.
         setLoading(false);
         return;
     }
@@ -66,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, []);
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
       const { exists, error } = await checkPSNExistsAction(psn);
@@ -74,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
           toast({
               title: "Error Verifying PSN",
-              description: error, // The action now provides a user-friendly error.
+              description: error, 
               variant: "destructive",
               duration: 12000,
           });
@@ -101,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login Successful",
         description: "Redirecting to your dashboard...",
       });
-      // The onAuthStateChanged listener will handle setting the user and triggering redirects.
     } else {
       toast({
         title: "Login Failed",
@@ -117,14 +114,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!result.success) {
        toast({
         title: "Signup Failed",
-        description: result.message, // The action provides a user-friendly error.
+        description: result.message,
         variant: "destructive",
         duration: 10000
       });
     } else {
         toast({ title: "Account Created", description: result.message });
     }
-    // onAuthStateChanged will handle login.
     return result;
   };
 

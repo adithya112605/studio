@@ -17,11 +17,13 @@ export default function SignUpPage() {
     }
   }, [user, loading, router]);
 
-  if (loading || (!loading && user)) {
+  if (loading || user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">Checking authentication status...</p>
+          <p className="mt-4 text-muted-foreground">
+            {loading ? 'Checking authentication...' : 'Redirecting to dashboard...'}
+          </p>
       </div>
     );
   }

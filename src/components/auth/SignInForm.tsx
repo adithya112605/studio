@@ -64,8 +64,6 @@ export default function SignInForm() {
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     setIsLoading(true);
     await login(Number(data.psn), data.password);
-    // The AuthContext will handle showing toasts for success/failure.
-    // The page redirect will be handled by the parent page component watching the user state.
     setIsLoading(false);
   };
 
