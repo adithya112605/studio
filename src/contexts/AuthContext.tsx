@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { User, Supervisor, Employee } from '@/types';
@@ -20,7 +21,7 @@ interface AuthContextType {
   signup: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   loading: boolean;
-  checkPSNExists: (psn: number) => Promise<boolean>;
+  checkPSNExists: (psn: number) => Promise<boolean | 'db_error'>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -94,14 +95,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [toast]);
 
-  const checkPSNExists = async (psn: number): Promise<boolean> => {
+  const checkPSNExists = async (psn: number): Promise<boolean | 'db_error'> => {
     try {
         const user = await getUserByPsn(psn);
         return !!user;
     } catch (error: any) {
         if (error.message.includes('no such table')) {
-            // If tables don't exist, we can't check. Return false.
-            return false;
+            toast(dbNotSeededMessage);
+            return 'db_error';
         }
         throw error; // Re-throw other errors
     }

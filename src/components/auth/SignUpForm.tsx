@@ -105,19 +105,20 @@ export default function SignUpForm() {
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
     setIsLoading(true);
     const psnNumber = Number(data.psn);
-    const psnIsValidLntUser = await checkPSNExists(psnNumber); // Checks against mock L&T data
+    const result = await checkPSNExists(psnNumber);
     setIsLoading(false);
 
-    if (psnIsValidLntUser) {
+    if (result === true) {
       setPsnForStep2(psnNumber);
       setStep(2);
-    } else {
+    } else if (result === false) {
       toast({
         title: "PSN Not Recognized",
         description: "This PSN is not found in our records. Please verify your PSN or contact L&T Admin if you believe this is an error.",
         variant: "destructive",
       });
     }
+    // If result is 'db_error', the toast from checkPSNExists is already shown, so we do nothing more here.
   };
 
   const handlePasswordSubmit: SubmitHandler<SignUpStep2Values> = async (data) => {
