@@ -1,4 +1,3 @@
-
 "use client"
 
 import type { User, Supervisor, Employee } from '@/types';
@@ -33,6 +32,14 @@ const firebaseDisabledMessage = {
     duration: 8000,
 } as const;
 
+const dbNotSeededMessage = {
+    title: "Database Not Ready",
+    description: "Database tables not found. Please run `npm run db:seed` in your terminal and then refresh the page.",
+    variant: "destructive",
+    duration: 10000,
+} as const;
+
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,27 +53,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser && firebaseUser.email) {
-        
-        // Find user by email in the database
-        const allEmployees = await getAllEmployees();
-        // This is a simplification. In a real scenario, you'd have a users table with unique emails.
-        // Here we have to check both employees and supervisors tables.
-        const employee = allEmployees.find(e => e.businessEmail?.toLowerCase() === firebaseUser.email!.toLowerCase());
+        try {
+            // Find user by email in the database
+            const allEmployees = await getAllEmployees();
+            // This is a simplification. In a real scenario, you'd have a users table with unique emails.
+            // Here we have to check both employees and supervisors tables.
+            const employee = allEmployees.find(e => e.businessEmail?.toLowerCase() === firebaseUser.email!.toLowerCase());
 
-        let lntUser: User | null = await getUserByPsn(employee?.psn || 0);
-        
-        if (lntUser) {
-          setUser(lntUser);
-        } else {
-          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found in DB. Logging out.`);
-          toast({
-            title: "Profile Mismatch",
-            description: "Your authentication was successful, but we could not find a matching L&T user profile. Please contact IT support.",
-            variant: "destructive",
-            duration: 8000,
-          });
-          await signOut(firebaseAuth);
-          setUser(null);
+            let lntUser: User | null = await getUserByPsn(employee?.psn || 0);
+            
+            if (lntUser) {
+              setUser(lntUser);
+            } else {
+              console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found in DB. Logging out.`);
+              toast({
+                title: "Profile Mismatch",
+                description: "Your authentication was successful, but we could not find a matching L&T user profile. Please contact IT support.",
+                variant: "destructive",
+                duration: 8000,
+              });
+              await signOut(firebaseAuth);
+              setUser(null);
+            }
+        } catch (error: any) {
+            if (error.message.includes('no such table')) {
+                console.warn("[DB WARNING] Database not seeded. Tables are missing. Run `npm run db:seed`.");
+                // We can't find a user if tables don't exist, so treat as logged out.
+                setUser(null);
+            } else {
+                console.error("Database error in AuthContext:", error);
+                setUser(null);
+            }
         }
       } else {
         setUser(null);
@@ -78,8 +95,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
   const checkPSNExists = async (psn: number): Promise<boolean> => {
-    const user = await getUserByPsn(psn);
-    return !!user;
+    try {
+        const user = await getUserByPsn(psn);
+        return !!user;
+    } catch (error: any) {
+        if (error.message.includes('no such table')) {
+            // If tables don't exist, we can't check. Return false.
+            return false;
+        }
+        throw error; // Re-throw other errors
+    }
   };
 
   const login = async (psn: number, password?: string): Promise<boolean> => {
@@ -88,7 +113,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
     }
 
-    const lntUser = await getUserByPsn(psn);
+    let lntUser: User | null;
+    try {
+        lntUser = await getUserByPsn(psn);
+    } catch (error: any) {
+        if (error.message.includes('no such table')) {
+            toast(dbNotSeededMessage);
+            return false;
+        }
+        toast({ title: "Database Error", description: "An unexpected database error occurred.", variant: "destructive" });
+        return false;
+    }
+
 
     if (!lntUser || !lntUser.businessEmail) {
       toast({
@@ -152,7 +188,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, message: "Authentication service is unavailable." };
     }
 
-    const lntUser = await getUserByPsn(psn);
+    let lntUser: User | null;
+    try {
+        lntUser = await getUserByPsn(psn);
+    } catch(error: any) {
+        if (error.message.includes('no such table')) {
+            toast(dbNotSeededMessage);
+            return { success: false, message: "Database is not set up." };
+        }
+        return { success: false, message: "An unexpected database error occurred." };
+    }
+
 
     if (!lntUser || !lntUser.businessEmail) {
       return { success: false, message: "PSN not found or no business email is associated with it. Cannot create account." };
