@@ -35,37 +35,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const auth = getAuthInstance();
     if (!auth) {
+      console.error("[AuthContext] Firebase Auth not initialized. Cannot set up authentication listener.");
       setLoading(false);
       return;
     }
 
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser && firebaseUser.email) {
-        // We have a Firebase user. Let's try to find their profile in our DB.
-        const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
-        
-        if (lntUser) {
-          // Success! We found the matching profile.
-          setUser(lntUser);
-          setLoading(false);
+      try {
+        if (firebaseUser && firebaseUser.email) {
+          // A user is signed in to Firebase. Let's fetch their app-specific profile.
+          const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+          
+          if (lntUser) {
+            // Success: We found the matching profile in our database.
+            setUser(lntUser);
+          } else {
+            // Critical Error: Firebase user exists, but no profile in our DB.
+            // This can happen if a user is deleted from the app DB but not Firebase.
+            // Log them out of Firebase to sync the state.
+            const errorMessage = error || "Your authentication was successful, but we could not find a matching user profile. Please check your Firestore indexes or run `npm run db:seed`.";
+            console.error(`[AuthContext] Firebase user ${firebaseUser.email} authenticated, but no L&T profile found. Signing out. Error: ${errorMessage}`);
+            toast({
+              title: "Profile Not Found",
+              description: errorMessage,
+              variant: "destructive",
+              duration: 10000,
+            });
+            await signOut(auth); // This will trigger the listener again with a null user.
+            setUser(null);
+          }
         } else {
-          // Firebase user exists, but no profile in our DB. This is an error state.
-          // Log them out of Firebase and let the listener run again with a null user.
-          const errorMessage = error || "Your authentication was successful, but we could not find a matching user profile. Please check your Firestore indexes or run `npm run db:seed`.";
-          console.error(`[AuthContext] Firebase user ${firebaseUser.email} authenticated, but no L&T profile found. Error: ${errorMessage}`);
-          toast({
-            title: "Profile Not Found",
-            description: errorMessage,
-            variant: "destructive",
-            duration: 10000,
-          });
-          // This signOut will re-trigger this listener with a null user,
-          // which will then correctly set loading to false in the `else` block below.
-          await signOut(auth);
+          // No Firebase user is signed in.
+          setUser(null);
         }
-      } else {
-        // No Firebase user, so we are definitely not logged in.
+      } catch (e: any) {
+        // Catch any unexpected errors during profile fetch.
+        console.error("[AuthContext] Unexpected error in onAuthStateChanged:", e);
+        toast({
+            title: "Authentication Error",
+            description: "An unexpected error occurred while verifying your session. Please try again.",
+            variant: "destructive"
+        });
         setUser(null);
+      } finally {
+        // This block is GUARANTEED to run, ensuring we never get stuck in an infinite loading state.
         setLoading(false);
       }
     });
@@ -100,28 +113,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (psn: number, password?: string): Promise<void> => {
-    setLoading(true); // Set loading at the beginning of the login attempt.
+    setLoading(true); // Set loading for the login attempt. The listener will set it to false.
     const result = await loginAction(psn, password);
-    if (result.success) {
-      toast({
-        title: "Login Successful",
-        description: "Finalizing authentication...",
-      });
-      // On success, we DON'T set loading to false.
-      // The onAuthStateChanged listener will do that once the user profile is fetched.
-    } else {
+    if (!result.success) {
       toast({
         title: "Login Failed",
         description: result.message,
         variant: "destructive",
         duration: 10000,
       });
-      setLoading(false); // On failure, we must reset the loading state.
+      setLoading(false); // On direct failure, we must reset the loading state here.
     }
+    // On success, we don't need to do anything. The onAuthStateChanged listener will handle it.
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
-    setLoading(true);
+    setLoading(true); // Set loading for the signup attempt.
     const result = await signupAction(psn, password);
     if (!result.success) {
        toast({
@@ -130,10 +137,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
         duration: 10000
       });
-      setLoading(false);
+      setLoading(false); // On failure, reset loading state.
     } else {
         toast({ title: "Account Created", description: result.message });
     }
+    // On success, the onAuthStateChanged listener will handle the new user and set loading to false.
     return result;
   };
 
@@ -150,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      setUser(null);
+      // setUser(null) will be handled by the onAuthStateChanged listener.
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({
