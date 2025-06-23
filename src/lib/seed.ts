@@ -1,12 +1,4 @@
 
-'use server';
-
-import { config } from 'dotenv';
-import path from 'path';
-
-// Explicitly load .env.local to ensure Firebase keys are available to the script.
-config({ path: path.resolve(process.cwd(), '.env.local') });
-
 import { getFirestoreInstance } from './firebase';
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from '@/data/mockData';
 import { doc, writeBatch, getDocs, collection, getDoc } from "firebase/firestore";
