@@ -17,42 +17,53 @@ const VantaBackground = () => {
   const vantaRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
 
+  // Effect for CREATING and DESTROYING the Vanta instance.
+  // It runs only when the component mounts and unmounts.
   useEffect(() => {
     let effect: any;
-    // Check if scripts are loaded and component is mounted
-    if (typeof window !== "undefined" && window.VANTA && window.THREE && vantaRef.current) {
-      effect = window.VANTA.NET({
-        el: vantaRef.current,
-        THREE: window.THREE, // Vanta requires the THREE object to be passed
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200.00,
-        minWidth: 200.00,
-        scale: 1.00,
-        scaleMobile: 1.00,
-        color: 0x3175ff,
-        backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa, // Match theme background colors
-        points: 13.00,
-        spacing: 17.00
-      });
-      setVantaEffect(effect);
+    
+    // We can't initialize if Vanta script isn't loaded yet.
+    // So we'll poll until it's ready.
+    if (typeof window !== "undefined" && vantaRef.current) {
+      const checkVanta = setInterval(() => {
+        if (window.VANTA) {
+          clearInterval(checkVanta);
+          effect = window.VANTA.NET({
+            el: vantaRef.current,
+            THREE: window.THREE,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x3175ff,
+            points: 13.00,
+            spacing: 17.00
+            // Initial background color is set in the next effect
+          });
+          setVantaEffect(effect);
+        }
+      }, 500); // Check every 500ms
+
+       // Cleanup the interval if the component unmounts before Vanta loads
+      return () => clearInterval(checkVanta);
     }
-
-    // Cleanup function to destroy the effect on unmount
+    
+    // Cleanup function. This will be called when the component unmounts.
     return () => {
-      if (effect) {
-        effect.destroy();
-      }
+      if (effect) effect.destroy();
     };
-  }, []); // Empty dependency array ensures this runs only once on mount
+  // The empty dependency array [] means this effect runs only once on mount.
+  }, []);
 
-  // This effect updates the background color whenever the theme changes
+  // This separate effect handles UPDATING the background color when the theme changes.
   useEffect(() => {
-    if (vantaEffect) {
-        vantaEffect.setOptions({
-            backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa,
-        });
+    if (vantaEffect && resolvedTheme) {
+      vantaEffect.setOptions({
+        backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa,
+      });
     }
   }, [resolvedTheme, vantaEffect]);
 
