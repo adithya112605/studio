@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { getAllProjects, getAllJobCodes, getAllGrades, addEmployee } from '@/lib/queries';
+import { getAllProjectsAction, getAllJobCodesAction, getAllGradesAction, addEmployeeAction } from '@/lib/actions';
 
 const addEmployeeSchema = z.object({
   psn: z.string()
@@ -46,17 +46,22 @@ export default function AddEmployeeForm() {
 
   useEffect(() => {
     async function fetchData() {
-      const [projectsData, jobCodesData, gradesData] = await Promise.all([
-        getAllProjects(),
-        getAllJobCodes(),
-        getAllGrades(),
-      ]);
-      setProjects(projectsData);
-      setJobCodes(jobCodesData);
-      setGrades(gradesData);
+      try {
+        const [projectsData, jobCodesData, gradesData] = await Promise.all([
+          getAllProjectsAction(),
+          getAllJobCodesAction(),
+          getAllGradesAction(),
+        ]);
+        setProjects(projectsData);
+        setJobCodes(jobCodesData);
+        setGrades(gradesData);
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to load form data.", variant: "destructive" });
+        console.error("Failed to fetch form data:", error);
+      }
     }
     fetchData();
-  }, []);
+  }, [toast]);
 
   const { register, handleSubmit, control, formState: { errors }, setValue } = useForm<AddEmployeeFormData>({
     resolver: zodResolver(addEmployeeSchema),
@@ -72,7 +77,7 @@ export default function AddEmployeeForm() {
   const onSubmit: SubmitHandler<AddEmployeeFormData> = async (data) => {
     setIsLoading(true);
     try {
-      await addEmployee(data);
+      await addEmployeeAction(data);
       toast({ title: "Employee Added", description: `${data.name} (${data.psn}) has been added.` });
       router.push('/dashboard');
     } catch (error) {

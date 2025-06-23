@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import type { AddSupervisorFormData, Project, City } from '@/types';
+import type { AddSupervisorFormData, Project } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, CalendarIcon } from 'lucide-react';
@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { getAllProjects, addSupervisor } from '@/lib/queries';
+import { getAllProjectsAction, addSupervisorAction } from '@/lib/actions';
 
 const addSupervisorSchema = z.object({
   psn: z.string()
@@ -46,13 +46,18 @@ export default function AddSupervisorForm() {
 
   useEffect(() => {
     async function fetchData() {
-      const projectsData = await getAllProjects();
-      setProjects(projectsData);
-      const uniqueCities = Array.from(new Set(projectsData.map(p => p.city))).sort();
-      setCities(uniqueCities);
+      try {
+        const projectsData = await getAllProjectsAction();
+        setProjects(projectsData);
+        const uniqueCities = Array.from(new Set(projectsData.map(p => p.city))).sort();
+        setCities(uniqueCities);
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to load project data.", variant: "destructive" });
+        console.error("Failed to fetch project data:", error);
+      }
     }
     fetchData();
-  }, []);
+  }, [toast]);
 
   const { register, handleSubmit, control, setValue, getValues, watch, formState: { errors } } = useForm<AddSupervisorFormData>({
     resolver: zodResolver(addSupervisorSchema),
@@ -74,7 +79,7 @@ export default function AddSupervisorForm() {
   const onSubmit: SubmitHandler<AddSupervisorFormData> = async (data) => {
     setIsLoading(true);
     try {
-        await addSupervisor(data);
+        await addSupervisorAction(data);
         toast({ title: "Supervisor Added", description: `${data.name} (${data.psn}) has been added as ${data.title}.` });
         router.push('/dashboard');
     } catch (error) {

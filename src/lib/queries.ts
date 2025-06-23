@@ -1,5 +1,4 @@
 
-'use server';
 import { getDb } from './db';
 import type { User, Employee, Supervisor, Ticket, Project, JobCode, TicketAttachment, AddEmployeeFormData, AddSupervisorFormData, NewTicketFormData } from '@/types';
 import { format } from 'date-fns';
@@ -135,7 +134,8 @@ export async function addSupervisor(data: AddSupervisorFormData) {
 export async function createTicket(ticketData: Omit<Ticket, 'id'>, attachments: File[] = []) {
     const db = await getDb();
     
-    const ticketId = `#TK${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    // A more robust unique ID for mock purposes
+    const ticketId = `TKT${Date.now()}${Math.random().toString(36).substring(2, 6)}`;
 
     await db.run(
         'INSERT INTO tickets (id, psn, employeeName, query, followUpQuery, priority, dateOfQuery, actionPerformed, dateOfResponse, status, currentAssigneePSN, project, lastStatusUpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

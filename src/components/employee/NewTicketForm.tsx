@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,9 +14,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import type { NewTicketFormData, TicketPriority, Ticket, Employee, TicketStatus } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2, Paperclip } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { createTicket, getSupervisorByPsn } from '@/lib/queries';
+import { createTicketAction } from '@/lib/actions';
 
 const MAX_QUERY_LENGTH = 1500;
 
@@ -39,8 +39,6 @@ export default function NewTicketForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [queryCharCount, setQueryCharCount] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const { register, handleSubmit, control, watch, formState: { errors } } = useForm<NewTicketFormData>({
     resolver: zodResolver(newTicketSchema),
@@ -57,32 +55,6 @@ export default function NewTicketForm() {
     setQueryCharCount(queryValue?.length || 0);
   }, [queryValue]);
 
-  const handleAttachmentClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const newFiles = Array.from(event.target.files);
-      setAttachedFiles(prev => [...prev, ...newFiles]); 
-      newFiles.forEach(file => {
-        toast({
-            title: "File Added (Mock)",
-            description: `"${file.name}" is ready to be attached.`,
-        });
-      });
-      if(fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-  
-  const removeAttachment = (fileName: string) => {
-    setAttachedFiles(prev => prev.filter(file => file.name !== fileName));
-    toast({
-        title: "File Removed",
-        description: `"${fileName}" has been removed from attachments.`,
-        variant: "default"
-    })
-  };
 
   const onSubmit: SubmitHandler<NewTicketFormData> = async (data) => {
     if (!user || user.role !== 'Employee') {
@@ -93,7 +65,7 @@ export default function NewTicketForm() {
 
     setIsLoading(true);
 
-    const newTicketData: Omit<Ticket, 'id'> = {
+    const newTicketData: Omit<Ticket, 'id' | 'attachments'> = {
       psn: employeeUser.psn,
       employeeName: employeeUser.name,
       query: data.query,
@@ -107,17 +79,13 @@ export default function NewTicketForm() {
     };
     
     try {
-        const newTicketId = await createTicket(newTicketData, attachedFiles);
+        const { ticketId, supervisorName } = await createTicketAction(newTicketData);
 
-        if (employeeUser.isPSN) {
-          const isSupervisor = await getSupervisorByPsn(employeeUser.isPSN);
-          if (isSupervisor) {
-            console.log(`Notification: New ticket ${newTicketId} assigned to IS ${isSupervisor.name}`);
-            toast({ title: "IS Notified (Simulated)", description: `Supervisor ${isSupervisor.name} has been notified about your new ticket.`});
-          }
+        if (supervisorName) {
+            toast({ title: "IS Notified (Simulated)", description: `Supervisor ${supervisorName} has been notified about your new ticket.`});
         }
         
-        toast({ title: "Ticket Submitted!", description: `Your ticket ${newTicketId} has been successfully raised.` });
+        toast({ title: "Ticket Submitted!", description: `Your ticket ${ticketId} has been successfully raised.` });
         router.push('/dashboard');
 
     } catch (error) {
@@ -193,35 +161,13 @@ export default function NewTicketForm() {
             </div>
           )}
 
-          <div className="space-y-2">
+           <div className="space-y-2">
             <Label htmlFor="attachments">Attachments (Optional)</Label>
-            <Button type="button" variant="outline" onClick={handleAttachmentClick} className="w-full justify-start text-left" data-ai-hint="file upload document image video audio link">
-                <Paperclip className="mr-2 h-4 w-4" /> Add Attachments
+            <Button type="button" variant="outline" className="w-full justify-start text-left" disabled>
+                Add Attachments (Temporarily disabled)
             </Button>
-            <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={handleFileChange}
-                multiple
-                accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            />
-            {attachedFiles.length > 0 && (
-                <div className="mt-2 space-y-1 text-xs">
-                    <p className="font-medium text-muted-foreground">Selected files:</p>
-                    <ul className="list-disc list-inside pl-4">
-                        {attachedFiles.map(file => (
-                            <li key={file.name} className="flex items-center justify-between">
-                                <span>{file.name} ({(file.size / 1024).toFixed(2)} KB)</span>
-                                <Button type="button" variant="ghost" size="sm" className="text-destructive h-auto p-1" onClick={() => removeAttachment(file.name)}>Remove</Button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-            <p className="text-xs text-muted-foreground">You can attach documents, images, videos, audio, or share links.</p>
+            <p className="text-xs text-muted-foreground">The file attachment feature is currently undergoing maintenance.</p>
           </div>
-
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>
