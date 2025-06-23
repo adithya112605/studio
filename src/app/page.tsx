@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -82,9 +81,10 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <ScrollTypewriter text="Welcome to " tag="span" speed={50} className="inline-block" once={true} delay={200}/>
+                  <ScrollTypewriter text="Welcome to" tag="span" speed={50} className="inline-block" once={true} delay={200}/>
+                  {' '}
                   <span className="text-primary">
-                    <ScrollTypewriter text="L&T Helpdesk" tag="span" speed={50} delay={200 + (11 * 50)} className="inline-block" once={true}/>
+                    <ScrollTypewriter text="L&T Helpdesk" tag="span" speed={50} delay={200 + (10 * 50)} className="inline-block" once={true}/>
                   </span>
                 </>
               )}
