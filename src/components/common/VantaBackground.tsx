@@ -18,9 +18,8 @@ const VantaBackground = () => {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
-    let effect: any = null; // Use a local variable for the instance
+    let effect: any = null;
 
-    // Function to initialize Vanta
     const initVanta = () => {
       if (window.VANTA && window.THREE && vantaRef.current) {
         effect = window.VANTA.NET({
@@ -35,31 +34,29 @@ const VantaBackground = () => {
           scaleMobile: 1.00,
           points: 13.00,
           spacing: 17.00,
-          color: resolvedTheme === 'dark' ? 0x1b2851 : 0xc4ccd3, // Subtle dark blue for dark theme, light gray for light theme
+          color: resolvedTheme === 'dark' ? 0x6487e3 : 0xb18282, 
           backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa,
         });
         setVantaEffect(effect);
       }
     };
-
-    // Poll until scripts are loaded
-    const checkScripts = setInterval(() => {
-      if (window.VANTA && window.THREE) {
-        clearInterval(checkScripts);
-        initVanta();
-      }
-    }, 500);
     
-    // Cleanup function that runs when the theme changes or component unmounts
+    const checkScriptsAndInit = () => {
+      if (window.VANTA && window.THREE) {
+        initVanta();
+      } else {
+        setTimeout(checkScriptsAndInit, 500);
+      }
+    };
+
+    checkScriptsAndInit();
+    
     return () => {
-      clearInterval(checkScripts);
       if (effect) {
         effect.destroy();
       }
     };
-  // Rerun this whole effect if the theme changes to create a new instance with new colors
   }, [resolvedTheme]); 
-
 
   return <div ref={vantaRef} className="absolute inset-0 z-0 w-full h-full" />;
 };
