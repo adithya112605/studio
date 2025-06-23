@@ -1,4 +1,9 @@
 
+'use server';
+
+import { config } from 'dotenv';
+config(); // Load environment variables from .env.local
+
 import { getFirestoreInstance } from './firebase';
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from '@/data/mockData';
 import { doc, writeBatch, deleteDoc, collection, getDocs, query } from "firebase/firestore";
