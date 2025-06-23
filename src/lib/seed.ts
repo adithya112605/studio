@@ -2,21 +2,24 @@
 'use server';
 
 import { config } from 'dotenv';
-config(); // Load environment variables from .env.local
+import path from 'path';
+
+// Explicitly load .env.local to ensure Firebase keys are available to the script.
+config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { getFirestoreInstance } from './firebase';
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from '@/data/mockData';
-import { doc, writeBatch, deleteDoc, collection, getDocs, query } from "firebase/firestore";
+import { doc, writeBatch, getDocs, collection, getDoc } from "firebase/firestore";
 
 async function clearCollection(collectionName: string) {
     const db = getFirestoreInstance();
     if (!db) throw new Error("Firestore not initialized for clearing collection.");
 
-    const q = query(collection(db, collectionName));
+    const q = collection(db, collectionName);
     const querySnapshot = await getDocs(q);
     
     if (querySnapshot.empty) {
-        console.log(`  - '${collectionName}' collection is already empty.`);
+        console.log(`  - Collection '${collectionName}' is already empty.`);
         return;
     }
 
@@ -33,7 +36,7 @@ async function clearCollection(collectionName: string) {
 async function seedFirestore() {
   const db = getFirestoreInstance();
   if (!db) {
-    throw new Error("\n\n❌ Firestore is not initialized. Please check your Firebase config in .env.local and ensure the server has restarted.\n\n");
+    throw new Error("\n\n❌ Firestore is not initialized. Please check that your Firebase project configuration is correctly set in the .env.local file and that you have restarted the development server.\n\n");
   }
   
   console.log('🔄 Starting Firestore seed process...');
@@ -41,10 +44,11 @@ async function seedFirestore() {
   try {
     // Clear existing data to ensure a fresh start
     console.log('--- Clearing Existing Data ---');
-    // Clear ticket subcollections first if they exist, before clearing tickets
     const ticketsSnapshot = await getDocs(collection(db, 'tickets'));
-    for (const ticketDoc of ticketsSnapshot.docs) {
-        await clearCollection(`tickets/${ticketDoc.id}/attachments`);
+    if (!ticketsSnapshot.empty) {
+        for (const ticketDoc of ticketsSnapshot.docs) {
+            await clearCollection(`tickets/${ticketDoc.id}/attachments`);
+        }
     }
     await clearCollection('tickets');
     await clearCollection('projects');
@@ -96,22 +100,32 @@ async function seedFirestore() {
 
     console.log('  - Committing batch write to Firestore... (This may take a moment)');
     await batch.commit();
+
+    // --- Verification Step ---
+    console.log('\n--- Verifying Seeded Data ---');
+    const verifyUserRef = doc(db, 'employees', '10004703');
+    const verifyUserSnap = await getDoc(verifyUserRef);
+    if (verifyUserSnap.exists()) {
+        console.log('✅ Verification successful: Found user 10004703.');
+    } else {
+        console.error('❌ VERIFICATION FAILED: User 10004703 not found after seeding.');
+        throw new Error('Seed data verification failed. Check Firestore rules and .env.local configuration.');
+    }
+
     console.log('\n✅ Firestore seeding complete!');
     console.log(`   - Seeded ${mockProjects.length} projects`);
     console.log(`   - Seeded ${mockJobCodes.length} job codes`);
     console.log(`   - Seeded ${mockEmployees.length} employees`);
     console.log(`   - Seeded ${mockSupervisors.length} supervisors`);
     console.log(`   - Seeded ${mockTickets.length} tickets`);
-    console.log('\nFirestore is now populated. Your application should be ready.');
+    console.log('\nFirestore is now populated. Your application is ready.');
 
   } catch (error) {
     console.error('❌ A critical error occurred during the Firestore seeding process:', error);
-    throw error; // Re-throw the error to ensure the calling process knows it failed
+    throw error;
   }
 }
 
-// This guard ensures the seed script ONLY runs when you
-// explicitly execute `npm run db:seed` from the terminal.
 if (require.main === module) {
   seedFirestore().catch(err => {
     console.error("Seeding script failed to execute:", err);
