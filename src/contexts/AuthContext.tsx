@@ -41,19 +41,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
+      setLoading(true); // Always start loading when auth state changes
       try {
         if (firebaseUser && firebaseUser.email) {
-          // A user has an active session from a previous login.
-          // Let's fetch their app-specific profile to populate the context.
-          if (!user) { // Only fetch if user is not already set by an active login flow
-            const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
-            if (lntUser) {
-              setUser(lntUser);
-            } else {
-              console.error(`[AuthContext] Session check failed: no L&T profile for ${firebaseUser.email}. Error: ${error}`);
-              await signOut(auth);
-              setUser(null);
-            }
+          // A user session exists. Fetch our app-specific user profile.
+          const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+          if (lntUser) {
+            setUser(lntUser);
+          } else {
+            const errorMessage = `L&T profile not found for ${firebaseUser.email}. You may need to run the db:seed script or check Firestore indexes. Logging out. Error: ${error}`;
+            console.error(`[AuthContext] onAuthStateChanged: ${errorMessage}`);
+            toast({ title: "Profile Error", description: errorMessage, variant: "destructive", duration: 10000 });
+            await signOut(auth); // This will re-trigger onAuthStateChanged with null
+            setUser(null);
           }
         } else {
           // No Firebase user is signed in.
@@ -68,7 +68,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [user]); // Rerun if user changes to handle logout case properly.
+  }, []); // CRITICAL FIX: Empty dependency array. This should only run once.
+
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
       const { exists, error } = await checkPSNExistsAction(psn);
@@ -84,10 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     const result = await loginAction(psn, password);
 
-    if (result.success && result.user) {
-      setUser(result.user);
-      // Let the signin page handle the redirect toast.
-    } else {
+    if (!result.success) {
       toast({
         title: "Login Failed",
         description: result.message,
@@ -95,25 +93,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         duration: 8000,
       });
       setUser(null);
+      setLoading(false);
     }
-    setLoading(false);
+    // On success, we don't call setUser or setLoading(false) here.
+    // The onAuthStateChanged listener will be triggered by a successful login,
+    // and it will handle setting the user and setting loading to false.
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
     setLoading(true);
     const result = await signupAction(psn, password);
-    if (result.success && result.user) {
-        setUser(result.user);
-        toast({ title: "Account Created!", description: "You are now logged in." });
-    } else {
+    if (!result.success) {
        toast({
         title: "Signup Failed",
         description: result.message,
         variant: "destructive",
       });
        setUser(null);
+       setLoading(false);
     }
-    setLoading(false);
+    // On success, let onAuthStateChanged handle it.
     return { success: result.success, message: result.message };
   };
 
@@ -127,12 +126,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      setUser(null);
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      // setUser(null) and setLoading(false) will be handled by onAuthStateChanged
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({ title: "Logout Failed", description: "Could not log out. Please try again.", variant: "destructive" });
-    } finally {
       setLoading(false);
     }
   };
