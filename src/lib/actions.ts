@@ -28,14 +28,14 @@ import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket, TicketAt
 import { revalidatePath } from 'next/cache';
 
 // Action to check if a PSN exists
-export async function checkPSNExistsAction(psn: number): Promise<boolean> {
+export async function checkPSNExistsAction(psn: number): Promise<{ exists: boolean; error?: string }> {
   try {
     const user = await getUserByPsn(psn);
-    return !!user;
+    return { exists: !!user };
   } catch (error: any) {
     console.error("[Action Error] checkPSNExistsAction:", error.message);
-    // Log the server error, but return false to the client
-    return false;
+    // Pass a generic error message to the client
+    return { exists: false, error: "A database error occurred. Please check the server logs." };
   }
 }
 

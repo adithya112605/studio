@@ -105,10 +105,16 @@ export default function SignUpForm() {
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
     setIsLoading(true);
     const psnNumber = Number(data.psn);
-    const exists = await checkPSNExists(psnNumber);
+    const { exists, error } = await checkPSNExists(psnNumber);
     setIsLoading(false);
 
-    if (exists) {
+    if (error) {
+        toast({
+            title: "Error Checking PSN",
+            description: error,
+            variant: "destructive",
+        });
+    } else if (exists) {
       setPsnForStep2(psnNumber);
       setStep(2);
     } else {

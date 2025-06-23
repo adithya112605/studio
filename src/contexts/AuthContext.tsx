@@ -22,18 +22,10 @@ interface AuthContextType {
   signup: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   loading: boolean;
-  checkPSNExists: (psn: number) => Promise<boolean>;
+  checkPSNExists: (psn: number) => Promise<{ exists: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const firebaseDisabledMessage = {
-    title: "Authentication Service Unavailable",
-    description: "Firebase is not configured correctly. Please check your .env.local file and restart the server.",
-    variant: "destructive",
-    duration: 8000,
-} as const;
-
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,7 +34,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!firebaseAuth) {
-        toast(firebaseDisabledMessage);
         setLoading(false);
         return;
     }
@@ -73,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [toast]);
 
-  const checkPSNExists = async (psn: number): Promise<boolean> => {
+  const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
       return await checkPSNExistsAction(psn);
   };
 
@@ -120,7 +111,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     if (!firebaseAuth) {
-        toast(firebaseDisabledMessage);
+        toast({
+            title: "Authentication Service Unavailable",
+            description: "Firebase is not configured correctly. Please check your .env.local file and restart the server.",
+            variant: "destructive",
+            duration: 8000,
+        });
         return;
     }
     try {
