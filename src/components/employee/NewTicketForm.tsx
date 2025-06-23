@@ -11,12 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { NewTicketFormData, TicketPriority, Ticket, Employee, TicketStatus, TicketAttachment } from '@/types';
+import type { NewTicketFormData, TicketPriority, Ticket, Employee, TicketStatus } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Loader2, Paperclip } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { mockTickets, mockSupervisors } from '@/data/mockData';
+import { createTicket, getSupervisorByPsn } from '@/lib/queries';
 
 const MAX_QUERY_LENGTH = 1500;
 
@@ -32,14 +32,6 @@ const newTicketSchema = z.object({
   path: ["followUpQuery"],
 });
 
-const generateTicketId = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 7; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `#TK${result}`;
-};
 
 export default function NewTicketForm() {
   const { user } = useAuth();
@@ -49,7 +41,6 @@ export default function NewTicketForm() {
   const [queryCharCount, setQueryCharCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-
 
   const { register, handleSubmit, control, watch, formState: { errors } } = useForm<NewTicketFormData>({
     resolver: zodResolver(newTicketSchema),
@@ -93,7 +84,6 @@ export default function NewTicketForm() {
     })
   };
 
-
   const onSubmit: SubmitHandler<NewTicketFormData> = async (data) => {
     if (!user || user.role !== 'Employee') {
       toast({ title: "Error", description: "You must be logged in as an Employee to submit a ticket.", variant: "destructive" });
@@ -102,51 +92,40 @@ export default function NewTicketForm() {
     const employeeUser = user as Employee;
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const newTicketId = generateTicketId();
-    const currentDate = new Date().toISOString();
-    
-    const ticketAttachments: TicketAttachment[] = attachedFiles.map((file, index) => ({
-        id: `${newTicketId}-att-${index}`,
-        fileName: file.name,
-        fileType: file.type.startsWith('image/') ? 'image' : 
-                    file.type.startsWith('video/') ? 'video' :
-                    file.type.startsWith('audio/') ? 'audio' : 'document',
-        urlOrContent: `mock/upload/path/${file.name}`, 
-        uploadedAt: currentDate,
-    }));
-
-
-    const newTicket: Ticket = {
-      id: newTicketId,
+    const newTicketData: Omit<Ticket, 'id'> = {
       psn: employeeUser.psn,
       employeeName: employeeUser.name,
       query: data.query,
       followUpQuery: data.hasFollowUp ? data.followUpQuery : undefined,
       priority: data.priority,
-      dateOfQuery: currentDate,
+      dateOfQuery: new Date().toISOString(),
       status: 'Open' as TicketStatus,
       project: employeeUser.project,
       currentAssigneePSN: employeeUser.isPSN,
-      attachments: ticketAttachments,
-      lastStatusUpdateDate: currentDate, // Set initial status update date
+      lastStatusUpdateDate: new Date().toISOString(),
     };
+    
+    try {
+        const newTicketId = await createTicket(newTicketData, attachedFiles);
 
-    mockTickets.push(newTicket);
-    console.log("New Ticket Data:", newTicket);
+        if (employeeUser.isPSN) {
+          const isSupervisor = await getSupervisorByPsn(employeeUser.isPSN);
+          if (isSupervisor) {
+            console.log(`Notification: New ticket ${newTicketId} assigned to IS ${isSupervisor.name}`);
+            toast({ title: "IS Notified (Simulated)", description: `Supervisor ${isSupervisor.name} has been notified about your new ticket.`});
+          }
+        }
+        
+        toast({ title: "Ticket Submitted!", description: `Your ticket ${newTicketId} has been successfully raised.` });
+        router.push('/dashboard');
 
-    if (employeeUser.isPSN) {
-      const isSupervisor = mockSupervisors.find(s => s.psn === employeeUser.isPSN);
-      if (isSupervisor) {
-        console.log(`Notification: New ticket ${newTicketId} assigned to IS ${isSupervisor.name}`);
-        toast({ title: "IS Notified (Simulated)", description: `Supervisor ${isSupervisor.name} has been notified about your new ticket.`});
-      }
+    } catch (error) {
+        console.error("Failed to create ticket:", error);
+        toast({ title: "Error", description: "Failed to submit your ticket. Please try again.", variant: "destructive" });
+    } finally {
+        setIsLoading(false);
     }
-
-    setIsLoading(false);
-    toast({ title: "Ticket Submitted!", description: `Your ticket ${newTicketId} has been successfully raised.` });
-    router.push('/dashboard');
   };
 
   return (

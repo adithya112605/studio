@@ -11,9 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { mockEmployees, mockSupervisors, allMockUsers } from "@/data/mockData"; 
 import { Loader2 } from 'lucide-react';
 import ScrollReveal from '@/components/common/ScrollReveal';
+import { getUserByPsn } from '@/lib/queries';
 
 const forgotPasswordSchema = z.object({
   psn: z.string() 
@@ -40,10 +40,9 @@ export default function ForgotPasswordPage() {
 
   const handleSendInstructions: SubmitHandler<ForgotPasswordFormValues> = async (data) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); 
-
+    
     const psnNumber = Number(data.psn);
-    const userAccount = allMockUsers.find(u => u.psn === psnNumber);
+    const userAccount = await getUserByPsn(psnNumber);
 
     if (userAccount && userAccount.businessEmail) {
       toast({

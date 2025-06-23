@@ -12,8 +12,8 @@ import {
   type User as FirebaseUser 
 } from "firebase/auth";
 import { auth as firebaseAuth } from '@/lib/firebase';
-import { allMockUsers, mockEmployees, mockSupervisors } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+import { getUserByPsn, getEmployeeByPsn, getAllEmployees } from '@/lib/queries';
 
 interface AuthContextType {
   user: User | null;
@@ -46,39 +46,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser && firebaseUser.email) {
-        let lntUser = allMockUsers.find(u => u.businessEmail?.toLowerCase() === firebaseUser.email?.toLowerCase());
+        
+        // Find user by email in the database
+        const allEmployees = await getAllEmployees();
+        // This is a simplification. In a real scenario, you'd have a users table with unique emails.
+        // Here we have to check both employees and supervisors tables.
+        const employee = allEmployees.find(e => e.businessEmail?.toLowerCase() === firebaseUser.email!.toLowerCase());
+
+        let lntUser: User | null = await getUserByPsn(employee?.psn || 0);
         
         if (lntUser) {
-          // Dynamic Role Promotion Logic
-          const isSupervisorForSomeone = mockEmployees.some(emp => 
-            emp.isPSN === lntUser!.psn || emp.nsPSN === lntUser!.psn || emp.dhPSN === lntUser!.psn
-          );
-
-          if (isSupervisorForSomeone) {
-            let supervisorProfile = mockSupervisors.find(s => s.psn === lntUser!.psn);
-            if (supervisorProfile) {
-              // If a formal supervisor profile exists, use it.
-              lntUser = supervisorProfile;
-            } else {
-              // If no formal supervisor profile exists, but they manage people,
-              // create a temporary supervisor object for the session.
-              let functionalRole: 'IS' | 'NS' | 'DH' = 'IS';
-              if (mockEmployees.some(e => e.dhPSN === lntUser!.psn)) functionalRole = 'DH';
-              else if (mockEmployees.some(e => e.nsPSN === lntUser!.psn)) functionalRole = 'NS';
-
-              const tempSupervisor: Supervisor = {
-                ...lntUser,
-                role: functionalRole,
-                functionalRole: functionalRole,
-                title: `${functionalRole} (Acting)`,
-              };
-              lntUser = tempSupervisor;
-            }
-          }
           setUser(lntUser);
-
         } else {
-          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found. Logging out.`);
+          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found in DB. Logging out.`);
           toast({
             title: "Profile Mismatch",
             description: "Your authentication was successful, but we could not find a matching L&T user profile. Please contact IT support.",
@@ -98,8 +78,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
   const checkPSNExists = async (psn: number): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return allMockUsers.some(u => u.psn === psn);
+    const user = await getUserByPsn(psn);
+    return !!user;
   };
 
   const login = async (psn: number, password?: string): Promise<boolean> => {
@@ -108,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
     }
 
-    const lntUser = allMockUsers.find(u => u.psn === psn);
+    const lntUser = await getUserByPsn(psn);
 
     if (!lntUser || !lntUser.businessEmail) {
       toast({
@@ -130,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       await signInWithEmailAndPassword(firebaseAuth, lntUser.businessEmail, password);
+      // onAuthStateChanged will handle setting the user state.
       return true;
     } catch (error: any) {
       console.error("Firebase login error:", error);
@@ -171,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, message: "Authentication service is unavailable." };
     }
 
-    const lntUser = allMockUsers.find(u => u.psn === psn);
+    const lntUser = await getUserByPsn(psn);
 
     if (!lntUser || !lntUser.businessEmail) {
       return { success: false, message: "PSN not found or no business email is associated with it. Cannot create account." };

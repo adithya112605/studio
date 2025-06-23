@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState }from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import type { AddEmployeeFormData, Employee } from '@/types';
-import { mockProjects, mockJobCodes, mockSupervisors, mockEmployees, mockGrades } from '@/data/mockData';
+import type { AddEmployeeFormData, Project, JobCode } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -19,10 +18,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-
+import { getAllProjects, getAllJobCodes, getAllGrades, addEmployee } from '@/lib/queries';
 
 const addEmployeeSchema = z.object({
-  psn: z.string() // Changed for maxLength
+  psn: z.string()
     .min(1, "PSN is required.")
     .max(8, "PSN must be 1 to 8 digits.")
     .regex(/^[0-9]+$/, "PSN must be a number."),
@@ -41,6 +40,23 @@ export default function AddEmployeeForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [jobCodes, setJobCodes] = useState<JobCode[]>([]);
+  const [grades, setGrades] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const [projectsData, jobCodesData, gradesData] = await Promise.all([
+        getAllProjects(),
+        getAllJobCodes(),
+        getAllGrades(),
+      ]);
+      setProjects(projectsData);
+      setJobCodes(jobCodesData);
+      setGrades(gradesData);
+    }
+    fetchData();
+  }, []);
 
   const { register, handleSubmit, control, formState: { errors }, setValue } = useForm<AddEmployeeFormData>({
     resolver: zodResolver(addEmployeeSchema),
@@ -55,30 +71,16 @@ export default function AddEmployeeForm() {
 
   const onSubmit: SubmitHandler<AddEmployeeFormData> = async (data) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-
-    const newEmployee: Employee = {
-      psn: Number(data.psn),
-      name: data.name,
-      businessEmail: data.businessEmail,
-      dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
-      project: data.project,
-      jobCodeId: data.jobCodeId,
-      grade: data.grade,
-      role: 'Employee',
-      isPSN: data.isPSN ? Number(data.isPSN) : undefined,
-      isName: data.isPSN ? mockSupervisors.find(s => s.psn === Number(data.isPSN))?.name : undefined,
-      nsPSN: data.nsPSN ? Number(data.nsPSN) : undefined,
-      nsName: data.nsPSN ? mockSupervisors.find(s => s.psn === Number(data.nsPSN))?.name : undefined,
-      dhPSN: data.dhPSN ? Number(data.dhPSN) : undefined,
-      dhName: data.dhPSN ? mockSupervisors.find(s => s.psn === Number(data.dhPSN))?.name : undefined,
-    };
-
-    mockEmployees.push(newEmployee);
-    console.log("New Employee Data:", newEmployee);
-    setIsLoading(false);
-    toast({ title: "Employee Added", description: `${newEmployee.name} (${newEmployee.psn}) has been added.` });
-    router.push('/dashboard');
+    try {
+      await addEmployee(data);
+      toast({ title: "Employee Added", description: `${data.name} (${data.psn}) has been added.` });
+      router.push('/dashboard');
+    } catch (error) {
+      console.error("Failed to add employee:", error);
+      toast({ title: "Error", description: "Failed to add employee. The PSN might already exist.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -161,7 +163,7 @@ export default function AddEmployeeForm() {
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger id="project"><SelectValue placeholder="Select project" /></SelectTrigger>
                     <SelectContent>
-                      {mockProjects.map(p => (<SelectItem key={p.id} value={p.id}>{p.name} ({p.city})</SelectItem>))}
+                      {projects.map(p => (<SelectItem key={p.id} value={p.id}>{p.name} ({p.city})</SelectItem>))}
                     </SelectContent>
                   </Select>
                 )}
@@ -177,7 +179,7 @@ export default function AddEmployeeForm() {
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger id="grade"><SelectValue placeholder="Select grade (e.g., M1-A)" /></SelectTrigger>
                     <SelectContent>
-                      {mockGrades.map(g => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
+                      {grades.map(g => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
                     </SelectContent>
                   </Select>
                 )}
@@ -195,7 +197,7 @@ export default function AddEmployeeForm() {
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger id="jobCodeId"><SelectValue placeholder="Select job code/title" /></SelectTrigger>
                     <SelectContent>
-                      {mockJobCodes.map(jc => (<SelectItem key={jc.id} value={jc.id}>{jc.code} - {jc.description}</SelectItem>))}
+                      {jobCodes.map(jc => (<SelectItem key={jc.id} value={jc.id}>{jc.code} - {jc.description}</SelectItem>))}
                     </SelectContent>
                   </Select>
                 )}

@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import type { AddSupervisorFormData, Supervisor } from '@/types';
-import { mockProjects, mockCities, mockSupervisors } from '@/data/mockData';
+import type { AddSupervisorFormData, Project, City } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, CalendarIcon } from 'lucide-react';
@@ -20,9 +19,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { getAllProjects, addSupervisor } from '@/lib/queries';
 
 const addSupervisorSchema = z.object({
-  psn: z.string() // Changed for maxLength
+  psn: z.string()
     .min(1, "PSN is required.")
     .max(8, "PSN must be 1 to 8 digits.")
     .regex(/^[0-9]+$/, "PSN must be a number."),
@@ -40,6 +40,19 @@ export default function AddSupervisorForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+
+
+  useEffect(() => {
+    async function fetchData() {
+      const projectsData = await getAllProjects();
+      setProjects(projectsData);
+      const uniqueCities = Array.from(new Set(projectsData.map(p => p.city))).sort();
+      setCities(uniqueCities);
+    }
+    fetchData();
+  }, []);
 
   const { register, handleSubmit, control, setValue, getValues, watch, formState: { errors } } = useForm<AddSupervisorFormData>({
     resolver: zodResolver(addSupervisorSchema),
@@ -60,33 +73,16 @@ export default function AddSupervisorForm() {
 
   const onSubmit: SubmitHandler<AddSupervisorFormData> = async (data) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const supervisorDataSubmit = { ...data };
-    if (supervisorDataSubmit.branchProject === "NO_PROJECT_SELECTED") {
-        supervisorDataSubmit.branchProject = undefined;
+    try {
+        await addSupervisor(data);
+        toast({ title: "Supervisor Added", description: `${data.name} (${data.psn}) has been added as ${data.title}.` });
+        router.push('/dashboard');
+    } catch (error) {
+        console.error("Failed to add supervisor:", error);
+        toast({ title: "Error", description: "Failed to add supervisor. The PSN might already exist.", variant: "destructive" });
+    } finally {
+        setIsLoading(false);
     }
-
-    const newSupervisor: Supervisor = {
-      psn: Number(supervisorDataSubmit.psn), // Convert PSN string to number
-      name: supervisorDataSubmit.name,
-      businessEmail: supervisorDataSubmit.businessEmail,
-      dateOfBirth: supervisorDataSubmit.dateOfBirth ? format(supervisorDataSubmit.dateOfBirth, "yyyy-MM-dd") : undefined,
-      title: supervisorDataSubmit.title,
-      functionalRole: supervisorDataSubmit.functionalRole,
-      branchProject: supervisorDataSubmit.branchProject,
-      cityAccess: supervisorDataSubmit.cityAccess,
-      projectsHandledIds: supervisorDataSubmit.projectsHandledIds,
-      role: supervisorDataSubmit.functionalRole,
-      ticketsResolved: 0,
-      ticketsPending: 0,
-    };
-
-    mockSupervisors.push(newSupervisor);
-    console.log("New Supervisor Data:", newSupervisor);
-    setIsLoading(false);
-    toast({ title: "Supervisor Added", description: `${newSupervisor.name} (${newSupervisor.psn}) has been added as ${newSupervisor.title}.` });
-    router.push('/dashboard');
   };
 
   const handleCityAccessSelection = (cityName: string) => {
@@ -204,7 +200,7 @@ export default function AddSupervisorForm() {
                     <SelectTrigger id="branchProject-supervisor"> <SelectValue placeholder="Select primary project if applicable" /> </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="NO_PROJECT_SELECTED">None</SelectItem>
-                        {mockProjects.map(p => ( <SelectItem key={p.id} value={p.id}>{p.name} ({p.city})</SelectItem> ))}
+                        {projects.map(p => ( <SelectItem key={p.id} value={p.id}>{p.name} ({p.city})</SelectItem> ))}
                     </SelectContent>
                     </Select>
                 )}
@@ -216,15 +212,15 @@ export default function AddSupervisorForm() {
             <div className="space-y-2">
                 <Label>City Access (for DH/IC Head)</Label>
                 <div className="max-h-48 overflow-y-auto space-y-2 rounded-md border p-4">
-                    {mockCities.map(c => (
-                        <div key={c.name} className="flex items-center space-x-2">
+                    {cities.map(city => (
+                        <div key={city} className="flex items-center space-x-2">
                             <Checkbox
-                            id={`city-${c.name}`}
-                            checked={getValues("cityAccess")?.includes(c.name) || selectedFunctionalRole === 'IC Head'}
-                            onCheckedChange={() => handleCityAccessSelection(c.name)}
+                            id={`city-${city}`}
+                            checked={getValues("cityAccess")?.includes(city) || selectedFunctionalRole === 'IC Head'}
+                            onCheckedChange={() => handleCityAccessSelection(city)}
                             disabled={selectedFunctionalRole === 'IC Head'}
                             />
-                            <Label htmlFor={`city-${c.name}`} className="font-normal cursor-pointer"> {c.name} </Label>
+                            <Label htmlFor={`city-${city}`} className="font-normal cursor-pointer"> {city} </Label>
                         </div>
                     ))}
                 </div>
