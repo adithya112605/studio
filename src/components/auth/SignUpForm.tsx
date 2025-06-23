@@ -117,8 +117,14 @@ export default function SignUpForm() {
         description: "This PSN is not found in our records. Please verify your PSN or contact L&T Admin if you believe this is an error.",
         variant: "destructive",
       });
+    } else if (result === 'db_error') {
+      toast({
+        title: "Database Not Found",
+        description: "The application database has not been set up. Please run `npm run db:seed` in your terminal and then try again.",
+        variant: "destructive",
+        duration: 10000,
+      });
     }
-    // If result is 'db_error', the toast from checkPSNExists is already shown, so we do nothing more here.
   };
 
   const handlePasswordSubmit: SubmitHandler<SignUpStep2Values> = async (data) => {

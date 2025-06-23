@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!firebaseAuth) {
+        toast(firebaseDisabledMessage);
         setLoading(false);
         return;
     }
@@ -51,7 +52,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
         
         if (error === 'db_not_seeded') {
-          console.error("Database not seeded. Please run `npm run db:seed` and refresh the page.");
+          toast({
+            title: "Database Not Found",
+            description: "The application database has not been set up. Please run `npm run db:seed` in your terminal and then refresh this page.",
+            variant: "destructive",
+            duration: 10000,
+          });
           setUser(null);
         } else if (error) {
           toast({ title: "Database Error", description: "An unexpected error occurred while fetching user data.", variant: "destructive" });
@@ -80,9 +86,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkPSNExists = async (psn: number): Promise<boolean | 'db_error'> => {
     const result = await checkPSNExistsAction(psn);
-    if (result === 'db_error') {
-      console.error("Database not seeded. Please run `npm run db:seed`.");
-    }
+    // Let the calling component handle the UI feedback for 'db_error'.
+    // This makes the context more reusable and less prescriptive about UI.
     return result;
   };
 
