@@ -5,20 +5,22 @@ import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes
 import fs from 'fs';
 import path from 'path';
 
-// This function will be called directly from the command line
+// This is the definitive database seeding script.
+// It is designed to be run manually from the command line via `npm run db:seed`.
 async function seedDatabase() {
   const dbPath = path.resolve('./db.sqlite');
 
+  console.log('🔄 Starting database seed process...');
+  
   // Step 1: Forcefully delete the old database file. This is crucial to break
-  // any stale connections held by the hot-reloading dev server.
+  // any stale connections held by a running development server.
   if (fs.existsSync(dbPath)) {
     try {
       fs.unlinkSync(dbPath);
-      console.log("✅ Successfully deleted existing database file.");
+      console.log('✅ Successfully deleted existing database file.');
     } catch (err) {
-      console.error("❌ Error deleting existing database file:", err);
-      // Exit with an error code because if this fails, seeding cannot succeed.
-      process.exit(1);
+      console.error('❌ Error deleting existing database file:', err);
+      process.exit(1); // Exit if this fails, as seeding cannot succeed.
     }
   }
 
@@ -27,9 +29,9 @@ async function seedDatabase() {
     // Step 2: Open a brand new database connection.
     db = await open({
       filename: dbPath,
-      driver: sqlite3.Database
+      driver: sqlite3.Database,
     });
-    console.log("✅ New database file created. Creating schema...");
+    console.log('✅ New database file created. Creating schema...');
 
     // Step 3: Create the database schema.
     await db.exec(`
@@ -40,9 +42,9 @@ async function seedDatabase() {
         CREATE TABLE tickets ( id TEXT PRIMARY KEY, psn INTEGER NOT NULL, employeeName TEXT NOT NULL, query TEXT NOT NULL, followUpQuery TEXT, priority TEXT NOT NULL, dateOfQuery TEXT NOT NULL, actionPerformed TEXT, dateOfResponse TEXT, status TEXT NOT NULL, currentAssigneePSN INTEGER, project TEXT NOT NULL, lastStatusUpdateDate TEXT NOT NULL );
         CREATE TABLE ticket_attachments ( id TEXT PRIMARY KEY, ticket_id TEXT NOT NULL, fileName TEXT NOT NULL, fileType TEXT NOT NULL, urlOrContent TEXT NOT NULL, uploadedAt TEXT NOT NULL, FOREIGN KEY (ticket_id) REFERENCES tickets(id) );
     `);
-    console.log("✅ Tables created. Seeding data...");
+    console.log('✅ Tables created. Seeding data...');
 
-    // Step 4: Seed all the data within a single transaction for performance.
+    // Step 4: Seed all the data within a single transaction for performance and safety.
     await db.exec('BEGIN TRANSACTION;');
     
     for (const p of mockProjects) await db.run('INSERT INTO projects (id, name, city) VALUES (?, ?, ?)', p.id, p.name, p.city);
@@ -63,21 +65,42 @@ async function seedDatabase() {
     console.log(`✅ Seeding complete. ${mockProjects.length} projects, ${mockJobCodes.length} job codes, ${mockEmployees.length} employees, ${mockSupervisors.length} supervisors, and ${mockTickets.length} tickets inserted.`);
 
   } catch (err: any) {
-    console.error("❌ A critical error occurred during the seeding process:", err.message);
+    console.error('❌ A critical error occurred during the seeding process:', err.message);
     if (db) {
-      await db.exec('ROLLBACK;').catch(rbErr => console.error("Rollback failed:", rbErr));
+      await db.exec('ROLLBACK;').catch(rbErr => console.error('Rollback failed:', rbErr));
     }
+    process.exit(1); // Exit with an error code if seeding fails
   } finally {
-    // Step 5: Gracefully close the connection to ensure all data is flushed to the file.
+    // Step 5: Gracefully close the connection.
     if (db) {
       await db.close();
-      console.log("✅ Database connection closed by seed script.");
+      console.log('✅ Database connection closed by seed script.');
     }
+  }
+
+  // Final Step: Trigger a server restart in development by "touching" a watched file.
+  // This is the most reliable way to make the Next.js dev server discard its
+  // old, stale database connection and connect to the new, correct one.
+  try {
+    const configPath = path.resolve('./next.config.ts');
+    const time = new Date();
+    // This updates the file's modification time, which Next.js watches.
+    fs.utimesSync(configPath, time, time);
+    console.log('\n\n✅ Touched next.config.ts to trigger a server restart.');
+    console.log('🟢 Your app is now ready. The server is restarting in the background.');
+    console.log('✨ Please refresh your browser in a few moments. ✨\n');
+  } catch (err) {
+    console.warn('\n⚠️ Could not touch next.config.ts to trigger server restart.', err);
+    console.warn('You may need to manually restart the dev server or refresh the browser for changes to take effect.\n');
   }
 }
 
-// Execute the function
-seedDatabase().catch(err => {
+// This guard is crucial. It ensures the seed script ONLY runs when you
+// explicitly execute `npm run db:seed` from the terminal. It will NOT run on
+// every server change or restart, which was the cause of the crash loop.
+if (require.main === module) {
+  seedDatabase().catch(err => {
     console.error("Seeding script failed to execute:", err);
     process.exit(1);
-});
+  });
+}
