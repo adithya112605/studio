@@ -77,7 +77,7 @@ export default function SignInForm() {
       <Card className="w-full max-w-md shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Sign In</CardTitle>
-          <CardDescription>Enter your PSN and password. For a demo, you can use PSN <code className="font-bold text-primary">10004703</code> with password <code className="font-bold text-primary">password</code>.</CardDescription>
+          <CardDescription>Enter your PSN and password. For a demo, use PSN <code className="font-bold text-primary">10004703</code> with password <code className="font-bold text-primary">password</code>.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

@@ -14,16 +14,19 @@ async function clearCollection(collectionName: string) {
 
     const q = query(collection(db, collectionName));
     const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+        console.log(`  - '${collectionName}' collection is already empty.`);
+        return;
+    }
+
     const batch = writeBatch(db);
     querySnapshot.forEach((doc) => {
         batch.delete(doc.ref);
     });
-    if(!querySnapshot.empty){
-        await batch.commit();
-        console.log(`  - Cleared all documents from '${collectionName}' collection.`);
-    } else {
-        console.log(`  - '${collectionName}' collection is already empty.`);
-    }
+    
+    await batch.commit();
+    console.log(`  - Cleared all ${querySnapshot.size} documents from '${collectionName}' collection.`);
 }
 
 
@@ -37,15 +40,22 @@ async function seedFirestore() {
   
   try {
     // Clear existing data to ensure a fresh start
-    console.log('  - Clearing existing data...');
+    console.log('--- Clearing Existing Data ---');
+    // Clear ticket subcollections first if they exist, before clearing tickets
+    const ticketsSnapshot = await getDocs(collection(db, 'tickets'));
+    for (const ticketDoc of ticketsSnapshot.docs) {
+        await clearCollection(`tickets/${ticketDoc.id}/attachments`);
+    }
     await clearCollection('tickets');
     await clearCollection('projects');
     await clearCollection('job_codes');
     await clearCollection('employees');
     await clearCollection('supervisors');
+    console.log('--- Data Cleared Successfully ---\n');
 
     const batch = writeBatch(db);
 
+    console.log('--- Seeding New Data ---');
     console.log(`  - Preparing to seed ${mockProjects.length} projects...`);
     mockProjects.forEach(p => {
       const docRef = doc(db, 'projects', p.id);
@@ -70,12 +80,13 @@ async function seedFirestore() {
       batch.set(docRef, { ...sup, businessEmail: sup.businessEmail?.toLowerCase() });
     });
     
-    console.log(`  - Preparing to seed ${mockTickets.length} tickets...`);
+    console.log(`  - Preparing to seed ${mockTickets.length} tickets (with attachments)...`);
     mockTickets.forEach(ticket => {
-        const docRef = doc(db, "tickets", ticket.id);
         const { attachments, ...ticketData } = ticket;
+        const docRef = doc(db, "tickets", ticket.id);
         batch.set(docRef, ticketData);
-        if (attachments) {
+        
+        if (attachments && attachments.length > 0) {
             attachments.forEach(att => {
                 const attDocRef = doc(db, `tickets/${ticket.id}/attachments`, att.id);
                 batch.set(attDocRef, att);
@@ -85,12 +96,12 @@ async function seedFirestore() {
 
     console.log('  - Committing batch write to Firestore... (This may take a moment)');
     await batch.commit();
-    console.log('✅ Firestore seeding complete!');
-    console.log(`   - ${mockProjects.length} projects`);
-    console.log(`   - ${mockJobCodes.length} job codes`);
-    console.log(`   - ${mockEmployees.length} employees`);
-    console.log(`   - ${mockSupervisors.length} supervisors`);
-    console.log(`   - ${mockTickets.length} tickets`);
+    console.log('\n✅ Firestore seeding complete!');
+    console.log(`   - Seeded ${mockProjects.length} projects`);
+    console.log(`   - Seeded ${mockJobCodes.length} job codes`);
+    console.log(`   - Seeded ${mockEmployees.length} employees`);
+    console.log(`   - Seeded ${mockSupervisors.length} supervisors`);
+    console.log(`   - Seeded ${mockTickets.length} tickets`);
     console.log('\nFirestore is now populated. Your application should be ready.');
 
   } catch (error) {
