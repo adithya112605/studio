@@ -1,89 +1,77 @@
 
-import { open, type Database } from 'sqlite';
-import sqlite3 from 'sqlite3';
+'use server';
+
+import { db } from './firebase';
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from '@/data/mockData';
-import fs from 'fs';
-import path from 'path';
+import { doc, writeBatch } from "firebase/firestore";
 
-// This is the definitive database seeding script.
-// It is designed to be run manually from the command line via `npm run db:seed`.
-async function seedDatabase() {
-  const dbPath = path.resolve('./db.sqlite');
-
-  console.log('🔄 Starting database seed process...');
-  
-  // Step 1: Forcefully delete the old database file. This is crucial to break
-  // any stale connections held by a running development server.
-  if (fs.existsSync(dbPath)) {
-    try {
-      fs.unlinkSync(dbPath);
-      console.log('✅ Successfully deleted existing database file.');
-    } catch (err) {
-      console.error('❌ Error deleting existing database file:', err);
-      process.exit(1); // Exit if this fails, as seeding cannot succeed.
-    }
+async function seedFirestore() {
+  if (!db) {
+    console.error("\n\n❌ Firestore is not initialized. Please check your Firebase config in .env.local and ensure the server has restarted.\n\n");
+    process.exit(1);
   }
+  console.log('🔄 Starting Firestore seed process...');
+  const batch = writeBatch(db);
 
-  let db: Database | null = null;
   try {
-    // Step 2: Open a brand new database connection.
-    db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
+    // Note: We are not deleting old data. Seeding is an additive process here.
+    // For a production app, you might want a separate script to clear collections.
+    console.log('  - Preparing Projects...');
+    mockProjects.forEach(p => {
+      const docRef = doc(db, 'projects', p.id);
+      batch.set(docRef, p);
     });
-    console.log('✅ New database file created. Creating schema...');
 
-    // Step 3: Create the database schema.
-    await db.exec(`
-        CREATE TABLE projects ( id TEXT PRIMARY KEY, name TEXT NOT NULL, city TEXT NOT NULL );
-        CREATE TABLE job_codes ( id TEXT PRIMARY KEY, code TEXT NOT NULL, description TEXT NOT NULL );
-        CREATE TABLE employees ( psn INTEGER PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL, grade TEXT NOT NULL, jobCodeId TEXT, project TEXT, businessEmail TEXT, dateOfBirth TEXT, isPSN INTEGER, isName TEXT, nsPSN INTEGER, nsName TEXT, dhPSN INTEGER, dhName TEXT );
-        CREATE TABLE supervisors ( psn INTEGER PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL, functionalRole TEXT NOT NULL, title TEXT NOT NULL, businessEmail TEXT, dateOfBirth TEXT, branchProject TEXT, projectsHandledIds TEXT, cityAccess TEXT, ticketsResolved INTEGER, ticketsPending INTEGER );
-        CREATE TABLE tickets ( id TEXT PRIMARY KEY, psn INTEGER NOT NULL, employeeName TEXT NOT NULL, query TEXT NOT NULL, followUpQuery TEXT, priority TEXT NOT NULL, dateOfQuery TEXT NOT NULL, actionPerformed TEXT, dateOfResponse TEXT, status TEXT NOT NULL, currentAssigneePSN INTEGER, project TEXT NOT NULL, lastStatusUpdateDate TEXT NOT NULL );
-        CREATE TABLE ticket_attachments ( id TEXT PRIMARY KEY, ticket_id TEXT NOT NULL, fileName TEXT NOT NULL, fileType TEXT NOT NULL, urlOrContent TEXT NOT NULL, uploadedAt TEXT NOT NULL, FOREIGN KEY (ticket_id) REFERENCES tickets(id) );
-    `);
-    console.log('✅ Tables created. Seeding data...');
+    console.log('  - Preparing Job Codes...');
+    mockJobCodes.forEach(jc => {
+      const docRef = doc(db, 'job_codes', jc.id);
+      batch.set(docRef, jc);
+    });
 
-    // Step 4: Seed all the data within a single transaction for performance and safety.
-    await db.exec('BEGIN TRANSACTION;');
+    console.log('  - Preparing Employees...');
+    mockEmployees.forEach(emp => {
+      const docRef = doc(db, 'employees', emp.psn.toString());
+      batch.set(docRef, { ...emp, businessEmail: emp.businessEmail?.toLowerCase() });
+    });
+
+    console.log('  - Preparing Supervisors...');
+    mockSupervisors.forEach(sup => {
+      const docRef = doc(db, 'supervisors', sup.psn.toString());
+      batch.set(docRef, { ...sup, businessEmail: sup.businessEmail?.toLowerCase() });
+    });
     
-    for (const p of mockProjects) await db.run('INSERT INTO projects (id, name, city) VALUES (?, ?, ?)', p.id, p.name, p.city);
-    for (const jc of mockJobCodes) await db.run('INSERT INTO job_codes (id, code, description) VALUES (?, ?, ?)', jc.id, jc.code, jc.description);
-    for (const emp of mockEmployees) await db.run('INSERT INTO employees (psn, name, role, grade, jobCodeId, project, businessEmail, dateOfBirth, isPSN, isName, nsPSN, nsName, dhPSN, dhName) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', emp.psn, emp.name, emp.role, emp.grade, emp.jobCodeId, emp.project, emp.businessEmail, emp.dateOfBirth, emp.isPSN, emp.isName, emp.nsPSN, emp.nsName, emp.dhPSN, emp.dhName);
-    for (const sup of mockSupervisors) await db.run('INSERT INTO supervisors (psn, name, role, functionalRole, title, businessEmail, dateOfBirth, branchProject, projectsHandledIds, cityAccess, ticketsResolved, ticketsPending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', sup.psn, sup.name, sup.role, sup.functionalRole, sup.title, sup.businessEmail, sup.dateOfBirth, sup.branchProject, JSON.stringify(sup.projectsHandledIds || []), JSON.stringify(sup.cityAccess || []), sup.ticketsResolved, sup.ticketsPending);
-
-    for (const ticket of mockTickets) {
-        await db.run('INSERT INTO tickets (id, psn, employeeName, query, followUpQuery, priority, dateOfQuery, actionPerformed, dateOfResponse, status, currentAssigneePSN, project, lastStatusUpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', ticket.id, ticket.psn, ticket.employeeName, ticket.query, ticket.followUpQuery, ticket.priority, ticket.dateOfQuery, ticket.actionPerformed, ticket.dateOfResponse, ticket.status, ticket.currentAssigneePSN, ticket.project, ticket.lastStatusUpdateDate);
-        if (ticket.attachments) {
-            for (const attachment of ticket.attachments) {
-                await db.run('INSERT INTO ticket_attachments (id, ticket_id, fileName, fileType, urlOrContent, uploadedAt) VALUES (?, ?, ?, ?, ?, ?)', attachment.id, ticket.id, attachment.fileName, attachment.fileType, attachment.urlOrContent, attachment.uploadedAt);
-            }
+    console.log('  - Preparing Tickets...');
+    mockTickets.forEach(ticket => {
+        const docRef = doc(db, "tickets", ticket.id);
+        const { attachments, ...ticketData } = ticket;
+        batch.set(docRef, ticketData);
+        if (attachments) {
+            attachments.forEach(att => {
+                const attDocRef = doc(db, `tickets/${ticket.id}/attachments`, att.id);
+                batch.set(attDocRef, att);
+            });
         }
-    }
-    
-    await db.exec('COMMIT;');
-    console.log(`✅ Seeding complete. ${mockProjects.length} projects, ${mockJobCodes.length} job codes, ${mockEmployees.length} employees, ${mockSupervisors.length} supervisors, and ${mockTickets.length} tickets inserted.`);
+    });
 
-  } catch (err: any) {
-    console.error('❌ A critical error occurred during the seeding process:', err.message);
-    if (db) {
-      await db.exec('ROLLBACK;').catch(rbErr => console.error('Rollback failed:', rbErr));
-    }
-    process.exit(1); // Exit with an error code if seeding fails
-  } finally {
-    // Step 5: Gracefully close the connection.
-    if (db) {
-      await db.close();
-      console.log('✅ Database connection closed by seed script.');
-    }
+    console.log('  - Committing batch write to Firestore... (This may take a moment)');
+    await batch.commit();
+    console.log('✅ Firestore seeding complete!');
+    console.log(`   - ${mockProjects.length} projects`);
+    console.log(`   - ${mockJobCodes.length} job codes`);
+    console.log(`   - ${mockEmployees.length} employees`);
+    console.log(`   - ${mockSupervisors.length} supervisors`);
+    console.log(`   - ${mockTickets.length} tickets`);
+    console.log('\nFirestore is now populated. Your application should be ready.');
+
+  } catch (error) {
+    console.error('❌ A critical error occurred during the Firestore seeding process:', error);
   }
 }
 
-// This guard is crucial. It ensures the seed script ONLY runs when you
-// explicitly execute `npm run db:seed` from the terminal. It will NOT run on
-// every server change or restart.
+// This guard ensures the seed script ONLY runs when you
+// explicitly execute `npm run db:seed` from the terminal.
 if (require.main === module) {
-  seedDatabase().catch(err => {
+  seedFirestore().catch(err => {
     console.error("Seeding script failed to execute:", err);
     process.exit(1);
   });

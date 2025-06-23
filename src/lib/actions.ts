@@ -17,21 +17,20 @@ import {
   addSupervisor as addSupervisorQuery,
   createTicket as createTicketQuery,
   getSupervisorByPsn as getSupervisorByPsnQuery,
+  getUserByEmail as getUserByEmailQuery,
 } from '@/lib/queries';
 import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket } from '@/types';
 import { revalidatePath } from 'next/cache';
 
 // Action to check if a PSN exists
-export async function checkPSNExistsAction(psn: number): Promise<boolean | 'db_error'> {
+export async function checkPSNExistsAction(psn: number): Promise<boolean> {
   try {
     const user = await getUserByPsn(psn);
     return !!user;
   } catch (error: any) {
-    if (error.message.includes('no such table')) {
-      return 'db_error';
-    }
-    console.error("Error in checkPSNExistsAction:", error);
-    return 'db_error';
+    console.error("[Action Error] checkPSNExistsAction:", error.message);
+    // Log the server error, but return false to the client
+    return false;
   }
 }
 
@@ -44,10 +43,8 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
   try {
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
-    if (error.message.includes('no such table')) {
-      return { success: false, message: "Database not seeded. Please run `npm run db:seed`." };
-    }
-    return { success: false, message: "An unexpected database error occurred." };
+    console.error("[Action Error] loginAction fetching user:", error.message);
+    return { success: false, message: "A database connection error occurred. Please check server logs." };
   }
 
   if (!lntUser || !lntUser.businessEmail) {
@@ -93,10 +90,8 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
   try {
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
-     if (error.message.includes('no such table')) {
-      return { success: false, message: "Database not seeded. Please run `npm run db:seed`." };
-    }
-    return { success: false, message: "An unexpected database error occurred." };
+    console.error("[Action Error] signupAction fetching user:", error.message);
+    return { success: false, message: "A database connection error occurred. Please check server logs." };
   }
 
   if (!lntUser || !lntUser.businessEmail) {
@@ -135,31 +130,13 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
 }
 
 // Action to get user from DB based on email (for onAuthStateChanged)
-export async function getUserByEmailAction(email: string): Promise<{user: User | null, error?: string}> {
+export async function getUserByEmailAction(email: string): Promise<{user: User | null}> {
     try {
-        const allEmployees = await getAllEmployees();
-        const employee = allEmployees.find(e => e.businessEmail?.toLowerCase() === email.toLowerCase());
-
-        if (employee) {
-            const lntUser = await getUserByPsn(employee.psn);
-            return { user: lntUser };
-        }
-        
-        const allSupervisors = await getAllSupervisors();
-        const supervisor = allSupervisors.find(s => s.businessEmail?.toLowerCase() === email.toLowerCase());
-        if (supervisor) {
-            const lntUser = await getUserByPsn(supervisor.psn);
-            return { user: lntUser };
-        }
-
-        return { user: null };
-
+        const user = await getUserByEmailQuery(email);
+        return { user };
     } catch (error: any) {
-        if (error.message.includes('no such table')) {
-            return { user: null, error: 'db_not_seeded' };
-        }
-        console.error("Database error in getUserByEmailAction:", error);
-        return { user: null, error: 'db_error' };
+        console.error("[Action Error] getUserByEmailAction:", error.message);
+        return { user: null }; // Return null on error, log it.
     }
 }
 
@@ -173,10 +150,7 @@ export async function getUserForPasswordResetAction(psn: number): Promise<{ busi
     }
     return null;
   } catch (error: any) {
-    if (error.message.includes('no such table')) {
-        // Just return null if the table doesn't exist
-    }
-    console.error("Error in getUserForPasswordResetAction:", error);
+    console.error("[Action Error] getUserForPasswordResetAction:", error.message);
     return null;
   }
 }

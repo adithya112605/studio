@@ -105,24 +105,18 @@ export default function SignUpForm() {
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
     setIsLoading(true);
     const psnNumber = Number(data.psn);
-    const result = await checkPSNExists(psnNumber);
+    const exists = await checkPSNExists(psnNumber);
     setIsLoading(false);
 
-    if (result === true) {
+    if (exists) {
       setPsnForStep2(psnNumber);
       setStep(2);
-    } else if (result === false) {
+    } else {
       toast({
-        title: "PSN Not Recognized",
-        description: "This PSN is not found in our records. Please verify your PSN or contact L&T Admin if you believe this is an error.",
+        title: "PSN Not Found",
+        description: "This PSN is not found in our database. Please run 'npm run db:seed' or contact admin if you believe this is an error.",
         variant: "destructive",
-      });
-    } else if (result === 'db_error') {
-      toast({
-        title: "Database Not Found",
-        description: "The application database has not been set up. Please run `npm run db:seed` in your terminal and then try again.",
-        variant: "destructive",
-        duration: 10000,
+        duration: 8000
       });
     }
   };
@@ -137,17 +131,16 @@ export default function SignUpForm() {
       return;
     }
     setIsLoading(true);
-    const result = await signup(psnForStep2, data.password); // This now calls Firebase createUser...
-    setIsLoading(false); // setLoading(false) is handled in AuthContext onAuthStateChanged, but for immediate button state
+    const result = await signup(psnForStep2, data.password);
+    setIsLoading(false);
     
     if (result.success) {
       toast({ title: "Account Creation Attempted", description: result.message });
-       // Redirect is handled by AuthContext listener or ProtectedPage
       router.push('/dashboard');
     } else {
       toast({
         title: "Signup Failed",
-        description: result.message, // Error message from Firebase (e.g., email already in use)
+        description: result.message,
         variant: "destructive",
       });
     }
@@ -159,7 +152,7 @@ export default function SignUpForm() {
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
           {step === 1 && <CardDescription>Enter your L&T PSN (up to 8 digits) to begin.</CardDescription>}
-          {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}). Your associated L&T business email will be used for Firebase registration.</CardDescription>}
+          {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}). Your associated L&T business email will be used for registration.</CardDescription>}
         </CardHeader>
         <CardContent>
           {step === 1 && (

@@ -1,186 +1,247 @@
 
-import { getDb } from './db';
-import type { User, Employee, Supervisor, Ticket, Project, JobCode, TicketAttachment, AddEmployeeFormData, AddSupervisorFormData, NewTicketFormData } from '@/types';
+import { db } from './firebase';
+import type { User, Employee, Supervisor, Ticket, Project, JobCode, AddEmployeeFormData, AddSupervisorFormData, TicketAttachment } from '@/types';
+import { collection, doc, getDoc, getDocs, setDoc, query, where, addDoc, writeBatch } from "firebase/firestore";
 import { format } from 'date-fns';
 
-// Helper to parse supervisor JSON fields
-function parseSupervisor(sup: any): Supervisor | null {
-    if (!sup) return null;
-    return {
-        ...sup,
-        projectsHandledIds: sup.projectsHandledIds ? JSON.parse(sup.projectsHandledIds) : [],
-        cityAccess: sup.cityAccess ? JSON.parse(sup.cityAccess) : [],
-    };
+function checkDb() {
+    if (!db) {
+        throw new Error("Firestore is not initialized. Please check your Firebase config.");
+    }
+    return db;
 }
 
 // === USER QUERIES ===
 
 export async function getUserByPsn(psn: number): Promise<User | null> {
-    const db = await getDb();
-    // Check supervisors table first, as they are a more specific role
-    const supervisor = await db.get('SELECT * FROM supervisors WHERE psn = ?', psn);
-    if (supervisor) return parseSupervisor(supervisor);
+    const firestore = checkDb();
+    const psnString = psn.toString();
     
-    // Fallback to employees table
-    const employee = await db.get('SELECT * FROM employees WHERE psn = ?', psn);
-    return employee || null;
+    const supervisorRef = doc(firestore, 'supervisors', psnString);
+    const supervisorSnap = await getDoc(supervisorRef);
+    if (supervisorSnap.exists()) {
+        return supervisorSnap.data() as Supervisor;
+    }
+    
+    const employeeRef = doc(firestore, 'employees', psnString);
+    const employeeSnap = await getDoc(employeeRef);
+    if (employeeSnap.exists()) {
+        return employeeSnap.data() as Employee;
+    }
+
+    return null;
+}
+
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+    const firestore = checkDb();
+    const lcEmail = email.toLowerCase();
+    
+    const empQuery = query(collection(firestore, 'employees'), where("businessEmail", "==", lcEmail));
+    const empSnap = await getDocs(empQuery);
+    if (!empSnap.empty) {
+        return empSnap.docs[0].data() as Employee;
+    }
+
+    const supQuery = query(collection(firestore, 'supervisors'), where("businessEmail", "==", lcEmail));
+    const supSnap = await getDocs(supQuery);
+    if (!supSnap.empty) {
+        return supSnap.docs[0].data() as Supervisor;
+    }
+    
+    return null;
 }
 
 export async function getAllUsers(): Promise<User[]> {
-    const db = await getDb();
-    const employees = await db.all('SELECT * FROM employees');
-    const supervisorsRaw = await db.all('SELECT * FROM supervisors');
-    const supervisors = supervisorsRaw.map(s => parseSupervisor(s) as Supervisor);
+    const firestore = checkDb();
+    const employeesSnap = await getDocs(collection(firestore, 'employees'));
+    const supervisorsSnap = await getDocs(collection(firestore, 'supervisors'));
+
+    const employees = employeesSnap.docs.map(doc => doc.data() as Employee);
+    const supervisors = supervisorsSnap.docs.map(doc => doc.data() as Supervisor);
+    
     return [...employees, ...supervisors];
 }
 
 export async function getEmployeeByPsn(psn: number): Promise<Employee | null> {
-    const db = await getDb();
-    return await db.get('SELECT * FROM employees WHERE psn = ?', psn);
+    const firestore = checkDb();
+    const docRef = doc(firestore, 'employees', psn.toString());
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as Employee : null;
 }
 
 export async function getSupervisorByPsn(psn: number): Promise<Supervisor | null> {
-    const db = await getDb();
-    const sup = await db.get('SELECT * FROM supervisors WHERE psn = ?', psn);
-    return parseSupervisor(sup);
+    const firestore = checkDb();
+    const docRef = doc(firestore, 'supervisors', psn.toString());
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as Supervisor : null;
 }
 
 export async function getAllSupervisors(): Promise<Supervisor[]> {
-    const db = await getDb();
-    const supervisorsRaw = await db.all('SELECT * FROM supervisors');
-    return supervisorsRaw.map(s => parseSupervisor(s) as Supervisor);
+    const firestore = checkDb();
+    const supervisorsSnap = await getDocs(collection(firestore, 'supervisors'));
+    return supervisorsSnap.docs.map(doc => doc.data() as Supervisor);
 }
 
 export async function getAllEmployees(): Promise<Employee[]> {
-    const db = await getDb();
-    return await db.all('SELECT * FROM employees');
+    const firestore = checkDb();
+    const employeesSnap = await getDocs(collection(firestore, 'employees'));
+    return employeesSnap.docs.map(doc => doc.data() as Employee);
 }
 
 
 // === TICKET QUERIES ===
 
 export async function getTicketById(id: string): Promise<Ticket | null> {
-    const db = await getDb();
-    const ticket = await db.get('SELECT * FROM tickets WHERE id = ?', id);
-    if (ticket) {
-        const attachments = await db.all('SELECT * FROM ticket_attachments WHERE ticket_id = ?', id);
-        ticket.attachments = attachments;
+    const firestore = checkDb();
+    const ticketRef = doc(firestore, 'tickets', id);
+    const ticketSnap = await getDoc(ticketRef);
+
+    if (ticketSnap.exists()) {
+        const ticketData = ticketSnap.data() as Omit<Ticket, 'attachments'>;
+        const attachmentsSnap = await getDocs(collection(firestore, `tickets/${id}/attachments`));
+        const attachments = attachmentsSnap.docs.map(d => d.data() as TicketAttachment);
+        return { ...ticketData, attachments };
     }
-    return ticket;
+    return null;
 }
 
 export async function getTicketsByEmployeePsn(psn: number): Promise<Ticket[]> {
-    const db = await getDb();
-    return await db.all('SELECT * FROM tickets WHERE psn = ? ORDER BY dateOfQuery DESC', psn);
+    const firestore = checkDb();
+    const ticketsRef = collection(firestore, 'tickets');
+    // NOTE: This query requires a composite index in Firestore on (psn, dateOfQuery).
+    // The Firebase console will provide a link to create this index the first time the query fails.
+    const q = query(ticketsRef, where("psn", "==", psn));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as Ticket);
 }
 
 export async function getAllTickets(): Promise<Ticket[]> {
-    const db = await getDb();
-    return await db.all('SELECT * FROM tickets ORDER BY dateOfQuery DESC');
+    const firestore = checkDb();
+    const ticketsSnap = await getDocs(collection(firestore, 'tickets'));
+    return ticketsSnap.docs.map(doc => doc.data() as Ticket);
 }
 
 // === PROJECT & JOB CODE QUERIES ===
 
 export async function getAllProjects(): Promise<Project[]> {
-    const db = await getDb();
-    return await db.all('SELECT * FROM projects');
+    const firestore = checkDb();
+    const projectsSnap = await getDocs(collection(firestore, 'projects'));
+    return projectsSnap.docs.map(doc => doc.data() as Project);
 }
 
 export async function getProjectById(id: string): Promise<Project | null> {
-    const db = await getDb();
-    return await db.get('SELECT * FROM projects WHERE id = ?', id);
+    const firestore = checkDb();
+    const docRef = doc(firestore, 'projects', id);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as Project : null;
 }
 
 export async function getAllJobCodes(): Promise<JobCode[]> {
-    const db = await getDb();
-    return await db.all('SELECT * FROM job_codes');
+    const firestore = checkDb();
+    const jobCodesSnap = await getDocs(collection(firestore, 'job_codes'));
+    return jobCodesSnap.docs.map(doc => doc.data() as JobCode);
 }
 
 export async function getJobCodeById(id: string): Promise<JobCode | null> {
-    const db = await getDb();
-    return await db.get('SELECT * FROM job_codes WHERE id = ?', id);
+    const firestore = checkDb();
+    const docRef = doc(firestore, 'job_codes', id);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as JobCode : null;
 }
 
 export async function getAllGrades(): Promise<string[]> {
-    const db = await getDb();
-    const grades = await db.all<{grade: string}[]>('SELECT DISTINCT grade FROM employees ORDER BY grade');
-    return grades.map(g => g.grade);
+    // In Firestore, this kind of aggregation is best handled by a dedicated 'metadata' document
+    // or by deriving from the client-side mock data for this app's purpose.
+    const allEmployees = await getAllEmployees();
+    const grades = new Set(allEmployees.map(e => e.grade));
+    return Array.from(grades).sort();
 }
 
 // === DATA MUTATION QUERIES ===
 
 export async function addEmployee(data: AddEmployeeFormData) {
-    const db = await getDb();
+    const firestore = checkDb();
     const isName = data.isPSN ? (await getUserByPsn(Number(data.isPSN)))?.name : undefined;
     const nsName = data.nsPSN ? (await getUserByPsn(Number(data.nsPSN)))?.name : undefined;
     const dhName = data.dhPSN ? (await getUserByPsn(Number(data.dhPSN)))?.name : undefined;
 
-    const result = await db.run(
-      'INSERT INTO employees (psn, name, role, grade, jobCodeId, project, businessEmail, dateOfBirth, isPSN, isName, nsPSN, nsName, dhPSN, dhName) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      Number(data.psn), data.name, 'Employee', data.grade, data.jobCodeId, data.project, data.businessEmail, data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined, data.isPSN ? Number(data.isPSN) : undefined, isName, data.nsPSN ? Number(data.nsPSN) : undefined, nsName, data.dhPSN ? Number(data.dhPSN) : undefined, dhName
-    );
-    return result;
+    const newEmployee: Employee = {
+        psn: Number(data.psn),
+        name: data.name,
+        role: 'Employee',
+        grade: data.grade,
+        jobCodeId: data.jobCodeId,
+        project: data.project,
+        businessEmail: data.businessEmail.toLowerCase(),
+        dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
+        isPSN: data.isPSN ? Number(data.isPSN) : undefined,
+        isName: isName,
+        nsPSN: data.nsPSN ? Number(data.nsPSN) : undefined,
+        nsName: nsName,
+        dhPSN: data.dhPSN ? Number(data.dhPSN) : undefined,
+        dhName: dhName,
+    };
+    
+    await setDoc(doc(firestore, 'employees', data.psn), newEmployee);
 }
 
 export async function addSupervisor(data: AddSupervisorFormData) {
-    const db = await getDb();
-    const result = await db.run(
-        'INSERT INTO supervisors (psn, name, role, functionalRole, title, businessEmail, dateOfBirth, branchProject, projectsHandledIds, cityAccess, ticketsResolved, ticketsPending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        Number(data.psn), data.name, data.functionalRole, data.functionalRole, data.title, data.businessEmail, data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined, data.branchProject === "NO_PROJECT_SELECTED" ? undefined : data.branchProject, JSON.stringify(data.projectsHandledIds || []), JSON.stringify(data.cityAccess || []), 0, 0
-    );
-    return result;
+    const firestore = checkDb();
+    
+    const newSupervisor: Supervisor = {
+        psn: Number(data.psn),
+        name: data.name,
+        role: data.functionalRole,
+        functionalRole: data.functionalRole,
+        title: data.title,
+        businessEmail: data.businessEmail.toLowerCase(),
+        dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined,
+        branchProject: data.branchProject === "NO_PROJECT_SELECTED" ? undefined : data.branchProject,
+        projectsHandledIds: data.projectsHandledIds || [],
+        cityAccess: data.cityAccess || [],
+        ticketsResolved: 0,
+        ticketsPending: 0
+    };
+
+    await setDoc(doc(firestore, 'supervisors', data.psn), newSupervisor);
 }
 
-export async function createTicket(ticketData: Omit<Ticket, 'id'>, attachments: File[] = []) {
-    const db = await getDb();
-    
-    // A more robust unique ID for mock purposes
-    const ticketId = `TKT${Date.now()}${Math.random().toString(36).substring(2, 6)}`;
-
-    await db.run(
-        'INSERT INTO tickets (id, psn, employeeName, query, followUpQuery, priority, dateOfQuery, actionPerformed, dateOfResponse, status, currentAssigneePSN, project, lastStatusUpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        ticketId, ticketData.psn, ticketData.employeeName, ticketData.query, ticketData.followUpQuery, ticketData.priority, ticketData.dateOfQuery, ticketData.actionPerformed, ticketData.dateOfResponse, ticketData.status, ticketData.currentAssigneePSN, ticketData.project, ticketData.lastStatusUpdateDate
-    );
-
-    for (const file of attachments) {
-        const attachmentId = `${ticketId}-att-${Date.now()}-${Math.random()}`;
-        const fileType = file.type.startsWith('image/') ? 'image' : 'document';
-        // In a real app, you'd upload the file and store a URL. Here we simulate path.
-        const urlOrContent = `uploads/${ticketId}/${file.name}`; 
-        await db.run(
-            'INSERT INTO ticket_attachments (id, ticket_id, fileName, fileType, urlOrContent, uploadedAt) VALUES (?, ?, ?, ?, ?, ?)',
-            attachmentId, ticketId, file.name, fileType, urlOrContent, new Date().toISOString()
-        );
-    }
-    
-    return ticketId;
+export async function createTicket(ticketData: Omit<Ticket, 'id' | 'attachments'>) {
+    const firestore = checkDb();
+    const ticketsCollection = collection(firestore, 'tickets');
+    const docRef = await addDoc(ticketsCollection, ticketData);
+    return docRef.id;
 }
 
 export async function updateTicket(ticketId: string, data: Partial<Ticket>) {
-    const db = await getDb();
-    const fields = Object.keys(data).filter(k => k !== 'id' && k !== 'attachments');
-    const values = fields.map(k => (data as any)[k]);
-    
-    if (fields.length === 0) return;
+    const firestore = checkDb();
+    if (Object.keys(data).length === 0) return;
 
-    const setClause = fields.map(field => `${field} = ?`).join(', ');
-    
-    await db.run(
-        `UPDATE tickets SET ${setClause} WHERE id = ?`,
-        ...values,
-        ticketId
-    );
+    const ticketRef = doc(firestore, 'tickets', ticketId);
+    await setDoc(ticketRef, data, { merge: true });
 }
 
 export async function addTicketAttachments(ticketId: string, attachments: File[]) {
-    const db = await getDb();
+    const firestore = checkDb();
+    const batch = writeBatch(firestore);
+
     for (const file of attachments) {
+        // NOTE: This does not actually upload the file, just its metadata.
+        // File uploads require Firebase Storage, which is beyond this scope.
         const attachmentId = `${ticketId}-att-${Date.now()}-${Math.random()}`;
         const fileType = file.type.startsWith('image/') ? 'image' : 'document';
-        const urlOrContent = `uploads/${ticketId}/${file.name}`; // Simulated
-        await db.run(
-            'INSERT INTO ticket_attachments (id, ticket_id, fileName, fileType, urlOrContent, uploadedAt) VALUES (?, ?, ?, ?, ?, ?)',
-            attachmentId, ticketId, file.name, fileType, urlOrContent, new Date().toISOString()
-        );
+        const urlOrContent = `uploads/${ticketId}/${file.name}`; // Simulated path
+        const newAttachment: TicketAttachment = {
+            id: attachmentId,
+            fileName: file.name,
+            fileType: fileType,
+            urlOrContent: urlOrContent,
+            uploadedAt: new Date().toISOString()
+        };
+
+        const attDocRef = doc(firestore, `tickets/${ticketId}/attachments`, attachmentId);
+        batch.set(attDocRef, newAttachment);
     }
+    await batch.commit();
 }

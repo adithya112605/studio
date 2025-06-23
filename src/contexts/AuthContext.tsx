@@ -22,7 +22,7 @@ interface AuthContextType {
   signup: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   loading: boolean;
-  checkPSNExists: (psn: number) => Promise<boolean | 'db_error'>;
+  checkPSNExists: (psn: number) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,26 +49,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = firebaseAuth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser && firebaseUser.email) {
-        const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+        const { user: lntUser } = await getUserByEmailAction(firebaseUser.email);
         
-        if (error === 'db_not_seeded') {
-          toast({
-            title: "Database Not Found",
-            description: "The application database has not been set up. Please run `npm run db:seed` in your terminal and then refresh this page.",
-            variant: "destructive",
-            duration: 10000,
-          });
-          setUser(null);
-        } else if (error) {
-          toast({ title: "Database Error", description: "An unexpected error occurred while fetching user data.", variant: "destructive" });
-          setUser(null);
-        } else if (lntUser) {
+        if (lntUser) {
           setUser(lntUser);
         } else {
-          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found in DB. Logging out.`);
+          console.error(`Firebase user ${firebaseUser.email} authenticated, but no matching L&T user profile was found in Firestore. Logging out.`);
           toast({
             title: "Profile Mismatch",
-            description: "Your authentication was successful, but we could not find a matching L&T user profile. Please contact IT support.",
+            description: "Your authentication was successful, but we could not find a matching L&T user profile. Please run 'npm run db:seed' or contact IT support.",
             variant: "destructive",
             duration: 8000,
           });
@@ -84,11 +73,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [toast]);
 
-  const checkPSNExists = async (psn: number): Promise<boolean | 'db_error'> => {
-    const result = await checkPSNExistsAction(psn);
-    // Let the calling component handle the UI feedback for 'db_error'.
-    // This makes the context more reusable and less prescriptive about UI.
-    return result;
+  const checkPSNExists = async (psn: number): Promise<boolean> => {
+      return await checkPSNExistsAction(psn);
   };
 
   const login = async (psn: number, password?: string): Promise<boolean> => {
