@@ -12,11 +12,13 @@ export default function SignUpPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // If auth state is resolved and a user exists, they should be on the dashboard.
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
 
+  // Show a loader while we determine auth state or if a user is being redirected.
   if (loading || user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
@@ -28,6 +30,7 @@ export default function SignUpPage() {
     );
   }
 
+  // Only show the form if we are not loading and there's no user.
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
       <SignUpForm />

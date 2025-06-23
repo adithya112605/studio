@@ -1,7 +1,8 @@
 
+import 'dotenv/config'; // Ensures .env.local is loaded
 import { getFirestoreInstance } from './firebase';
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from '@/data/mockData';
-import { doc, writeBatch, getDocs, collection, getDoc } from "firebase/firestore";
+import { doc, writeBatch, getDocs, collection, getDoc, deleteDoc } from "firebase/firestore";
 
 async function clearCollection(collectionName: string) {
     const db = getFirestoreInstance();

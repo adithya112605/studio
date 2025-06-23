@@ -12,13 +12,14 @@ export default function SignInPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // If the auth state is done loading and we have a user, redirect to the dashboard.
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
   
-  // This will now show a loader ONLY when auth state is being checked,
-  // or after a successful login while redirecting.
+  // While checking auth state or if a user is found and we are about to redirect, show a loader.
+  // This prevents a "flash" of the sign-in form for already authenticated users.
   if (loading || user) { 
       return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
@@ -30,7 +31,7 @@ export default function SignInPage() {
     );
   }
 
-  // If not loading and no user, show the sign-in form.
+  // If not loading and no user, it's safe to show the sign-in form.
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
       <SignInForm />

@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ScrollReveal from '@/components/common/ScrollReveal';
 
@@ -28,7 +27,6 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignInForm() {
   const { login } = useAuth();
-  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,20 +47,16 @@ export default function SignInForm() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    toast({
-      title: "Google Sign-In (Placeholder)",
-      description: "Google Sign-In with Firebase is not fully implemented in this prototype. Use PSN/Password.",
-      duration: 7000,
-    });
-  };
-
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     setIsSubmitting(true);
     try {
+      // The login function now handles success (via onAuthStateChanged) and failure (by throwing an error).
       await login(Number(data.psn), data.password);
+      // On success, the parent page will redirect. No navigation logic needed here.
     } catch (error) {
-      // Error is already toasted by the login function in AuthContext
+      // The context already shows a toast for the error.
+      // We just need to stop the loading spinner.
+      console.error("Sign-in attempt failed:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -133,22 +127,6 @@ export default function SignInForm() {
               Sign In
             </Button>
           </form>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-            <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-              <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.5 512 0 403.3 0 261.8S110.5 11.6 244 11.6c70.3 0 133.5 29.1 179.9 75.9L363.5 145.5C334.1 120.2 293.3 100.9 244 100.9c-66.8 0-123.2 46.3-140 107.5H244V261.8zM99.3 203.9C112.7 139.4 173.1 95.4 244 95.4c42.9 0 79.2 21.4 101.8 53.1l42.4-42.4C346.3 52.4 299.6 29.1 244 29.1 151.4 29.1 74.1 83.8 39.5 158.9l59.8 45z"></path>
-            </svg>
-            Sign in with Google (Placeholder)
-          </Button>
         </CardContent>
         <CardFooter className="text-sm text-center block">
           <p>

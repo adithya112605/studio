@@ -48,11 +48,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (lntUser) {
             setUser(lntUser);
           } else {
-            const errorMessage = `L&T profile not found for ${firebaseUser.email}. This can happen if the user was deleted from the database but not from Firebase Auth. Logging out. Error: ${error}`;
+            const errorMessage = `L&T profile not found for ${firebaseUser.email}. This can happen if the user was deleted from the database but not from Firebase Auth. Logging out. Error: ${error || 'Unknown DB error.'}`;
             console.error(`[AuthContext] onAuthStateChanged: ${errorMessage}`);
             toast({ title: "Profile Error", description: errorMessage, variant: "destructive", duration: 10000 });
-            await signOut(auth);
-            setUser(null);
+            await signOut(auth); // This will re-trigger the listener with a null user
+            setUser(null); // Explicitly set user to null here
           }
         } else {
           setUser(null);
@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("[AuthContext] Unexpected error in onAuthStateChanged:", e);
         setUser(null);
       } finally {
+        // This block GUARANTEES the loading state is always updated.
         setLoading(false);
       }
     });
@@ -87,8 +88,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
         duration: 8000,
       });
+      // The onAuthStateChanged listener will handle state changes.
+      // We throw an error to let the calling form know the login failed.
       throw new Error(result.message);
     }
+    // On success, onAuthStateChanged will automatically handle setting the user and loading state.
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
@@ -100,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     }
+    // On success, onAuthStateChanged will handle setting the user and loading state.
     return { success: result.success, message: result.message };
   };
 
@@ -110,10 +115,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     try {
+      setLoading(true);
       await signOut(auth);
+      // onAuthStateChanged will handle setting user to null.
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({ title: "Logout Failed", description: "Could not log out. Please try again.", variant: "destructive" });
+    } finally {
+        setLoading(false);
     }
   };
 

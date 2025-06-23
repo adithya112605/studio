@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import PasswordStrength from './PasswordStrength';
 import type { PasswordStrengthResult } from '@/types';
 import { Loader2, Eye, EyeOff, AlertTriangle, Sparkles } from 'lucide-react';
@@ -61,8 +60,7 @@ const generatePassword = (length = 14): string => {
 };
 
 export default function SignUpForm() {
-  const { checkPSNExists, signup, loading } = useAuth();
-  const router = useRouter();
+  const { checkPSNExists, signup } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [psnForStep2, setPsnForStep2] = useState<number>(0);
@@ -71,6 +69,7 @@ export default function SignUpForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   const formStep1 = useForm<SignUpStep1Values>({
     resolver: zodResolver(signUpStep1Schema),
@@ -130,8 +129,11 @@ export default function SignUpForm() {
       });
       return;
     }
-    // AuthContext's signup function now handles loading state and redirection via context changes.
+    setIsSigningUp(true);
     await signup(psnForStep2, data.password);
+    // On success, the parent page will redirect. No navigation logic needed here.
+    // The context handles toasting errors.
+    setIsSigningUp(false);
   };
 
   return (
@@ -139,7 +141,7 @@ export default function SignUpForm() {
       <Card className="w-full max-w-md shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Create Account</CardTitle>
-          {step === 1 && <CardDescription>Enter your L&T PSN to begin. For a demo, try PSNs like <strong className="text-primary">10004703</strong> (Employee) or <strong className="text-primary">20192584</strong> (Supervisor).</CardDescription>}
+          {step === 1 && <CardDescription>Enter your L&T PSN to begin. For a demo, you can use PSNs like <strong className="text-primary">10004703</strong> (Employee) or <strong className="text-primary">20192584</strong> (Supervisor).</CardDescription>}
           {step === 2 && <CardDescription>Create a secure password for your account (PSN: {psnForStep2}). Your associated L&T business email will be used for registration.</CardDescription>}
         </CardHeader>
         <CardContent>
@@ -231,8 +233,8 @@ export default function SignUpForm() {
                 </div>
                 {formStep2.formState.errors.confirmPassword && <p className="text-sm text-destructive">{formStep2.formState.errors.confirmPassword.message}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={loading || !passwordStrength?.isValid}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isSigningUp || !passwordStrength?.isValid}>
+                {isSigningUp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account & Sign In
               </Button>
               <Button variant="outline" onClick={() => setStep(1)} className="w-full" type="button">
