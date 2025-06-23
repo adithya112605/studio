@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,12 +27,11 @@ const signInSchema = z.object({
 type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignInForm() {
-  const { login, loading } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { login } = useAuth();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -52,7 +50,6 @@ export default function SignInForm() {
   };
 
   const handleGoogleSignIn = () => {
-    // This would integrate with Firebase Google Sign-In Provider
     toast({
       title: "Google Sign-In (Placeholder)",
       description: "Google Sign-In with Firebase is not fully implemented in this prototype. Use PSN/Password.",
@@ -60,10 +57,15 @@ export default function SignInForm() {
     });
   };
 
-  const onSubmit: SubmitHandler<SignInFormValues> = (data) => {
-    // The loading state is now handled globally by the AuthContext.
-    // We just need to call the login function.
-    login(Number(data.psn), data.password);
+  const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
+    setIsSubmitting(true);
+    try {
+      await login(Number(data.psn), data.password);
+    } catch (error) {
+      // Error is already toasted by the login function in AuthContext
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -126,8 +128,8 @@ export default function SignInForm() {
                 </Alert>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>

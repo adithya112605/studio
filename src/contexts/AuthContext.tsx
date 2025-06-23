@@ -41,22 +41,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
-      setLoading(true); // Always start loading when auth state changes
+      setLoading(true);
       try {
         if (firebaseUser && firebaseUser.email) {
-          // A user session exists. Fetch our app-specific user profile.
           const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
           if (lntUser) {
             setUser(lntUser);
           } else {
-            const errorMessage = `L&T profile not found for ${firebaseUser.email}. You may need to run the db:seed script or check Firestore indexes. Logging out. Error: ${error}`;
+            const errorMessage = `L&T profile not found for ${firebaseUser.email}. This can happen if the user was deleted from the database but not from Firebase Auth. Logging out. Error: ${error}`;
             console.error(`[AuthContext] onAuthStateChanged: ${errorMessage}`);
             toast({ title: "Profile Error", description: errorMessage, variant: "destructive", duration: 10000 });
-            await signOut(auth); // This will re-trigger onAuthStateChanged with null
+            await signOut(auth);
             setUser(null);
           }
         } else {
-          // No Firebase user is signed in.
           setUser(null);
         }
       } catch (e: any) {
@@ -68,8 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []); // CRITICAL FIX: Empty dependency array. This should only run once.
-
+  }, [toast]);
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
       const { exists, error } = await checkPSNExistsAction(psn);
@@ -82,9 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (psn: number, password?: string): Promise<void> => {
-    setLoading(true);
     const result = await loginAction(psn, password);
-
     if (!result.success) {
       toast({
         title: "Login Failed",
@@ -92,16 +87,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
         duration: 8000,
       });
-      setUser(null);
-      setLoading(false);
+      throw new Error(result.message);
     }
-    // On success, we don't call setUser or setLoading(false) here.
-    // The onAuthStateChanged listener will be triggered by a successful login,
-    // and it will handle setting the user and setting loading to false.
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
-    setLoading(true);
     const result = await signupAction(psn, password);
     if (!result.success) {
        toast({
@@ -109,28 +99,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: result.message,
         variant: "destructive",
       });
-       setUser(null);
-       setLoading(false);
     }
-    // On success, let onAuthStateChanged handle it.
     return { success: result.success, message: result.message };
   };
 
   const logout = async () => {
-    setLoading(true);
     const auth = getAuthInstance();
     if (!auth) {
       toast({ title: "Logout Error", description: "Auth service not available.", variant: "destructive" });
-      setLoading(false);
       return;
     }
     try {
       await signOut(auth);
-      // setUser(null) and setLoading(false) will be handled by onAuthStateChanged
     } catch (error) {
       console.error("Firebase logout error: ", error);
       toast({ title: "Logout Failed", description: "Could not log out. Please try again.", variant: "destructive" });
-      setLoading(false);
     }
   };
 
