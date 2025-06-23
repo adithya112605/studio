@@ -1,14 +1,11 @@
 
-'use server';
-
 import { db } from './firebase';
 import { mockEmployees, mockSupervisors, mockTickets, mockProjects, mockJobCodes } from '@/data/mockData';
 import { doc, writeBatch } from "firebase/firestore";
 
 async function seedFirestore() {
   if (!db) {
-    console.error("\n\n❌ Firestore is not initialized. Please check your Firebase config in .env.local and ensure the server has restarted.\n\n");
-    process.exit(1);
+    throw new Error("\n\n❌ Firestore is not initialized. Please check your Firebase config in .env.local and ensure the server has restarted.\n\n");
   }
   console.log('🔄 Starting Firestore seed process...');
   const batch = writeBatch(db);
@@ -65,6 +62,7 @@ async function seedFirestore() {
 
   } catch (error) {
     console.error('❌ A critical error occurred during the Firestore seeding process:', error);
+    throw error; // Re-throw the error to ensure the calling process knows it failed
   }
 }
 
