@@ -68,25 +68,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { exists, error } = await checkPSNExistsAction(psn);
       
       if (error) {
-        if (error.includes("Firestore is not initialized")) {
-            toast({
-                title: "Firebase Connection Error",
-                description: error, // Show the detailed error from the action
-                variant: "destructive",
-                duration: 9000
-            });
-        } else {
-             toast({
-                title: "Error Checking PSN",
-                description: "A database error occurred.",
-                variant: "destructive",
-            });
-        }
-        return { exists: false, error };
+          toast({
+              title: "Error Checking PSN",
+              description: error, // Show the detailed error from the action
+              variant: "destructive",
+              duration: 9000
+          });
+          return { exists: false, error };
       }
 
-      // In the original check, if it exists, it returns true, which is correct.
-      // If it doesn't exist, it returns false. So we should check for that case.
       if (!exists) {
         toast({
           title: "PSN Not Found",
@@ -103,20 +93,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (psn: number, password?: string): Promise<boolean> => {
     const result = await loginAction(psn, password);
     if (!result.success) {
-      if (result.message.includes("Firebase Authentication is not configured")) {
-          toast({
-            title: "Action Required in Firebase",
-            description: "To fix this, go to your Firebase Console -> Authentication -> Sign-in method -> and Enable the Email/Password provider. This is a one-time setup.",
-            variant: "destructive",
-            duration: 9000
-          });
-      } else {
-        toast({
-          title: "Login Failed",
-          description: result.message,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Login Failed",
+        description: result.message,
+        variant: "destructive",
+      });
     }
     // onAuthStateChanged will handle setting the user state.
     return result.success;
@@ -125,15 +106,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
     const result = await signupAction(psn, password);
     if (!result.success) {
-      if (result.message.includes("Firebase Authentication is not configured")) {
-           toast({
-            title: "Action Required in Firebase",
-            description: "To fix this, go to your Firebase Console -> Authentication -> Sign-in method -> and Enable the Email/Password provider. This is a one-time setup.",
-            variant: "destructive",
-            duration: 9000
-          });
-      }
-      // The signup form itself will show the error toast from its own submit handler.
+       toast({
+        title: "Signup Failed",
+        description: result.message,
+        variant: "destructive",
+      });
     } else {
         toast({ title: "Account Created", description: result.message });
     }

@@ -34,11 +34,7 @@ export async function checkPSNExistsAction(psn: number): Promise<{ exists: boole
     return { exists: !!user };
   } catch (error: any) {
     console.error("[Action Error] checkPSNExistsAction:", error.message);
-    // Pass a more specific error message to the client for config issues.
-    if (error.message.includes("Firestore is not initialized")) {
-        return { exists: false, error: error.message };
-    }
-    return { exists: false, error: "A database error occurred. Please check the server logs." };
+    return { exists: false, error: error.message || "An unknown database error occurred." };
   }
 }
 
@@ -52,10 +48,7 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
     console.error("[Action Error] loginAction fetching user:", error.message);
-    if (error.message.includes("Firestore is not initialized")) {
-        return { success: false, message: error.message };
-    }
-    return { success: false, message: "A database connection error occurred. Please check server logs." };
+    return { success: false, message: error.message || "A database connection error occurred." };
   }
 
   if (!lntUser || !lntUser.businessEmail) {
@@ -102,10 +95,7 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
     console.error("[Action Error] signupAction fetching user:", error.message);
-    if (error.message.includes("Firestore is not initialized")) {
-        return { success: false, message: error.message };
-    }
-    return { success: false, message: "A database connection error occurred. Please check server logs." };
+    return { success: false, message: error.message || "A database connection error occurred." };
   }
 
   if (!lntUser || !lntUser.businessEmail) {
