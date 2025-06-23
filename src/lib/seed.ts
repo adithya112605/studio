@@ -140,7 +140,12 @@ async function seedDatabase() {
   console.log("Database seeding completed successfully!");
 }
 
-seedDatabase().catch(err => {
-  console.error("Error seeding database:", err);
-  // We are removing process.exit(1) here to prevent it from crashing the Next.js dev server
-});
+// This check ensures the seed script only runs when executed directly from the
+// command line (e.g., `npm run db:seed`) and not when imported by the
+// Next.js server during development.
+// @ts-ignore
+if (require.main === module) {
+  seedDatabase().catch(err => {
+    console.error("Error seeding database:", err);
+  });
+}
