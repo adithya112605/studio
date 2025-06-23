@@ -18,7 +18,6 @@ import {
   createTicket as createTicketQuery,
   getSupervisorByPsn as getSupervisorByPsnQuery,
 } from '@/lib/queries';
-import { invalidateDb } from '@/lib/db';
 import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket } from '@/types';
 import { revalidatePath } from 'next/cache';
 
@@ -29,7 +28,6 @@ export async function checkPSNExistsAction(psn: number): Promise<boolean | 'db_e
     return !!user;
   } catch (error: any) {
     if (error.message.includes('no such table')) {
-      await invalidateDb();
       return 'db_error';
     }
     console.error("Error in checkPSNExistsAction:", error);
@@ -47,7 +45,6 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
     if (error.message.includes('no such table')) {
-      await invalidateDb();
       return { success: false, message: "Database not seeded. Please run `npm run db:seed`." };
     }
     return { success: false, message: "An unexpected database error occurred." };
@@ -97,7 +94,6 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
     lntUser = await getUserByPsn(psn);
   } catch (error: any) {
      if (error.message.includes('no such table')) {
-      await invalidateDb();
       return { success: false, message: "Database not seeded. Please run `npm run db:seed`." };
     }
     return { success: false, message: "An unexpected database error occurred." };
@@ -160,7 +156,6 @@ export async function getUserByEmailAction(email: string): Promise<{user: User |
 
     } catch (error: any) {
         if (error.message.includes('no such table')) {
-            await invalidateDb();
             return { user: null, error: 'db_not_seeded' };
         }
         console.error("Database error in getUserByEmailAction:", error);
@@ -179,7 +174,6 @@ export async function getUserForPasswordResetAction(psn: number): Promise<{ busi
     return null;
   } catch (error: any) {
     if (error.message.includes('no such table')) {
-        await invalidateDb();
         // Don't leak db state, just treat as not found
     }
     console.error("Error in getUserForPasswordResetAction:", error);
