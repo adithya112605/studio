@@ -1,6 +1,7 @@
 
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
+import path from 'path';
 
 /**
  * Establishes a connection to the SQLite database.
@@ -12,15 +13,16 @@ import { open, type Database } from 'sqlite';
  * modifies or replaces the database file, the running server might not see the
  * changes, leading to "table not found" errors.
  *
- * By creating a fresh connection each time, we guarantee that the application
- * always interacts with the most current state of the `db.sqlite` file, which
- * permanently resolves the persistent "DB not Ready" issue after seeding.
+ * This function now uses an absolute path to the database file to prevent any
+ * ambiguity caused by the server's current working directory. This guarantees
+ * both the app and the seed script are interacting with the exact same file.
  */
 export async function getDb(): Promise<Database> {
   try {
+    const dbPath = path.join(process.cwd(), 'db.sqlite');
     const verbose_sqlite = sqlite3.verbose();
     const db = await open({
-      filename: './db.sqlite',
+      filename: dbPath,
       driver: verbose_sqlite.Database,
     });
     return db;
