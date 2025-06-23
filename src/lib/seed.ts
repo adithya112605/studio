@@ -142,5 +142,5 @@ async function seedDatabase() {
 
 seedDatabase().catch(err => {
   console.error("Error seeding database:", err);
-  process.exit(1);
+  // We are removing process.exit(1) here to prevent it from crashing the Next.js dev server
 });
