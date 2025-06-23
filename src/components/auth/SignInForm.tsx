@@ -63,13 +63,10 @@ export default function SignInForm() {
 
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     setIsLoading(true);
-    const success = await login(Number(data.psn), data.password);
-    setIsLoading(false); 
-    if (success) {
-      toast({ title: "Login Attempted", description: "Checking credentials... Redirecting if successful." });
-      const redirectPath = searchParams.get('redirect') || '/dashboard';
-      router.push(redirectPath);
-    }
+    await login(Number(data.psn), data.password);
+    // The AuthContext will handle showing toasts for success/failure.
+    // The page redirect will be handled by the parent page component watching the user state.
+    setIsLoading(false);
   };
 
   return (

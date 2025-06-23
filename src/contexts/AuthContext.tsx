@@ -18,7 +18,7 @@ import {
 
 interface AuthContextType {
   user: User | null;
-  login: (psn: number, password?: string) => Promise<boolean>;
+  login: (psn: number, password?: string) => Promise<void>;
   signup: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   loading: boolean;
@@ -94,18 +94,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { exists: true, error: undefined };
   };
 
-  const login = async (psn: number, password?: string): Promise<boolean> => {
+  const login = async (psn: number, password?: string): Promise<void> => {
     const result = await loginAction(psn, password);
-    if (!result.success) {
+    if (result.success) {
+      toast({
+        title: "Login Successful",
+        description: "Redirecting to your dashboard...",
+      });
+      // The onAuthStateChanged listener will handle setting the user and triggering redirects.
+    } else {
       toast({
         title: "Login Failed",
-        description: result.message, // The action provides a user-friendly error.
+        description: result.message,
         variant: "destructive",
         duration: 10000,
       });
     }
-    // onAuthStateChanged will handle setting the user state.
-    return result.success;
   };
 
   const signup = async (psn: number, password?: string): Promise<{ success: boolean; message: string }> => {
