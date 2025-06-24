@@ -140,9 +140,9 @@ export default function HomePage() {
                 Key Features of L&T Helpdesk
               </h2>
             </ScrollReveal>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="flex gap-8 overflow-x-auto pb-6 snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-4">
               {features.map((feature, index) => (
-                <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
+                <ScrollReveal key={index} className="w-4/5 flex-shrink-0 snap-center md:w-auto" animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
                   <div className="text-center p-8 bg-background rounded-xl shadow-lg hover:shadow-2xl hover:shadow-primary/30 dark:hover:shadow-primary/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full">
                     <div className="mb-6">{feature.icon}</div>
                     <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
@@ -162,9 +162,9 @@ export default function HomePage() {
                 System Performance at a Glance
               </h2>
             </ScrollReveal>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+            <div className="flex gap-8 overflow-x-auto pb-6 snap-x snap-mandatory md:grid sm:grid-cols-2 lg:grid-cols-4 text-center">
               {stats.map((stat, index) => (
-                <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
+                <ScrollReveal key={index} className="w-4/5 flex-shrink-0 snap-center md:w-auto" animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
                   <div className="flex flex-col items-center p-8 bg-card rounded-xl shadow-md hover:shadow-xl hover:shadow-accent/30 dark:hover:shadow-accent/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full">
                     <div className={`${stat.color} mb-4`}>{stat.icon}</div>
                     <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>

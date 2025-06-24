@@ -142,7 +142,7 @@ const Navbar = () => {
 
   return (
     <TooltipProvider delayDuration={100}>
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/75 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container flex h-16 max-w-screen-2xl items-center px-4">
         <div className="flex items-center">
             <div className="md:hidden mr-2">
