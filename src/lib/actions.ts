@@ -81,6 +81,7 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
 
   try {
     await signInWithEmailAndPassword(auth, lntUser.businessEmail, password);
+    // After successful Firebase Auth, return the user profile we already fetched.
     return { success: true, message: "Login successful.", user: lntUser };
   } catch (error: any) {
     let errorMessage = "An unknown error occurred.";

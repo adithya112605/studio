@@ -13,25 +13,26 @@ export default function SignInPage() {
 
   useEffect(() => {
     // If the auth state is done loading and we have a user, redirect to the dashboard.
+    // This handles the case where a logged-in user navigates to the sign-in page.
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
   
-  // While checking auth state or if a user is found and we are about to redirect, show a loader.
-  // This prevents a "flash" of the sign-in form for already authenticated users.
-  if (loading || user) { 
+  // While the context is verifying the initial auth state, show a loader.
+  if (loading) { 
       return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="mt-4 text-muted-foreground">
-            {loading ? 'Checking authentication...' : 'Redirecting to dashboard...'}
+            Checking authentication...
           </p>
       </div>
     );
   }
 
   // If not loading and no user, it's safe to show the sign-in form.
+  // The redirection on successful login is now handled by the AuthContext.
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
       <SignInForm />

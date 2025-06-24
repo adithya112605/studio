@@ -49,17 +49,8 @@ export default function SignInForm() {
 
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     setIsSubmitting(true);
-    try {
-      // The login function now handles success (via onAuthStateChanged) and failure (by throwing an error).
-      await login(Number(data.psn), data.password);
-      // On success, the parent page will redirect. No navigation logic needed here.
-    } catch (error) {
-      // The context already shows a toast for the error.
-      // We just need to stop the loading spinner.
-      console.error("Sign-in attempt failed:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await login(Number(data.psn), data.password);
+    setIsSubmitting(false);
   };
 
   return (
@@ -67,7 +58,10 @@ export default function SignInForm() {
       <Card className="w-full max-w-md shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Sign In</CardTitle>
-          <CardDescription>Enter your PSN and password. For a demo, use PSN <code className="font-bold text-primary">10004703</code> with password <code className="font-bold text-primary">password</code>.</CardDescription>
+          <CardDescription>
+            Enter your PSN and password. For a demo, use 
+            PSN <code className="font-bold text-primary bg-muted px-1 py-0.5 rounded">10004703</code> with password <code className="font-bold text-primary bg-muted px-1 py-0.5 rounded">password</code>.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

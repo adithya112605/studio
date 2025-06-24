@@ -131,8 +131,6 @@ export default function SignUpForm() {
     }
     setIsSigningUp(true);
     await signup(psnForStep2, data.password);
-    // On success, the parent page will redirect. No navigation logic needed here.
-    // The context handles toasting errors.
     setIsSigningUp(false);
   };
 
