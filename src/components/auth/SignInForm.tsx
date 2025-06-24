@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
+  const { control, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
   });
 
@@ -47,8 +47,6 @@ export default function SignInForm() {
   };
 
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
-    // The isSubmitting state is now handled by react-hook-form.
-    // It will be true while this async function is running.
     await login(Number(data.psn), data.password);
   };
 
@@ -62,18 +60,23 @@ export default function SignInForm() {
             PSN <code className="font-bold text-primary bg-muted px-1 py-0.5 rounded">10004703</code> with password <code className="font-bold text-primary bg-muted px-1 py-0.5 rounded">password</code>.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="psn">PSN (up to 8 digits)</Label>
-              <Input 
-                id="psn" 
-                type="text" 
-                autoComplete="username"
-                {...register("psn")} 
-                onInput={handlePsnInput} 
-                maxLength={8} 
-                placeholder="e.g., 10004703" 
+               <Controller
+                name="psn"
+                control={control}
+                render={({ field }) => (
+                  <Input 
+                    id="psn" 
+                    autoComplete="username"
+                    {...field}
+                    onInput={handlePsnInput} 
+                    maxLength={8} 
+                    placeholder="e.g., 10004703" 
+                  />
+                )}
               />
               {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
             </div>
@@ -85,15 +88,21 @@ export default function SignInForm() {
                 </Link>
               </div>
               <div className="relative">
-                <Input 
-                  id="password-signin" 
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  {...register("password")} 
-                  placeholder="••••••••" 
-                  onKeyUp={checkCapsLock}
-                  onKeyDown={checkCapsLock}
-                  onClick={checkCapsLock}
+                <Controller
+                  name="password"
+                  control={control}
+                  render={({ field }) => (
+                    <Input 
+                      id="password-signin"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      {...field} 
+                      placeholder="••••••••" 
+                      onKeyUp={checkCapsLock}
+                      onKeyDown={checkCapsLock}
+                      onClick={checkCapsLock}
+                    />
+                  )}
                 />
                 <Button
                   type="button"
@@ -117,20 +126,20 @@ export default function SignInForm() {
                 </Alert>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+          </CardContent>
+          <CardFooter className="flex-col gap-4">
+             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="text-sm text-center block">
-          <p>
-            First time user?{' '}
-            <Link href="/auth/signup" passHref>
-              <Button variant="link" className="p-0 h-auto">Create Account</Button>
-            </Link>
-          </p>
-        </CardFooter>
+            <p className="text-sm">
+              First time user?{' '}
+              <Link href="/auth/signup" passHref>
+                <Button variant="link" className="p-0 h-auto">Create Account</Button>
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
       </Card>
     </ScrollReveal>
   );

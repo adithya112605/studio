@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -44,18 +44,15 @@ const generatePassword = (length = 14): string => {
   const allChars = lower + upper + digits + symbols;
 
   let password = "";
-  // Ensure at least one of each character type
   password += lower[Math.floor(Math.random() * lower.length)];
   password += upper[Math.floor(Math.random() * upper.length)];
   password += digits[Math.floor(Math.random() * digits.length)];
   password += symbols[Math.floor(Math.random() * symbols.length)];
 
-  // Fill the rest of the password length with random characters from all sets
   for (let i = password.length; i < length; i++) {
     password += allChars[Math.floor(Math.random() * allChars.length)];
   }
 
-  // Shuffle the password string to avoid predictable patterns (e.g., 'aZ1!...')
   return password.split('').sort(() => 0.5 - Math.random()).join('');
 };
 
@@ -147,13 +144,18 @@ export default function SignUpForm() {
             <form onSubmit={formStep1.handleSubmit(handlePsnSubmit)} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="psn-signup">PSN (up to 8 digits)</Label>
-                <Input 
-                  id="psn-signup" 
-                  type="text" 
-                  {...formStep1.register("psn")} 
-                  onInput={handlePsnInput}
-                  maxLength={8}
-                  placeholder="e.g., 10004703" 
+                <Controller
+                    name="psn"
+                    control={formStep1.control}
+                    render={({ field }) => (
+                         <Input 
+                            id="psn-signup" 
+                            {...field}
+                            onInput={handlePsnInput}
+                            maxLength={8}
+                            placeholder="e.g., 10004703" 
+                         />
+                    )}
                 />
                 {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
               </div>
@@ -173,14 +175,21 @@ export default function SignUpForm() {
                   </Button>
                 </div>
                 <div className="relative">
-                  <Input 
-                    id="password-signup" 
-                    type={showPassword ? "text" : "password"} 
-                    {...formStep2.register("password")} 
-                    placeholder="••••••••" 
-                    onKeyUp={checkCapsLock}
-                    onKeyDown={checkCapsLock}
-                    onClick={checkCapsLock}
+                   <Controller
+                    name="password"
+                    control={formStep2.control}
+                    render={({ field }) => (
+                       <Input 
+                        id="password-signup" 
+                        type={showPassword ? "text" : "password"} 
+                        {...field} 
+                        autoComplete="new-password"
+                        placeholder="••••••••" 
+                        onKeyUp={checkCapsLock}
+                        onKeyDown={checkCapsLock}
+                        onClick={checkCapsLock}
+                      />
+                    )}
                   />
                   <Button
                     type="button"
@@ -208,14 +217,21 @@ export default function SignUpForm() {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
                 <div className="relative">
-                  <Input 
-                    id="confirmPassword-signup" 
-                    type={showConfirmPassword ? "text" : "password"} 
-                    {...formStep2.register("confirmPassword")} 
-                    placeholder="••••••••" 
-                    onKeyUp={checkCapsLock} 
-                    onKeyDown={checkCapsLock}
-                    onClick={checkCapsLock}
+                  <Controller
+                    name="confirmPassword"
+                    control={formStep2.control}
+                    render={({ field }) => (
+                      <Input 
+                        id="confirmPassword-signup" 
+                        type={showConfirmPassword ? "text" : "password"} 
+                        {...field}
+                        autoComplete="new-password"
+                        placeholder="••••••••" 
+                        onKeyUp={checkCapsLock} 
+                        onKeyDown={checkCapsLock}
+                        onClick={checkCapsLock}
+                      />
+                    )}
                   />
                   <Button
                     type="button"

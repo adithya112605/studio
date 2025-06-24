@@ -30,11 +30,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // For initial page load auth check
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
 
-  // This effect runs once on mount to check the initial authentication state from Firebase.
   useEffect(() => {
     const auth = getAuthInstance();
     if (!auth) {
@@ -42,21 +41,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
       return;
     }
-
+  
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        // If we don't have a user profile yet, fetch it.
-        if (!user) {
-            const { user: lntUser } = await getUserByEmailAction(firebaseUser.email!);
-            setUser(lntUser);
+      try {
+        if (firebaseUser && firebaseUser.email) {
+          // A Firebase user is present. Fetch our app-specific user profile.
+          const { user: lntUser } = await getUserByEmailAction(firebaseUser.email);
+          setUser(lntUser);
+        } else {
+          // No Firebase user, so clear our app's user state.
+          setUser(null);
         }
-      } else {
-        // No Firebase user, so ensure local user state is null.
+      } catch (error) {
+        console.error("Error during auth state change:", error);
         setUser(null);
+        toast({
+          title: "Session Error",
+          description: "Could not verify your session. Please log in again.",
+          variant: "destructive"
+        });
+      } finally {
+        // This is crucial: setLoading(false) happens AFTER we've determined the auth state.
+        setLoading(false);
       }
-      setLoading(false);
     });
-
+  
     return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -65,9 +74,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const result = await loginAction(psn, password);
       if (result.success && result.user) {
-        setUser(result.user); // Set user state immediately
+        setUser(result.user);
         toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
-        router.push('/'); // Redirect on success
+        router.push('/');
         return true;
       } else {
         toast({
@@ -93,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (result.success && result.user) {
         setUser(result.user);
         toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
-        router.push('/'); // Redirect on success
+        router.push('/');
         return true;
       } else {
         toast({
@@ -131,8 +140,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      setUser(null); // Explicitly clear user state
-      router.push('/auth/signin'); // Redirect to signin page
+      setUser(null);
+      router.push('/auth/signin');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
       console.error("Firebase logout error: ", error);

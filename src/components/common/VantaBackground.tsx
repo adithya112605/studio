@@ -34,7 +34,7 @@ const VantaBackground = () => {
           scaleMobile: 1.00,
           points: 13.00,
           spacing: 17.00,
-          color: resolvedTheme === 'dark' ? 0x6487e3 : 0xb18282, 
+          color: resolvedTheme === 'dark' ? 0x96b2d0 : 0xb18282, 
           backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa,
         });
         setVantaEffect(effect);
