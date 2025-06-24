@@ -42,9 +42,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
   
+    // This listener is the single source of truth for the user's auth state.
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser && firebaseUser.email) {
+          // If Firebase has a user, fetch our detailed user profile.
           const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
            if (error) {
              console.error("Error fetching user profile during auth state change:", error);
@@ -53,12 +55,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
              setUser(lntUser);
            }
         } else {
+          // If Firebase has no user, our app has no user.
           setUser(null);
         }
       } catch (error) {
         console.error("Error during auth state change:", error);
         setUser(null);
       } finally {
+        // Only stop loading after the check is complete.
         setLoading(false);
       }
     });
@@ -67,49 +71,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (psn: number, password?: string) => {
-    try {
-      const result = await loginAction(psn, password);
-      if (result.success && result.user) {
-        setUser(result.user);
-        toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
-        router.push('/dashboard');
-      } else {
+    // This function now ONLY attempts to log in via the action.
+    // It does NOT set state or redirect. The onAuthStateChanged listener handles that.
+    // This prevents race conditions and redirect loops.
+    const result = await loginAction(psn, password);
+    if (result.success) {
+        toast({ title: "Login Successful", description: `Welcome back, ${result.user?.name}!` });
+    } else {
         toast({
-          title: "Login Failed",
-          description: result.message,
-          variant: "destructive",
+            title: "Login Failed",
+            description: result.message,
+            variant: "destructive",
         });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Login Error",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
     }
   };
 
   const signup = async (psn: number, password?: string) => {
-    try {
-      const result = await signupAction(psn, password);
-      if (result.success && result.user) {
-        setUser(result.user);
-        toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
-        router.push('/dashboard');
-      } else {
+    // This function now ONLY attempts to sign up via the action.
+    // The onAuthStateChanged listener will handle the resulting state change.
+     const result = await signupAction(psn, password);
+     if (result.success) {
+        toast({ title: "Account Created!", description: `Welcome, ${result.user?.name}!` });
+     } else {
         toast({
-          title: "Signup Failed",
-          description: result.message,
-          variant: "destructive",
+            title: "Signup Failed",
+            description: result.message,
+            variant: "destructive",
         });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Signup Error",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    }
+     }
   };
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
@@ -130,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      setUser(null); // Explicitly clear the user state on logout
+      // The onAuthStateChanged listener will automatically set the user to null.
       router.push('/auth/signin');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
