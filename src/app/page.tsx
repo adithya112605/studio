@@ -76,7 +76,7 @@ export default function HomePage() {
               {user ? (
                 <>
                   <ScrollTypewriter text="Welcome, " tag="span" speed={50} className="inline-block" once={true} delay={200}/>
-                  <span className="text-primary">
+                  <span className="text-highlight">
                     <ScrollTypewriter text={`${user.name}!`} tag="span" speed={50} delay={200 + (9 * 50)} className="inline-block" once={true}/>
                   </span>
                 </>
@@ -84,7 +84,7 @@ export default function HomePage() {
                 <>
                   <ScrollTypewriter text="Welcome to" tag="span" speed={50} className="inline-block" once={true} delay={200}/>
                   {' '}
-                  <span className="text-primary">
+                  <span className="text-highlight">
                     <ScrollTypewriter text="L&T Helpdesk" tag="span" speed={50} delay={200 + (10 * 50)} className="inline-block" once={true}/>
                   </span>
                 </>
@@ -98,7 +98,7 @@ export default function HomePage() {
               </p>
             ) : (
               <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
-                <span className="text-primary">Efficient</span>. <span className="text-primary">Reliable</span>. Internal Support, <span className="text-primary">Reimagined</span> for Larsen & Toubro Employees.
+                <span className="text-highlight">Efficient</span>. <span className="text-highlight">Reliable</span>. Internal Support, <span className="text-highlight">Reimagined</span> for Larsen & Toubro Employees.
               </p>
             )}
           </ScrollReveal>
@@ -176,7 +176,7 @@ export default function HomePage() {
                     <div>
                         <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
                           <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6 text-foreground">
-                              Built for <span className="text-primary">Efficiency and Scale</span>
+                              Built for <span className="text-highlight">Efficiency and Scale</span>
                           </h2>
                         </ScrollReveal>
                         <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
@@ -226,7 +226,7 @@ export default function HomePage() {
           </ScrollReveal>
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
             <h2 className="font-headline text-3xl md:text-5xl font-bold mb-6 text-foreground">
-              Ready to Experience <span className="text-primary">Streamlined Support</span>?
+              Ready to Experience <span className="text-highlight">Streamlined Support</span>?
             </h2>
           </ScrollReveal>
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>

@@ -39,6 +39,8 @@
     --input: 210 30% 96%; /* Slightly off-white input backgrounds */
     --ring: 263 60% 62%; /* Ring color related to primary */
 
+    --highlight: 25 55% 35%; /* Dark Brown for light theme highlights */
+
     --chart-1: 263 70% 52%;
     --chart-2: 240 60% 55%;
     --chart-3: 220 60% 55%;
@@ -77,6 +79,8 @@
     --input: 217 33% 20%;
     --ring: 263 70% 72%;
     
+    --highlight: 54 95% 65%; /* Bright Yellow for dark theme highlights */
+
     --chart-1: 263 80% 62%;
     --chart-2: 240 70% 65%;
     --chart-3: 220 70% 65%;
