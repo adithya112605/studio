@@ -19,8 +19,8 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
-  login: (psn: number, password?: string) => Promise<boolean>;
-  signup: (psn: number, password?: string) => Promise<boolean>;
+  login: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
+  signup: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   loading: boolean;
   checkPSNExists: (psn: number) => Promise<{ exists: boolean; error?: string }>;
@@ -45,23 +45,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser && firebaseUser.email) {
-          // A Firebase user is present. Fetch our app-specific user profile.
-          const { user: lntUser } = await getUserByEmailAction(firebaseUser.email);
-          setUser(lntUser);
+          const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+           if (error) {
+             console.error("Error fetching user profile during auth state change:", error);
+             setUser(null);
+           } else {
+             setUser(lntUser);
+           }
         } else {
-          // No Firebase user, so clear our app's user state.
           setUser(null);
         }
       } catch (error) {
         console.error("Error during auth state change:", error);
         setUser(null);
-        toast({
-          title: "Session Error",
-          description: "Could not verify your session. Please log in again.",
-          variant: "destructive"
-        });
       } finally {
-        // This is crucial: setLoading(false) happens AFTER we've determined the auth state.
         setLoading(false);
       }
     });
@@ -70,55 +67,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const login = async (psn: number, password?: string): Promise<boolean> => {
+  const login = async (psn: number, password?: string) => {
     try {
       const result = await loginAction(psn, password);
-      if (result.success && result.user) {
-        setUser(result.user);
-        toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
-        router.push('/');
-        return true;
+      if (result.success) {
+        // onAuthStateChanged will handle setting the user and loading state.
+        toast({ title: "Login Successful", description: `Welcome back, ${result.user?.name}!` });
       } else {
         toast({
           title: "Login Failed",
           description: result.message,
           variant: "destructive",
         });
-        return false;
       }
+      return { success: result.success, message: result.message };
     } catch (error: any) {
       toast({
         title: "Login Error",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-      return false;
+      return { success: false, message: error.message || "An unexpected error occurred." };
     }
   };
 
-  const signup = async (psn: number, password?: string): Promise<boolean> => {
+  const signup = async (psn: number, password?: string) => {
     try {
       const result = await signupAction(psn, password);
-      if (result.success && result.user) {
-        setUser(result.user);
-        toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
-        router.push('/');
-        return true;
+      if (result.success) {
+        // onAuthStateChanged will handle setting the user.
+        toast({ title: "Account Created!", description: `Welcome, ${result.user?.name}!` });
       } else {
         toast({
           title: "Signup Failed",
           description: result.message,
           variant: "destructive",
         });
-        return false;
       }
+       return { success: result.success, message: result.message };
     } catch (error: any) {
       toast({
         title: "Signup Error",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-      return false;
+      return { success: false, message: error.message || "An unexpected error occurred." };
     }
   };
 
@@ -140,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      setUser(null);
+      // onAuthStateChanged will set user to null
       router.push('/auth/signin');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {

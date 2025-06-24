@@ -32,7 +32,7 @@ export default function SignUpPage() {
   }
 
   // If not loading and no user, show the form.
-  // The redirection on successful signup is now handled by the AuthContext.
+  // The redirection on successful signup is now handled by this page's useEffect.
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
       <SignUpForm />
