@@ -113,7 +113,7 @@ export default function HomePage() {
                   <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
                     <Link href="/auth/signin">Sign In</Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="border-primary text-primary hover:bg-primary/10 px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+                  <Button asChild variant="outline" size="lg" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
                     <Link href="/auth/signup">Get Started</Link>
                   </Button>
                   </>

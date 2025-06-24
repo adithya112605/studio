@@ -278,7 +278,7 @@ const Navbar = () => {
              <div className="hidden md:flex items-center space-x-2">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button asChild variant="ghost" className="font-medium text-foreground hover:text-primary px-4 h-9 text-sm">
+                        <Button asChild variant="ghost" className="font-medium text-foreground px-4 h-9 text-sm">
                             <Link href="/auth/signin">SIGN IN</Link>
                         </Button>
                     </TooltipTrigger>
