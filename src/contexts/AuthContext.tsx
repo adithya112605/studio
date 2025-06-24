@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
   
   // This listener is for session persistence on page refresh.
   useEffect(() => {
@@ -174,7 +175,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     const auth = getAuthInstance();
-    const router = useRouter();
     if (!auth) {
       toast({ title: "Logout Error", description: "Auth service not available.", variant: "destructive" });
       return;
