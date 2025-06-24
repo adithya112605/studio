@@ -29,9 +29,8 @@ export default function SignInForm() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<SignInFormValues>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
   });
 
@@ -48,11 +47,9 @@ export default function SignInForm() {
   };
 
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
-    setIsSubmitting(true);
+    // The isSubmitting state is now handled by react-hook-form.
+    // It will be true while this async function is running.
     await login(Number(data.psn), data.password);
-    // On failure, the spinner will be turned off to allow another attempt.
-    // On success, the user will be redirected away.
-    setIsSubmitting(false);
   };
 
   return (
@@ -72,6 +69,7 @@ export default function SignInForm() {
               <Input 
                 id="psn" 
                 type="text" 
+                autoComplete="username"
                 {...register("psn")} 
                 onInput={handlePsnInput} 
                 maxLength={8} 
@@ -89,7 +87,8 @@ export default function SignInForm() {
               <div className="relative">
                 <Input 
                   id="password-signin" 
-                  type={showPassword ? "text" : "password"} 
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   {...register("password")} 
                   placeholder="••••••••" 
                   onKeyUp={checkCapsLock}
