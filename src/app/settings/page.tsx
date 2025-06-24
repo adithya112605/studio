@@ -5,7 +5,7 @@ import ProtectedPage from "@/components/common/ProtectedPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, KeyRound, Palette, BellDot, ShieldAlert, Settings2 as SettingsIcon, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle, UserCircle, Cog, SlidersHorizontal, Accessibility, FileText, Edit, CreditCard } from "lucide-react";
+import { User, KeyRound, Palette, BellDot, ShieldAlert, Settings2 as SettingsIcon, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle, UserCircle, Cog, SlidersHorizontal, Accessibility, FileText, Edit } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +30,7 @@ const getActingRolesForSettingsDisplay = (supervisor: Supervisor, allEmployees: 
   return rolesArray.length > 0 ? ` (also acts as: ${rolesArray.join(', ')})` : "";
 }
 
-type SettingsTab = 'profile' | 'security' | 'appearance' | 'notifications' | 'ticketSystem' | 'administrative' | 'feedback' | 'accessibility' | 'billing';
+type SettingsTab = 'profile' | 'security' | 'appearance' | 'notifications' | 'ticketSystem' | 'administrative' | 'feedback' | 'accessibility';
 
 const SettingsPage = () => {
   const { toast } = useToast();
@@ -43,25 +43,11 @@ const SettingsPage = () => {
   const [digestEmails, setDigestEmails] = useState(false);
   const [ticketRating, setTicketRating] = useState(false);
   const [generalFeedback, setGeneralFeedback] = useState(false);
-  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
-
-  const checkCapsLock = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (typeof event.getModifierState === 'function') {
-      setIsCapsLockOn(event.getModifierState("CapsLock"));
-    }
-  };
 
   const handleGenericSave = (featureName: string, specificSetting?: string) => {
     toast({
       title: "Settings Action (Simulated)",
       description: `${featureName} ${specificSetting ? `(${specificSetting})` : ''} preferences would be saved. This is a mock action.`,
-    });
-  };
-
-  const handlePasswordUpdate = () => {
-    toast({
-      title: "Security Action (Simulated)",
-      description: "Password update functionality is a placeholder. In a real app, this would securely update your password.",
     });
   };
 
@@ -143,29 +129,84 @@ const SettingsPage = () => {
     );
   };
 
-  const SecuritySection = () => (
-    <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Password</h2>
-        <p className="text-muted-foreground">Update your password. Choose a strong and unique password.</p>
-        <div className="space-y-4 p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
-            <div><Label htmlFor="current-password">Current Password</Label><Input id="current-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
-            <div><Label htmlFor="new-password">New Password</Label><Input id="new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
-            <div><Label htmlFor="confirm-new-password">Confirm New Password</Label><Input id="confirm-new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
-            {isCapsLockOn && <Alert variant="default" className="mt-2 p-3 text-sm bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700 flex items-center"><AlertTriangle className="h-5 w-5 mr-2 text-yellow-600 dark:text-yellow-400" /> <AlertDescription className="text-yellow-700 dark:text-yellow-300">Caps Lock is ON.</AlertDescription></Alert>}
-            <div className="pt-2"><p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p><ul className="text-xs text-muted-foreground list-disc list-inside"><li>At least 8 characters</li><li>Uppercase & lowercase letters</li><li>At least one number</li><li>At least one special character</li></ul></div>
-            <Button className="w-full mt-4" onClick={handlePasswordUpdate}>Update Password</Button>
-        </div>
-        <div className="p-6 border rounded-lg bg-card space-y-4 transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
-            <div className="flex items-center justify-between">
-                <div>
-                    <Label htmlFor="2fa-toggle" className="font-semibold">Two-Factor Authentication (2FA)</Label>
-                    <p className="text-sm text-muted-foreground">Enhance your account security (Simulated).</p>
+  const SecuritySection = ({ currentUser }: { currentUser: AuthUser }) => {
+    const { toast } = useToast();
+    const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+
+    const checkCapsLock = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (typeof event.getModifierState === 'function') {
+        setIsCapsLockOn(event.getModifierState("CapsLock"));
+        }
+    };
+    const handlePasswordUpdate = () => {
+        toast({
+        title: "Security Action (Simulated)",
+        description: "Password update functionality is a placeholder. In a real app, this would securely update your password.",
+        });
+    };
+    const handleRequestPasswordChange = () => {
+        toast({
+            title: "Request Sent (Simulated)",
+            description: "Your password change request has been sent to your Immediate Supervisor for approval.",
+        });
+    };
+
+    if (currentUser.role === 'Employee') {
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-semibold text-foreground">Password</h2>
+                <p className="text-muted-foreground">For security, password changes must be approved by your supervisor.</p>
+                <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50 space-y-4">
+                    <div className="flex items-start space-x-3">
+                        <MailWarning className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
+                        <div>
+                            <h4 className="font-semibold">Request Password Change</h4>
+                            <p className="text-sm text-muted-foreground">
+                                Clicking the button below will send a notification to your Immediate Supervisor (IS) to initiate the password reset process. You will be notified once the request is approved.
+                            </p>
+                        </div>
+                    </div>
+                    <Button className="w-full" onClick={handleRequestPasswordChange}>
+                        Send Request to IS
+                    </Button>
                 </div>
-                <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={(checked) => {setTwoFa(checked); handleGenericSave("Security", `2FA ${checked ? 'Enabled' : 'Disabled'}`);}} />
+                 <div className="p-6 border rounded-lg bg-card space-y-4 transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <Label htmlFor="2fa-toggle" className="font-semibold">Two-Factor Authentication (2FA)</Label>
+                            <p className="text-sm text-muted-foreground">This feature is managed by your supervisor.</p>
+                        </div>
+                        <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={(checked) => {setTwoFa(checked); handleGenericSave("Security", `2FA ${checked ? 'Enabled' : 'Disabled'}`);}} disabled/>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            <h2 className="text-2xl font-semibold text-foreground">Password</h2>
+            <p className="text-muted-foreground">Update your password. Choose a strong and unique password.</p>
+            <div className="space-y-4 p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
+                <div><Label htmlFor="current-password">Current Password</Label><Input id="current-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
+                <div><Label htmlFor="new-password">New Password</Label><Input id="new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
+                <div><Label htmlFor="confirm-new-password">Confirm New Password</Label><Input id="confirm-new-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
+                {isCapsLockOn && <Alert variant="default" className="mt-2 p-3 text-sm bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700 flex items-center"><AlertTriangle className="h-5 w-5 mr-2 text-yellow-600 dark:text-yellow-400" /> <AlertDescription className="text-yellow-700 dark:text-yellow-300">Caps Lock is ON.</AlertDescription></Alert>}
+                <div className="pt-2"><p className="text-xs text-muted-foreground font-medium mb-1">Password Policy:</p><ul className="text-xs text-muted-foreground list-disc list-inside"><li>At least 8 characters</li><li>Uppercase & lowercase letters</li><li>At least one number</li><li>At least one special character</li></ul></div>
+                <Button className="w-full mt-4" onClick={handlePasswordUpdate}>Update Password</Button>
+            </div>
+            <div className="p-6 border rounded-lg bg-card space-y-4 transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <Label htmlFor="2fa-toggle" className="font-semibold">Two-Factor Authentication (2FA)</Label>
+                        <p className="text-sm text-muted-foreground">Enhance your account security (Simulated).</p>
+                    </div>
+                    <Switch id="2fa-toggle" checked={twoFa} onCheckedChange={(checked) => {setTwoFa(checked); handleGenericSave("Security", `2FA ${checked ? 'Enabled' : 'Disabled'}`);}} />
+                </div>
             </div>
         </div>
-    </div>
-  );
+    );
+  };
 
   const AppearanceSettingItem = ({ title, description, children }: {title: string, description: string, children: React.ReactNode}) => (
     <div className="flex items-center justify-between py-3 border-b last:border-b-0">
@@ -284,18 +325,6 @@ const SettingsPage = () => {
     </div>
   );
 
-  const BillingSection = () => (
-    <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Billing & Plans</h2>
-        <p className="text-muted-foreground">This is an internal L&T helpdesk. Billing and plans are not applicable.</p>
-        <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
-            <Info className="w-6 h-6 text-primary mb-2"/>
-            <p className="text-muted-foreground">This platform is provided for internal use by Larsen & Toubro employees and does not involve direct billing or subscription plans for individual users.</p>
-            <p className="text-muted-foreground mt-2">For departmental cost allocations or IT service inquiries, please contact your respective manager or the IT department.</p>
-        </div>
-    </div>
-  );
-
 
   return (
     <ProtectedPage>
@@ -308,7 +337,6 @@ const SettingsPage = () => {
           { key: 'appearance', label: 'Appearance', icon: Palette },
           { key: 'accessibility', label: 'Accessibility', icon: Accessibility },
           { key: 'notifications', label: 'Notifications', icon: BellDot },
-          { key: 'billing', label: 'Billing and plans', icon: CreditCard },
           { key: 'ticketSystem', label: 'Ticket System', icon: SettingsIcon, adminOnly: ['DH', 'IC Head'] },
           { key: 'administrative', label: 'Administrative', icon: ShieldAlert, adminOnly: ['IC Head'] },
           { key: 'feedback', label: 'Feedback', icon: ThumbsUp, adminOnly: ['DH', 'IC Head'] },
@@ -343,11 +371,10 @@ const SettingsPage = () => {
                 <main className="flex-1 min-w-0">
                   <ScrollReveal key={activeTab} animationInClass="animate-fadeInUp" once={false}>
                     {activeTab === 'profile' && <ProfileSection currentUser={user} />}
-                    {activeTab === 'security' && <SecuritySection />}
+                    {activeTab === 'security' && <SecuritySection currentUser={user} />}
                     {activeTab === 'appearance' && <AppearanceSection />}
                     {activeTab === 'notifications' && <NotificationsSection />}
                     {activeTab === 'accessibility' && <AccessibilitySection />}
-                    {activeTab === 'billing' && <BillingSection />}
                     {activeTab === 'ticketSystem' && supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') && <TicketSystemSection />}
                     {activeTab === 'administrative' && supervisorUser && supervisorUser.functionalRole === 'IC Head' && <AdministrativeSection />}
                     {activeTab === 'feedback' && supervisorUser && (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') && <FeedbackSection />}
