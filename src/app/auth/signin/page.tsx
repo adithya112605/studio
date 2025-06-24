@@ -15,7 +15,7 @@ export default function SignInPage() {
     // This effect handles redirecting the user AWAY from the sign-in page
     // once they are successfully logged in (or if they were already logged in).
     if (!loading && user) {
-      router.replace('/dashboard');
+      router.replace('/');
     }
   }, [user, loading, router]);
   
@@ -46,7 +46,7 @@ export default function SignInPage() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
           <LoadingSpinner />
           <p className="mt-4 text-muted-foreground">
-            Redirecting to your dashboard...
+            Redirecting to your welcome page...
           </p>
       </div>
   );
