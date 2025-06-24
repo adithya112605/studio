@@ -15,7 +15,7 @@ export default function SignUpPage() {
     // This effect handles the case where a user who is ALREADY logged in
     // navigates to the sign-up page. It safely redirects them.
     if (!loading && user) {
-      router.replace('/');
+      router.replace('/dashboard');
     }
   }, [user, loading, router]);
 
@@ -45,7 +45,7 @@ export default function SignUpPage() {
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <LoadingSpinner />
         <p className="mt-4 text-muted-foreground">
-          Redirecting to your welcome page...
+          Redirecting to your dashboard...
         </p>
     </div>
   );
