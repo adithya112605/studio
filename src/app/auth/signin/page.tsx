@@ -32,10 +32,15 @@ export default function SignInPage() {
   }
 
   // If not loading and no user, it's safe to show the sign-in form.
-  // The redirection on successful login is now handled by the AuthContext.
-  return (
-    <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
-      <SignInForm />
-    </div>
-  );
+  // The redirection on successful login is now handled by the AuthContext's login function.
+  if (!user) {
+    return (
+        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
+        <SignInForm />
+        </div>
+    );
+  }
+
+  // Fallback case, should not be reached if logic is correct
+  return null;
 }

@@ -50,6 +50,8 @@ export default function SignInForm() {
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     setIsSubmitting(true);
     await login(Number(data.psn), data.password);
+    // On failure, the spinner will be turned off to allow another attempt.
+    // On success, the user will be redirected away.
     setIsSubmitting(false);
   };
 
