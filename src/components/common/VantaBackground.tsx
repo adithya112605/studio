@@ -35,8 +35,9 @@ const VantaBackground = () => {
           scaleMobile: 1.00,
           size: 0.7, // A good size for the globe
           // Set colors based on the current theme
-          color: resolvedTheme === 'dark' ? 0x8b5cf6 : 0x6b46c1, // primary color for dots
-          color2: resolvedTheme === 'dark' ? 0x818cf8 : 0x4f46e5, // accent color for lines
+          // Using accent color for main points and a muted color for lines to contrast with primary text
+          color: resolvedTheme === 'dark' ? 0x60a5fa : 0x3b82f6, // Accent Blue (light/dark)
+          color2: resolvedTheme === 'dark' ? 0x2d3d52 : 0xdbeafe, // Muted color for lines
           backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa,
         });
         setVantaEffect(effect);
