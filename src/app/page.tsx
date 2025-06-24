@@ -9,7 +9,6 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import ScrollReveal from '@/components/common/ScrollReveal';
 
 const features = [
@@ -117,76 +116,48 @@ const DesktopStatsLayout = () => (
 );
 
 const MobileStackedLayout = () => {
-    const featuresRef = useRef<HTMLDivElement | null>(null);
-    const { scrollYProgress: featuresScrollYProgress } = useScroll({
-      target: featuresRef,
-      offset: ["start start", "end end"],
-    });
-
-    const statsRef = useRef<HTMLDivElement | null>(null);
-    const { scrollYProgress: statsScrollYProgress } = useScroll({
-      target: statsRef,
-      offset: ["start start", "end end"],
-    });
-
     return (
         <div className="md:hidden">
             {/* Features Section */}
-            <section ref={featuresRef} className="relative h-[400vh] bg-background">
-                <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center">
-                    <h2 className="font-headline text-3xl font-bold text-center mb-8 text-foreground px-4 absolute top-16">
+            <section className="relative bg-background">
+                <div className="sticky top-0 z-10 bg-background/80 py-4 backdrop-blur-sm">
+                    <h2 className="font-headline text-3xl font-bold text-center text-foreground px-4">
                         Key Features
                     </h2>
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      {features.map((feature, index) => {
-                          const scaleInputRange = [0, (index + 0.5) / features.length, (index + 1) / features.length];
-                          const scale = useTransform(featuresScrollYProgress, scaleInputRange, [1 - (index * 0.1), 1 - (index * 0.1), 0.5]);
-                          const opacityInputRange = [(index - 0.2) / features.length, index / features.length, (index + 0.8) / features.length];
-                          const opacity = useTransform(featuresScrollYProgress, opacityInputRange, [0, 1, 0]);
-
-                          return (
-                              <motion.div
-                                  key={feature.title}
-                                  style={{ scale, opacity }}
-                                  className={cn("absolute inset-x-0 mx-auto w-[90%] max-w-sm h-auto flex flex-col justify-center items-center text-center p-8 rounded-2xl shadow-2xl", feature.bgColor)}
-                              >
-                                  {feature.icon}
-                                  <h3 className="font-headline text-2xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-                                  <p className="text-muted-foreground text-base">{feature.description}</p>
-                              </motion.div>
-                          );
-                      })}
-                    </div>
                 </div>
+                {features.map((feature, index) => (
+                    <div key={index} className="h-screen sticky top-0 flex items-center justify-center p-4">
+                        <div className={cn(
+                            "text-center p-8 rounded-2xl shadow-2xl flex flex-col items-center h-auto w-[90%] max-w-sm",
+                            feature.bgColor
+                        )}>
+                            <div className="mb-6">{feature.icon}</div>
+                            <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+                            <p className="text-muted-foreground text-sm">{feature.description}</p>
+                        </div>
+                    </div>
+                ))}
             </section>
 
             {/* Stats Section */}
-            <section ref={statsRef} className="relative h-[400vh] bg-background">
-                 <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center">
-                    <h2 className="font-headline text-3xl font-bold text-center mb-8 text-foreground px-4 absolute top-16">
+            <section className="relative bg-background">
+                <div className="sticky top-0 z-10 bg-background/80 py-4 backdrop-blur-sm">
+                    <h2 className="font-headline text-3xl font-bold text-center text-foreground px-4">
                         System Performance
                     </h2>
-                     <div className="relative w-full h-full flex items-center justify-center">
-                        {stats.map((stat, index) => {
-                            const scaleInputRange = [0, (index + 0.5) / stats.length, (index + 1) / stats.length];
-                            const scale = useTransform(statsScrollYProgress, scaleInputRange, [1 - (index * 0.1), 1 - (index * 0.1), 0.5]);
-                            const opacityInputRange = [(index - 0.2) / stats.length, index / stats.length, (index + 0.8) / stats.length];
-                            const opacity = useTransform(statsScrollYProgress, opacityInputRange, [0, 1, 0]);
-
-                            return (
-                                <motion.div
-                                    key={stat.label}
-                                    style={{ scale, opacity }}
-                                    className={cn("absolute inset-x-0 mx-auto w-[90%] max-w-sm h-auto flex flex-col justify-center items-center text-center p-8 rounded-2xl shadow-2xl", stat.bgColor)}
-                                >
-                                    <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-                                    <p className={`font-headline text-5xl md:text-6xl font-bold ${stat.color}`}>{stat.value}</p>
-                                    <p className="text-lg text-muted-foreground mt-2">{stat.label}</p>
-                                </motion.div>
-                            );
-                        })}
-                     </div>
                 </div>
+                {stats.map((stat, index) => (
+                    <div key={index} className="h-screen sticky top-0 flex items-center justify-center p-4">
+                        <div className={cn(
+                            "flex flex-col items-center p-8 rounded-2xl shadow-2xl h-auto w-[90%] max-w-sm",
+                            stat.bgColor
+                        )}>
+                            <div className={`${stat.color} mb-4`}>{stat.icon}</div>
+                            <p className={`font-headline text-4xl font-bold ${stat.color}`}>{stat.value}</p>
+                            <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
+                        </div>
+                    </div>
+                ))}
             </section>
         </div>
     );
