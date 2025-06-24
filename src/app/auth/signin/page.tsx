@@ -15,7 +15,7 @@ export default function SignInPage() {
     // This effect handles the case where a user who is ALREADY logged in
     // navigates to the sign-in page. It safely redirects them.
     if (!loading && user) {
-      router.replace('/dashboard');
+      router.replace('/');
     }
   }, [user, loading, router]);
   

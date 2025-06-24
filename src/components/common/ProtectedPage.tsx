@@ -28,7 +28,7 @@ const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, allowedRoles })
         description: "You do not have permission to view this page.",
         variant: "destructive"
       });
-      router.replace('/dashboard');
+      router.replace('/');
     }
   }, [user, loading, router, allowedRoles, toast]); // Add toast to the dependency array
 
@@ -46,7 +46,7 @@ const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, allowedRoles })
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
         <h1 className="text-2xl font-bold text-destructive mb-4">Access Denied</h1>
         <p className="text-muted-foreground">You do not have the necessary permissions to view this page.</p>
-        <Button onClick={() => router.push('/dashboard')} className="mt-4">Go to Dashboard</Button>
+        <Button onClick={() => router.push('/')} className="mt-4">Go to Home</Button>
       </div>
     );
   }

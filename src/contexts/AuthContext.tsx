@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (result.success && result.user) {
         setUser(result.user); // Set user state immediately
         toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
-        router.push('/dashboard'); // Redirect on success
+        router.push('/'); // Redirect on success
         return true;
       } else {
         toast({
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (result.success && result.user) {
         setUser(result.user);
         toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
-        router.push('/dashboard'); // Redirect on success
+        router.push('/'); // Redirect on success
         return true;
       } else {
         toast({

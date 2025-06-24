@@ -31,8 +31,8 @@ export default function TicketsRedirectPage() {
       router.replace('/hr/tickets');
     } else {
       // Fallback, though this case should ideally not be reached if roles are well-defined.
-      // Redirect to a general dashboard or home.
-      router.replace('/dashboard');
+      // Redirect to a general home page.
+      router.replace('/');
     }
   }, [user, loading, router]);
 
