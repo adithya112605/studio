@@ -6,12 +6,13 @@ import type { User, Supervisor, Employee, JobCode, Project } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Users, ArrowLeft, Loader2 } from "lucide-react";
+import { Users, ArrowLeft } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getAllEmployeesAction, getAllProjectsAction, getAllJobCodesAction, getAllGradesAction } from "@/lib/actions";
 
 export default function SupervisorEmployeeDetailsPage() {
@@ -97,9 +98,9 @@ export default function SupervisorEmployeeDetailsPage() {
 
         if (isLoading) {
             return (
-              <div className="flex justify-center items-center h-full min-h-[60vh]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="ml-2">Loading Employee Data...</p>
+              <div className="flex flex-col justify-center items-center h-full min-h-[60vh]">
+                <LoadingSpinner />
+                <p className="mt-2">Loading Employee Data...</p>
               </div>
             )
         }

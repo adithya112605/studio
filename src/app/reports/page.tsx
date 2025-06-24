@@ -5,7 +5,7 @@ import ProtectedPage from "@/components/common/ProtectedPage";
 import type { Supervisor, User, Ticket, Employee } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart, XCircle, Loader2 } from "lucide-react";
+import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,7 @@ import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getAllTicketsAction, getAllEmployeesAction } from "@/lib/actions";
 
 const filterOptions = [
@@ -192,9 +193,9 @@ export default function ReportsPage() {
 
         if (isLoading) {
             return (
-                <div className="flex justify-center items-center h-full min-h-[60vh]">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="ml-2">Loading Report Data...</p>
+                <div className="flex flex-col justify-center items-center h-full min-h-[60vh]">
+                  <LoadingSpinner />
+                  <p className="mt-2">Loading Report Data...</p>
                 </div>
             )
         }

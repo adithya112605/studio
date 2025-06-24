@@ -6,11 +6,12 @@ import type { User, Ticket, Supervisor, Employee, JobCode, Project } from "@/typ
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FileText, PlusCircle, Users, BarChart2, CheckCircle, UserSquare2, Eye, ArrowRight, Loader2 } from "lucide-react";
+import { FileText, PlusCircle, Users, BarChart2, CheckCircle, UserSquare2, Eye, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import ScrollReveal from "@/components/common/ScrollReveal";
 import { useState, useEffect } from 'react';
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { 
     getTicketsByEmployeePsnAction, 
     getAllTicketsAction,
@@ -60,9 +61,9 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
   
   if (isLoading) {
       return (
-          <div className="flex justify-center items-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="ml-2">Loading Dashboard...</p>
+          <div className="flex flex-col justify-center items-center py-10">
+              <LoadingSpinner />
+              <p className="mt-2">Loading Dashboard...</p>
           </div>
       )
   }
@@ -207,9 +208,9 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
 
   if (isLoading) {
       return (
-          <div className="flex justify-center items-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="ml-2">Loading Dashboard...</p>
+          <div className="flex flex-col justify-center items-center py-10">
+              <LoadingSpinner />
+              <p className="mt-2">Loading Dashboard...</p>
           </div>
       )
   }

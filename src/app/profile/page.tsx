@@ -6,12 +6,13 @@ import type { User, Employee, Supervisor, JobCode, Project as ProjectType } from
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Mail, Briefcase, Building, Users, CalendarDays, Edit, ShieldCheck, BarChart3, Activity, BadgePercent, Loader2 } from "lucide-react";
+import { Mail, Briefcase, Building, Users, CalendarDays, Edit, ShieldCheck, BarChart3, Activity, BadgePercent } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import ScrollReveal from "@/components/common/ScrollReveal";
 import { useState, useEffect } from 'react';
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { 
     getAllEmployeesAction, 
     getJobCodeByIdAction, 
@@ -109,9 +110,9 @@ export default function MyProfilePage() {
 
         if (isLoading) {
             return (
-                <div className="flex justify-center items-center py-10">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="ml-2">Loading Your Profile...</p>
+                <div className="flex flex-col justify-center items-center py-10">
+                    <LoadingSpinner />
+                    <p className="mt-2">Loading Your Profile...</p>
                 </div>
             )
         }

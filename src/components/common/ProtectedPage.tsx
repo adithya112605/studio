@@ -4,7 +4,7 @@
 import React, { useEffect, type ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import type { User } from '@/types';
 import { useToast } from "@/hooks/use-toast"; // Import useToast
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, allowedRoles })
   if (loading || !user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner />
         <p className="mt-4 text-muted-foreground">Verifying your session...</p>
       </div>
     );

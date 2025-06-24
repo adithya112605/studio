@@ -6,11 +6,12 @@ import type { User, Ticket, Employee } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FileText, PlusCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { FileText, PlusCircle, ArrowLeft } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import ScrollReveal from "@/components/common/ScrollReveal";
 import { useState, useEffect } from "react";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getTicketsByEmployeePsnAction } from "@/lib/actions";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
@@ -70,9 +71,9 @@ export default function EmployeeTicketsPage() {
               </ScrollReveal>
               
               {isLoading ? (
-                 <div className="flex justify-center items-center py-10">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="ml-2">Loading Your Tickets...</p>
+                 <div className="flex flex-col justify-center items-center py-10">
+                    <LoadingSpinner />
+                    <p className="mt-2">Loading Your Tickets...</p>
                  </div>
               ) : (
                 <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>

@@ -6,13 +6,14 @@ import type { User, Ticket, Supervisor, Employee } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FileText, ArrowLeft, Filter, Search, ArrowRight, Loader2 } from "lucide-react";
+import { FileText, ArrowLeft, Filter, Search, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import React, { useState, useMemo, useEffect } from "react";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getAllTicketsAction, getAllSupervisorsAction, getAllEmployeesAction } from "@/lib/actions";
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
@@ -223,9 +224,9 @@ export default function SupervisorTicketsPage() {
               </ScrollReveal>
 
                 {isLoading ? (
-                    <div className="flex justify-center items-center py-10">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="ml-2">Loading Tickets...</p>
+                    <div className="flex flex-col justify-center items-center py-10">
+                        <LoadingSpinner />
+                        <p className="mt-2">Loading Tickets...</p>
                     </div>
                 ) : (
                     <SupervisorTicketsPageContent

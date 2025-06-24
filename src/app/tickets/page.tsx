@@ -5,7 +5,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import type { User } from '@/types';
-import { Loader2 } from 'lucide-react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // This page component will handle redirection logic for the base /tickets route.
 export default function TicketsRedirectPage() {
@@ -39,7 +39,7 @@ export default function TicketsRedirectPage() {
   // Render a loading state while the redirect is processed.
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <LoadingSpinner />
       <p className="mt-4 text-muted-foreground">Redirecting to your tickets page...</p>
     </div>
   );

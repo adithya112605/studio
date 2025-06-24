@@ -5,7 +5,7 @@ import ProtectedPage from "@/components/common/ProtectedPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, KeyRound, Palette, BellDot, ShieldAlert, Settings2 as SettingsIcon, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle, UserCircle, Cog, SlidersHorizontal, Accessibility, FileText, Edit, CreditCard, Loader2 } from "lucide-react";
+import { User, KeyRound, Palette, BellDot, ShieldAlert, Settings2 as SettingsIcon, ThumbsUp, Activity, Lock, Languages, CalendarClock, MailWarning, Briefcase, Info, AlertTriangle, UserCircle, Cog, SlidersHorizontal, Accessibility, FileText, Edit, CreditCard } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import { getAllEmployeesAction, getJobCodeByIdAction, getProjectByIdAction } from "@/lib/actions";
 
@@ -113,9 +114,9 @@ const SettingsPage = () => {
         return (
             <div className="space-y-6">
                  <h2 className="text-2xl font-semibold text-foreground">Public Profile</h2>
-                 <div className="p-6 border rounded-lg bg-card space-y-4">
-                    <Loader2 className="h-6 w-6 animate-spin"/>
-                    <p>Loading profile details...</p>
+                 <div className="p-6 border rounded-lg bg-card flex flex-col items-center justify-center">
+                    <LoadingSpinner size="sm"/>
+                    <p className="mt-2 text-muted-foreground">Loading profile details...</p>
                  </div>
             </div>
         )
