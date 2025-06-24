@@ -14,28 +14,28 @@ import ScrollReveal from '@/components/common/ScrollReveal';
 
 const features = [
   {
-    icon: <MessageSquare className="w-10 h-10 text-primary mb-4" />,
+    icon: <MessageSquare className="w-10 h-10 text-sky-700 dark:text-sky-300 mb-4" />,
     title: "Effortless Ticket Submission",
     description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
-    bgColor: "bg-background",
+    bgColor: "bg-sky-100 dark:bg-sky-900/40",
   },
   {
-    icon: <ShieldCheck className="w-10 h-10 text-primary mb-4" />,
+    icon: <ShieldCheck className="w-10 h-10 text-teal-700 dark:text-teal-300 mb-4" />,
     title: "Secure & Role-Based Access",
     description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
-    bgColor: "bg-muted/50",
+    bgColor: "bg-teal-100 dark:bg-teal-900/40",
   },
   {
-    icon: <HardHat className="w-10 h-10 text-primary mb-4" />,
+    icon: <HardHat className="w-10 h-10 text-rose-700 dark:text-rose-300 mb-4" />,
     title: "Hierarchical Support System",
     description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
-    bgColor: "bg-background",
+    bgColor: "bg-rose-100 dark:bg-rose-900/40",
   },
   {
-    icon: <Sparkles className="w-10 h-10 text-primary mb-4" />,
+    icon: <Sparkles className="w-10 h-10 text-amber-700 dark:text-amber-300 mb-4" />,
     title: "AI-Powered Insights",
     description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
-    bgColor: "bg-muted/50",
+    bgColor: "bg-amber-100 dark:bg-amber-900/40",
   },
 ];
 
@@ -43,30 +43,30 @@ const stats = [
   {
     value: "24/7",
     label: "Support Available",
-    color: "text-primary",
     icon: <Clock className="w-10 h-10 mb-3" />,
-    bgColor: "bg-background",
+    bgColor: "bg-indigo-100 dark:bg-indigo-900/40",
+    color: "text-indigo-500 dark:text-indigo-300",
   },
   {
     value: "98%",
     label: "Resolution Rate",
-    color: "text-accent",
     icon: <TrendingUp className="w-10 h-10 mb-3" />,
-    bgColor: "bg-muted/50",
+    bgColor: "bg-emerald-100 dark:bg-emerald-900/40",
+    color: "text-emerald-500 dark:text-emerald-300",
   },
   {
     value: "<2Hrs",
     label: "Avg. Response",
-    color: "text-primary",
     icon: <Zap className="w-10 h-10 mb-3" />,
-    bgColor: "bg-background",
+    bgColor: "bg-orange-100 dark:bg-orange-900/40",
+    color: "text-orange-500 dark:text-orange-300",
   },
   {
     value: "150K+",
     label: "Employees Served",
-    color: "text-accent",
     icon: <Users className="w-10 h-10 mb-3" />,
-    bgColor: "bg-muted/50",
+    bgColor: "bg-pink-100 dark:bg-pink-900/40",
+    color: "text-pink-500 dark:text-pink-300",
   }
 ];
 
@@ -81,7 +81,7 @@ const DesktopFeaturesLayout = () => (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {features.map((feature, index) => (
           <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
-            <div className="text-center p-8 bg-background rounded-xl shadow-lg hover:shadow-2xl hover:shadow-primary/30 dark:hover:shadow-primary/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full">
+            <div className={cn("text-center p-8 rounded-xl shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full", feature.bgColor)}>
               <div className="mb-6">{feature.icon}</div>
               <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
               <p className="text-muted-foreground text-sm">{feature.description}</p>
@@ -104,7 +104,7 @@ const DesktopStatsLayout = () => (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
         {stats.map((stat, index) => (
           <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
-            <div className="flex flex-col items-center p-8 bg-card rounded-xl shadow-md hover:shadow-xl hover:shadow-accent/30 dark:hover:shadow-accent/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full">
+            <div className={cn("flex flex-col items-center p-8 rounded-xl shadow-md hover:shadow-xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full", stat.bgColor)}>
               <div className={`${stat.color} mb-4`}>{stat.icon}</div>
               <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
               <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
@@ -117,77 +117,93 @@ const DesktopStatsLayout = () => (
 );
 
 const MobileStackedLayout = () => {
-    const featureRef = useRef(null);
-    const { scrollYProgress: featureScrollYProgress } = useScroll({
-      target: featureRef,
-      offset: ["start start", "end end"]
+    const featuresRef = useRef<HTMLDivElement | null>(null);
+    const { scrollYProgress: featuresScrollYProgress } = useScroll({
+      target: featuresRef,
+      offset: ["start start", "end end"],
     });
 
-    const statsRef = useRef(null);
+    const statsRef = useRef<HTMLDivElement | null>(null);
     const { scrollYProgress: statsScrollYProgress } = useScroll({
       target: statsRef,
-      offset: ["start start", "end end"]
+      offset: ["start start", "end end"],
     });
 
     return (
-        <>
-            <div ref={featureRef} className="h-[400vh] relative">
-                <div className="sticky top-0 h-screen w-full flex items-center justify-center">
-                {features.map((feature, index) => {
-                    const targetScale = 1 - ((features.length - index) * 0.05);
-                    const scale = useTransform(featureScrollYProgress, [index / features.length, (index + 1) / features.length], [1, targetScale]);
-                    const opacity = useTransform(featureScrollYProgress, [(index - 0.5) / features.length, index / features.length], [1, 0]);
+        <div className="md:hidden">
+            {/* Features Section */}
+            <section ref={featuresRef} className="relative h-[400vh] bg-background">
+                <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center">
+                    <h2 className="font-headline text-3xl font-bold text-center mb-8 text-foreground px-4 absolute top-16">
+                        Key Features
+                    </h2>
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      {features.map((feature, index) => {
+                          const scaleInputRange = [0, (index + 0.5) / features.length, (index + 1) / features.length];
+                          const scale = useTransform(featuresScrollYProgress, scaleInputRange, [1 - (index * 0.1), 1 - (index * 0.1), 0.5]);
+                          const opacityInputRange = [(index - 0.2) / features.length, index / features.length, (index + 0.8) / features.length];
+                          const opacity = useTransform(featuresScrollYProgress, opacityInputRange, [0, 1, 0]);
 
-                    return (
-                    <motion.div 
-                        key={feature.title} 
-                        style={{ scale, opacity }}
-                        className={cn("absolute inset-0 h-full w-full flex items-center justify-center", feature.bgColor)}
-                    >
-                        <div className="w-[90%] max-w-sm h-[80vh] max-h-[500px] flex flex-col justify-center items-center text-center p-8 bg-card/50 backdrop-blur-md rounded-xl shadow-2xl">
-                        {feature.icon}
-                        <h3 className="font-headline text-2xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-                        <p className="text-muted-foreground text-base">{feature.description}</p>
-                        </div>
-                    </motion.div>
-                    );
-                })}
+                          return (
+                              <motion.div
+                                  key={feature.title}
+                                  style={{ scale, opacity }}
+                                  className={cn("absolute inset-x-0 mx-auto w-[90%] max-w-sm h-auto flex flex-col justify-center items-center text-center p-8 rounded-2xl shadow-2xl", feature.bgColor)}
+                              >
+                                  {feature.icon}
+                                  <h3 className="font-headline text-2xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+                                  <p className="text-muted-foreground text-base">{feature.description}</p>
+                              </motion.div>
+                          );
+                      })}
+                    </div>
                 </div>
-            </div>
-            <div ref={statsRef} className="h-[400vh] relative bg-card">
-                <div className="sticky top-0 h-screen w-full flex items-center justify-center">
-                {stats.map((stat, index) => {
-                    const targetScale = 1 - ((stats.length - index) * 0.05);
-                    const scale = useTransform(statsScrollYProgress, [index / stats.length, (index + 1) / stats.length], [1, targetScale]);
-                    const opacity = useTransform(statsScrollYProgress, [(index - 0.5) / stats.length, index / stats.length], [1, 0]);
+            </section>
 
-                    return (
-                    <motion.div 
-                        key={stat.label} 
-                        style={{ scale, opacity }}
-                        className={cn("absolute inset-0 h-full w-full flex items-center justify-center", stat.bgColor)}
-                    >
-                        <div className="w-[90%] max-w-sm h-[80vh] max-h-[500px] flex flex-col justify-center items-center text-center p-8 bg-card/50 backdrop-blur-md rounded-xl shadow-2xl">
-                        <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-                        <p className={`font-headline text-5xl md:text-6xl font-bold ${stat.color}`}>{stat.value}</p>
-                        <p className="text-lg text-muted-foreground mt-2">{stat.label}</p>
-                        </div>
-                    </motion.div>
-                    );
-                })}
+            {/* Stats Section */}
+            <section ref={statsRef} className="relative h-[400vh] bg-background">
+                 <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center">
+                    <h2 className="font-headline text-3xl font-bold text-center mb-8 text-foreground px-4 absolute top-16">
+                        System Performance
+                    </h2>
+                     <div className="relative w-full h-full flex items-center justify-center">
+                        {stats.map((stat, index) => {
+                            const scaleInputRange = [0, (index + 0.5) / stats.length, (index + 1) / stats.length];
+                            const scale = useTransform(statsScrollYProgress, scaleInputRange, [1 - (index * 0.1), 1 - (index * 0.1), 0.5]);
+                            const opacityInputRange = [(index - 0.2) / stats.length, index / stats.length, (index + 0.8) / stats.length];
+                            const opacity = useTransform(statsScrollYProgress, opacityInputRange, [0, 1, 0]);
+
+                            return (
+                                <motion.div
+                                    key={stat.label}
+                                    style={{ scale, opacity }}
+                                    className={cn("absolute inset-x-0 mx-auto w-[90%] max-w-sm h-auto flex flex-col justify-center items-center text-center p-8 rounded-2xl shadow-2xl", stat.bgColor)}
+                                >
+                                    <div className={`${stat.color} mb-4`}>{stat.icon}</div>
+                                    <p className={`font-headline text-5xl md:text-6xl font-bold ${stat.color}`}>{stat.value}</p>
+                                    <p className="text-lg text-muted-foreground mt-2">{stat.label}</p>
+                                </motion.div>
+                            );
+                        })}
+                     </div>
                 </div>
-            </div>
-        </>
+            </section>
+        </div>
     );
 };
 
 
 export default function HomePage() {
   const { user } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
+    const checkIsMobile = () => setIsMobile(window.innerWidth < 768);
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
   return (
@@ -242,13 +258,12 @@ export default function HomePage() {
       {/* Subsequent Content Wrapper */}
       <div className="relative z-10 bg-background">
         
-        {hasMounted && window.innerWidth < 768 ? (
-          <MobileStackedLayout />
-        ) : (
-          <>
-            <DesktopFeaturesLayout />
-            <DesktopStatsLayout />
-          </>
+        {hasMounted && (
+            isMobile ? <MobileStackedLayout /> : 
+            <>
+                <DesktopFeaturesLayout />
+                <DesktopStatsLayout />
+            </>
         )}
 
         {/* Image section like Vexo */}
