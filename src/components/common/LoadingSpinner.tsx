@@ -15,7 +15,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md' }) => {
 
   return (
     <dotlottie-player
-      src="https://lottie.host/588824f7-7275-4c31-a049-74a584959445/yF5oL10QfL.json"
+      src="https://lottie.host/e434193b-18a7-47c3-827c-39659a685f09/6kS4BTuE8w.json"
       background="transparent"
       speed="1"
       style={sizeMap[size]}
