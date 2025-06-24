@@ -7,9 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MessageSquare, ShieldCheck, HardHat, Sparkles, ArrowRight, Zap, TrendingUp, Clock, Users, CheckCircle, Handshake } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import ScrollReveal from '@/components/common/ScrollReveal';
 
 const features = [
@@ -116,86 +115,18 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-const MobileCardStack = ({ items, title }: { items: (typeof features | typeof stats), title: string }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
-
-  return (
-    <section ref={containerRef} className="relative h-[300vh] bg-background">
-      <div className="sticky top-0 z-10 bg-background/80 py-4 backdrop-blur-sm">
-        <h2 className="font-headline text-3xl font-bold text-center text-foreground px-4">
-          {title}
-        </h2>
-      </div>
-      <div className="sticky top-1/4 flex h-screen items-start justify-center">
-        <div className="relative w-full h-full">
-          {items.map((item, index) => {
-            const input_range = [index / items.length, (index + 1) / items.length];
-            const scale = useTransform(scrollYProgress, input_range, [1, 0.8]);
-            const opacity = useTransform(scrollYProgress, input_range, [1, 0]);
-
-            return (
-              <motion.div
-                key={index}
-                className={cn(
-                  "absolute left-1/2 -translate-x-1/2 w-[80%] max-w-sm rounded-2xl shadow-2xl flex flex-col items-center p-8 h-auto text-center",
-                  "color" in item ? item.bgColor : (item as any).bgColor
-                )}
-                style={{
-                  scale,
-                  opacity: index === items.length - 1 ? 1 : opacity,
-                  top: `${index * 2}rem`
-                }}
-              >
-                <div className={cn("mb-6", "color" in item ? item.color : '')}>
-                  {item.icon}
-                </div>
-                <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">
-                  {"title" in item ? item.title : item.value}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {"description" in item ? item.description : item.label}
-                </p>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-
-const MobileStackedLayout = () => {
-    return (
-        <div className="md:hidden">
-            <MobileCardStack items={features} title="Key Features" />
-            <MobileCardStack items={stats} title="System Performance" />
-        </div>
-    );
-};
-
-
 export default function HomePage() {
   const { user } = useAuth();
-  const [isMobile, setIsMobile] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
-    const checkIsMobile = () => setIsMobile(window.innerWidth < 768);
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-    return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
   return (
-    <div className="bg-background text-foreground">
+    <div className="bg-background text-foreground overflow-x-hidden">
       {/* Hero Section */}
-      <section className="h-screen w-full sticky top-0 flex items-center justify-center">
+      <section className="h-[calc(100vh-5rem)] w-full flex items-center justify-center relative">
         <Image
           src="https://placehold.co/1920x1080.png"
           alt="Modern office building background"
@@ -245,7 +176,6 @@ export default function HomePage() {
       <div className="relative z-10 bg-background">
         
         {hasMounted && (
-            isMobile ? <MobileStackedLayout /> : 
             <>
                 <DesktopFeaturesLayout />
                 <DesktopStatsLayout />
