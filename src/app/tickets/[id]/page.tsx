@@ -456,19 +456,19 @@ const TicketDetailPage = () => {
             </Card>
           </ScrollReveal>
 
-          {user.role !== 'Employee' && isTicketOwner && (
+          {user.role !== 'Employee' && isTicketOwner && user.psn !== ticket.currentAssigneePSN && (
             <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
               <Alert variant="default" className="bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700">
                 <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <AlertTitle className="text-blue-800 dark:text-blue-300">Information</AlertTitle>
                 <AlertDescription className="text-blue-700 dark:text-blue-400">
-                  This is your own ticket. You cannot perform management actions (respond, change status, escalate) on tickets you have raised yourself.
+                  This is your own ticket. You cannot perform management actions because it is currently assigned to another supervisor.
                 </AlertDescription>
               </Alert>
             </ScrollReveal>
           )}
 
-          {(user.role !== 'Employee' && user.psn === ticket.currentAssigneePSN && !isTicketOwner && !['Resolved', 'Closed'].includes(ticket.status)) && (
+          {(user.role !== 'Employee' && user.psn === ticket.currentAssigneePSN && !['Resolved', 'Closed'].includes(ticket.status)) && (
             <>
               <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
                 <TicketResolutionSuggestions ticketQuery={ticket.query} />

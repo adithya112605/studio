@@ -36,6 +36,12 @@ export interface Supervisor extends User {
   cityAccess?: string[];
   ticketsResolved?: number;
   ticketsPending?: number;
+  isPSN?: number;
+  isName?: string;
+  nsPSN?: number;
+  nsName?: string;
+  dhPSN?: number;
+  dhName?: string;
 }
 
 export type TicketStatus = 'Open' | 'Pending' | 'In Progress' | 'Resolved' | 'Closed' | 'Escalated to NS' | 'Escalated to DH' | 'Escalated to IC Head';

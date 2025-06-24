@@ -62,6 +62,8 @@ export const mockSupervisors: Supervisor[] = [
     projectsHandledIds: ["P002", "P003", "P004"],
     ticketsResolved: 15,
     ticketsPending: 3,
+    dhPSN: 20192584,
+    dhName: "Uma Srinivasan",
   },
   {
     psn: 85817,
@@ -76,6 +78,8 @@ export const mockSupervisors: Supervisor[] = [
     projectsHandledIds: ["P001"],
     ticketsResolved: 12,
     ticketsPending: 1,
+    dhPSN: 20076337,
+    dhName: "Manish Kumar Agarwal",
   },
   {
     psn: 163389,
@@ -90,6 +94,10 @@ export const mockSupervisors: Supervisor[] = [
     projectsHandledIds: ["P001"],
     ticketsResolved: 9,
     ticketsPending: 4,
+    nsPSN: 85817,
+    nsName: "Gopinath Alla",
+    dhPSN: 20076337,
+    dhName: "Manish Kumar Agarwal",
   }
 ];
 

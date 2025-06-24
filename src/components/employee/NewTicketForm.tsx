@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { NewTicketFormData, TicketPriority, Ticket, Employee, TicketStatus } from '@/types';
+import type { NewTicketFormData, TicketPriority, User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -57,40 +57,26 @@ export default function NewTicketForm() {
 
 
   const onSubmit: SubmitHandler<NewTicketFormData> = async (data) => {
-    if (!user || user.role !== 'Employee') {
-      toast({ title: "Error", description: "You must be logged in as an Employee to submit a ticket.", variant: "destructive" });
+    if (!user) {
+      toast({ title: "Error", description: "You must be logged in to submit a ticket.", variant: "destructive" });
       return;
     }
-    const employeeUser = user as Employee;
 
     setIsLoading(true);
-
-    const newTicketData: Omit<Ticket, 'id' | 'attachments'> = {
-      psn: employeeUser.psn,
-      employeeName: employeeUser.name,
-      query: data.query,
-      followUpQuery: data.hasFollowUp ? data.followUpQuery : undefined,
-      priority: data.priority,
-      dateOfQuery: new Date().toISOString(),
-      status: 'Open' as TicketStatus,
-      project: employeeUser.project,
-      currentAssigneePSN: employeeUser.isPSN,
-      lastStatusUpdateDate: new Date().toISOString(),
-    };
     
     try {
-        const { ticketId, supervisorName } = await createTicketAction(newTicketData);
+        const { ticketId, supervisorName } = await createTicketAction(data, user);
 
         if (supervisorName) {
-            toast({ title: "IS Notified (Simulated)", description: `Supervisor ${supervisorName} has been notified about your new ticket.`});
+            toast({ title: "Ticket Assigned", description: `Your new ticket has been assigned to ${supervisorName}.`});
         }
         
         toast({ title: "Ticket Submitted!", description: `Your ticket ${ticketId} has been successfully raised.` });
         router.push('/dashboard');
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to create ticket:", error);
-        toast({ title: "Error", description: "Failed to submit your ticket. Please try again.", variant: "destructive" });
+        toast({ title: "Error", description: error.message || "Failed to submit your ticket. Please try again.", variant: "destructive" });
     } finally {
         setIsLoading(false);
     }
@@ -100,7 +86,7 @@ export default function NewTicketForm() {
     <Card className="w-full max-w-2xl mx-auto shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Raise a New Ticket</CardTitle>
-        <CardDescription>Describe your issue or request below. Your Immediate Supervisor (IS) will be notified.</CardDescription>
+        <CardDescription>Describe your issue or request below. It will be assigned to the appropriate supervisor.</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-6">

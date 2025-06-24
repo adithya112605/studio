@@ -25,7 +25,7 @@ import {
   getJobCodeById as getJobCodeByIdQuery,
   getEmployeeByPsn as getEmployeeByPsnQuery,
 } from '@/lib/queries';
-import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket, TicketAttachment } from '@/types';
+import type { User, Employee, Supervisor, AddEmployeeFormData, AddSupervisorFormData, Ticket, TicketAttachment, NewTicketFormData, TicketStatus } from '@/types';
 import { revalidatePath } from 'next/cache';
 
 function formatFirebaseError(error: any): string {
@@ -110,16 +110,70 @@ export async function addSupervisorAction(data: AddSupervisorFormData) {
     revalidatePath('/dashboard');
 }
 
-export async function createTicketAction(ticketData: Omit<Ticket, 'id' | 'attachments'>) {
-    const newTicketId = await createTicketQuery(ticketData);
+export async function createTicketAction(formData: NewTicketFormData, creator: User) {
+    let assigneePsn: number | undefined;
+
+    const project = 'project' in creator ? (creator as Employee).project : ('branchProject' in creator ? (creator as Supervisor).branchProject : undefined);
+
+    if (creator.role === 'Employee') {
+        assigneePsn = (creator as Employee).isPSN;
+    } else { // It's a supervisor
+        const supervisorCreator = creator as Supervisor;
+        switch (supervisorCreator.functionalRole) {
+            case 'IS':
+                assigneePsn = supervisorCreator.nsPSN;
+                break;
+            case 'NS':
+                assigneePsn = supervisorCreator.dhPSN;
+                break;
+            case 'DH':
+                const icHead = (await getAllSupervisorsQuery()).find(s => s.functionalRole === 'IC Head');
+                assigneePsn = icHead?.psn;
+                break;
+            case 'IC Head':
+                assigneePsn = supervisorCreator.psn;
+                break;
+        }
+    }
+
+    if (!assigneePsn) {
+        if (creator.role === 'IC Head') {
+            assigneePsn = creator.psn;
+        } else {
+            const icHead = (await getAllSupervisorsQuery()).find(s => s.functionalRole === 'IC Head');
+            if (icHead) {
+                 assigneePsn = icHead.psn;
+                 console.warn(`Could not determine assignee for ticket by ${creator.name}. Assigning to IC Head as fallback.`);
+            } else {
+                 assigneePsn = creator.psn;
+                 console.warn(`Could not determine assignee for ticket by ${creator.name} (${creator.psn}). Assigning to self as final fallback.`);
+            }
+        }
+    }
+
+    const newTicketData: Omit<Ticket, 'id' | 'attachments'> = {
+      psn: creator.psn,
+      employeeName: creator.name,
+      query: formData.query,
+      followUpQuery: formData.hasFollowUp ? formData.followUpQuery : undefined,
+      priority: formData.priority,
+      dateOfQuery: new Date().toISOString(),
+      status: 'Open' as TicketStatus,
+      project: project || 'N/A',
+      currentAssigneePSN: assigneePsn,
+      lastStatusUpdateDate: new Date().toISOString(),
+    };
+    
+    const newTicketId = await createTicketQuery(newTicketData);
     let supervisorName: string | null = null;
     
-    if (ticketData.currentAssigneePSN) {
-        const supervisor = await getSupervisorByPsnQuery(ticketData.currentAssigneePSN);
+    if (assigneePsn) {
+        const supervisor = await getSupervisorByPsnQuery(assigneePsn);
         if (supervisor) {
             supervisorName = supervisor.name;
         }
     }
+
     revalidatePath('/dashboard');
     revalidatePath('/employee/tickets');
     revalidatePath(`/tickets/${newTicketId}`);

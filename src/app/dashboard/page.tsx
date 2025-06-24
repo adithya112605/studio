@@ -221,7 +221,12 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
   return (
     <div className="space-y-8">
       <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-        <h1 className="font-headline text-3xl font-bold">{user.title} Dashboard</h1>
+        <div className="flex justify-between items-center">
+            <h1 className="font-headline text-3xl font-bold">{user.title} Dashboard</h1>
+             <Button asChild>
+                <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
+            </Button>
+        </div>
       </ScrollReveal>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {[
