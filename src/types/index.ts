@@ -120,19 +120,3 @@ export interface PasswordStrengthResult {
   isValid: boolean;
   message: string;
 }
-
-// Type declaration for the Lottie Player web component
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'dotlottie-player': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
-        src: string;
-        background: string;
-        speed: string;
-        style?: React.CSSProperties;
-        loop?: boolean;
-        autoplay?: boolean;
-      }, HTMLElement>;
-    }
-  }
-}
