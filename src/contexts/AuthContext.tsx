@@ -19,8 +19,8 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
-  login: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
-  signup: (psn: number, password?: string) => Promise<{ success: boolean; message: string }>;
+  login: (psn: number, password?: string) => Promise<void>;
+  signup: (psn: number, password?: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   checkPSNExists: (psn: number) => Promise<{ exists: boolean; error?: string }>;
@@ -69,10 +69,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (psn: number, password?: string) => {
     try {
       const result = await loginAction(psn, password);
-      if (result.success) {
-        // The onAuthStateChanged listener will handle setting the user and redirecting.
-        // We just show a success toast here.
-        toast({ title: "Login Successful", description: `Welcome back!` });
+      if (result.success && result.user) {
+        setUser(result.user);
+        toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
+        router.push('/dashboard');
       } else {
         toast({
           title: "Login Failed",
@@ -80,14 +80,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           variant: "destructive",
         });
       }
-      return { success: result.success, message: result.message };
     } catch (error: any) {
       toast({
         title: "Login Error",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-      return { success: false, message: error.message || "An unexpected error occurred." };
     }
   };
 
@@ -95,8 +93,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const result = await signupAction(psn, password);
       if (result.success && result.user) {
-        // The onAuthStateChanged listener will handle the redirect.
+        setUser(result.user);
         toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
+        router.push('/dashboard');
       } else {
         toast({
           title: "Signup Failed",
@@ -104,14 +103,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           variant: "destructive",
         });
       }
-       return { success: result.success, message: result.message };
     } catch (error: any) {
       toast({
         title: "Signup Error",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-      return { success: false, message: error.message || "An unexpected error occurred." };
     }
   };
 

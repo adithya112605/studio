@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ export default function SignInForm() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
-  const { control, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       psn: '',
@@ -60,19 +60,13 @@ export default function SignInForm() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="psn">PSN (up to 8 digits)</Label>
-               <Controller
-                name="psn"
-                control={control}
-                render={({ field }) => (
-                  <Input 
-                    id="psn" 
-                    autoComplete="username"
-                    {...field}
-                    onInput={handlePsnInput} 
-                    maxLength={8} 
-                    placeholder="e.g., 10004703" 
-                  />
-                )}
+              <Input 
+                id="psn" 
+                autoComplete="username"
+                {...register("psn")}
+                onInput={handlePsnInput} 
+                maxLength={8} 
+                placeholder="e.g., 10004703" 
               />
               {errors.psn && <p className="text-sm text-destructive">{errors.psn.message}</p>}
             </div>
@@ -84,18 +78,12 @@ export default function SignInForm() {
                 </Link>
               </div>
               <div className="relative">
-                <Controller
-                  name="password"
-                  control={control}
-                  render={({ field }) => (
-                    <Input 
-                      id="password-signin"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      {...field} 
-                      placeholder="••••••••" 
-                    />
-                  )}
+                <Input 
+                  id="password-signin"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  {...register("password")} 
+                  placeholder="••••••••" 
                 />
                 <Button
                   type="button"
