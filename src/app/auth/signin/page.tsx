@@ -12,14 +12,14 @@ export default function SignInPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // If the auth state is done loading and we have a user, redirect to the dashboard.
-    // This handles the case where a logged-in user navigates to the sign-in page.
+    // This effect handles the case where a user who is ALREADY logged in
+    // navigates to the sign-in page. It safely redirects them.
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
   
-  // While the context is verifying the initial auth state, show a loader.
+  // The main loading indicator for the initial auth check.
   if (loading) { 
       return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">

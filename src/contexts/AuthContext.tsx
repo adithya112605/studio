@@ -15,7 +15,7 @@ import {
   loginAction,
   signupAction
 } from '@/lib/actions';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -42,51 +43,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    // This listener is the single source of truth for the user's auth state.
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
-      // This listener now primarily handles session persistence across page reloads.
-      // The initial login sets the user state directly.
-      if (firebaseUser && !user) {
-        setLoading(true);
-        try {
+      try {
+        if (firebaseUser) {
+          // If the user state is already correct, don't do anything.
+          if (user && user.businessEmail === firebaseUser.email) return;
+
+          // User is signed in to Firebase, now get their profile from our database.
           const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email!);
           if (lntUser) {
             setUser(lntUser);
+            // After successful login and profile fetch, redirect from auth pages.
+            const authRoutes = ['/auth/signin', '/auth/signup'];
+            if (authRoutes.includes(pathname)) {
+                 router.replace('/dashboard');
+            }
           } else {
-            console.error(`[AuthContext] onAuthStateChanged: L&T profile not found for ${firebaseUser.email}. Error: ${error || 'Unknown DB error.'}`);
-            await signOut(auth); // This will re-trigger the listener with a null user
+            // Logged into Firebase, but no profile in our DB. This is an error state.
+            console.error(`[AuthContext] Auth-DB Mismatch: L&T profile not found for ${firebaseUser.email}. Error: ${error || 'Unknown DB error.'}`);
+            toast({ title: "Profile Not Found", description: "Your account exists but we could not find your profile details. Please contact support.", variant: "destructive" });
+            await signOut(auth); // Sign out from Firebase to clean up state.
           }
-        } catch (e: any) {
-          console.error("[AuthContext] Unexpected error in onAuthStateChanged:", e);
-          await signOut(auth);
-        } finally {
-          setLoading(false);
+        } else {
+          // No user is signed in to Firebase.
+          setUser(null);
         }
-      } else if (!firebaseUser) {
-        setUser(null);
+      } catch(e) {
+         console.error("[AuthContext] Critical error in onAuthStateChanged:", e);
+         setUser(null); // Ensure user is logged out on error
+      }
+      finally {
+        // This is crucial: always set loading to false after processing.
         setLoading(false);
       }
     });
 
     return () => unsubscribe();
-  }, [user]);
-
-  const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
-      const { exists, error } = await checkPSNExistsAction(psn);
-      
-      if (error) {
-          toast({ title: "Error Verifying PSN", description: error, variant: "destructive" });
-          return { exists: false, error };
-      }
-      return { exists, error: undefined };
-  };
+  }, [pathname, router, user]); // Add dependencies to re-run if needed, but the logic inside prevents loops.
 
   const login = async (psn: number, password?: string): Promise<void> => {
-    setLoading(true);
     try {
       const result = await loginAction(psn, password);
+      // The onAuthStateChanged listener above will handle setting the user state and redirection.
+      // We just show success/failure toasts here.
       if (result.success && result.user) {
-        setUser(result.user);
-        router.push('/dashboard');
         toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
       } else {
         toast({
@@ -101,19 +102,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const signup = async (psn: number, password?: string): Promise<void> => {
-    setLoading(true);
     try {
       const result = await signupAction(psn, password);
       if (result.success && result.user) {
-        setUser(result.user);
-        router.push('/dashboard');
         toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
+         // The onAuthStateChanged listener will handle the rest.
       } else {
         toast({
           title: "Signup Failed",
@@ -127,9 +124,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
+      const { exists, error } = await checkPSNExistsAction(psn);
+      
+      if (error) {
+          toast({ title: "Error Verifying PSN", description: error, variant: "destructive" });
+          return { exists: false, error };
+      }
+      return { exists, error: undefined };
   };
 
   const logout = async () => {
@@ -140,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      setUser(null); // Explicitly clear user state
+      // The onAuthStateChanged listener will set user to null.
       router.push('/auth/signin'); // Redirect to signin page
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {

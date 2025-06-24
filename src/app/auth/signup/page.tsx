@@ -12,13 +12,14 @@ export default function SignUpPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // If auth state is resolved and a user exists, they should be on the dashboard.
+    // This effect handles the case where a user who is ALREADY logged in
+    // navigates to the sign-up page. It safely redirects them.
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
 
-  // Show a loader while we determine auth state or if a user is being redirected.
+  // The main loading indicator for the initial auth check.
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
@@ -30,7 +31,7 @@ export default function SignUpPage() {
     );
   }
 
-  // Only show the form if we are not loading and there's no user.
+  // If not loading and no user, show the form.
   // The redirection on successful signup is now handled by the AuthContext.
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
