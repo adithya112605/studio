@@ -15,12 +15,13 @@ import {
   loginAction,
   signupAction
 } from '@/lib/actions';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
-  login: (psn: number, password?: string) => Promise<void>;
-  signup: (psn: number, password?: string) => Promise<void>;
-  logout: () => void;
+  login: (psn: number, password?: string) => Promise<{success: boolean, message: string}>;
+  signup: (psn: number, password?: string) => Promise<{success: boolean, message: string}>;
+  logout: () => Promise<void>;
   loading: boolean;
   checkPSNExists: (psn: number) => Promise<{ exists: boolean; error?: string }>;
 }
@@ -29,8 +30,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Start as true to handle initial auth check
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -70,31 +72,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (psn: number, password?: string) => {
     // This function's only job is to attempt the login.
-    // The onAuthStateChanged listener above will handle state updates and redirects.
+    // The onAuthStateChanged listener above will handle state updates.
     const result = await loginAction(psn, password);
-    if (result.success && result.user) {
-      toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
-    } else {
+    if (!result.success) {
       toast({
         title: "Login Failed",
         description: result.message,
         variant: "destructive",
       });
     }
+    // No "else" block needed here. The onAuthStateChanged will handle the success case.
+    return result;
   };
 
   const signup = async (psn: number, password?: string) => {
     // This function's only job is to attempt the signup.
     const result = await signupAction(psn, password);
-    if (result.success && result.user) {
-      toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
-    } else {
-      toast({
+    if (!result.success) {
+       toast({
         title: "Signup Failed",
         description: result.message,
         variant: "destructive",
       });
+    } else {
+       toast({ title: "Account Created!", description: `Welcome!` });
     }
+    return result;
   };
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
@@ -116,6 +119,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await signOut(auth);
       // The onAuthStateChanged listener will automatically set the user to null.
+      // After user is set to null, redirect to sign-in page.
+      router.push('/auth/signin');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
       console.error("Firebase logout error: ", error);

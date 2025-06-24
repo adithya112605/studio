@@ -127,6 +127,7 @@ export default function SignUpForm() {
     }
     setIsSigningUp(true);
     await signup(psnForStep2, data.password);
+    // Let the AuthContext listener handle redirecting
     setIsSigningUp(false);
   };
 

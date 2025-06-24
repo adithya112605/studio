@@ -59,7 +59,7 @@ export async function checkPSNExistsAction(psn: number): Promise<{ exists: boole
 }
 
 // Action for user login
-export async function loginAction(psn: number, password?: string): Promise<{ success: boolean; message: string; user?: User }> {
+export async function loginAction(psn: number, password?: string): Promise<{ success: boolean; message: string }> {
   const auth = getAuthInstance();
   if (!auth) {
     return { success: false, message: "Authentication service is unavailable." };
@@ -81,8 +81,7 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
 
   try {
     await signInWithEmailAndPassword(auth, lntUser.businessEmail, password);
-    // After successful Firebase Auth, return the user profile we already fetched.
-    return { success: true, message: "Login successful.", user: lntUser };
+    return { success: true, message: "Login successful." };
   } catch (error: any) {
     let errorMessage = "An unknown error occurred.";
     if (error.code) {
@@ -107,7 +106,7 @@ export async function loginAction(psn: number, password?: string): Promise<{ suc
 }
 
 // Action for user signup
-export async function signupAction(psn: number, password?: string): Promise<{ success: boolean; message: string, user?: User }> {
+export async function signupAction(psn: number, password?: string): Promise<{ success: boolean; message: string }> {
   const auth = getAuthInstance();
   if (!auth) {
     return { success: false, message: "Authentication service is unavailable." };
@@ -130,7 +129,7 @@ export async function signupAction(psn: number, password?: string): Promise<{ su
 
   try {
     await createUserWithEmailAndPassword(auth, lntUser.businessEmail, password);
-    return { success: true, message: "Account created successfully! You are now logged in.", user: lntUser };
+    return { success: true, message: "Account created successfully! You are now logged in."};
   } catch (error: any)
   {
     let errorMessage = "An unknown error occurred during signup.";
