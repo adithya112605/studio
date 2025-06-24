@@ -40,6 +40,13 @@ export default function SignUpPage() {
     );
   }
   
-  // Fallback case, should not be reached
-  return null;
+  // Fallback case: User exists, redirecting...
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <LoadingSpinner />
+        <p className="mt-4 text-muted-foreground">
+          Redirecting to your dashboard...
+        </p>
+    </div>
+  );
 }

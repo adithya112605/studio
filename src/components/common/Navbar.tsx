@@ -31,7 +31,7 @@ import { getAllEmployeesAction } from '@/lib/actions';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname(); 
@@ -40,9 +40,9 @@ const Navbar = () => {
     setIsMounted(true);
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
     setIsOpen(false); 
+    await logout();
     router.push('/');
   };
 
@@ -258,7 +258,11 @@ const Navbar = () => {
 
         <div className="flex items-center space-x-1 md:space-x-2 ml-auto shrink-0">
           <ThemeToggle />
-          {user ? (
+          {loading ? (
+             <div className="h-9 w-9 flex items-center justify-center">
+               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+             </div>
+          ) : user ? (
              <div className="flex items-center space-x-1">
                 <Tooltip>
                     <TooltipTrigger asChild>

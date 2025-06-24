@@ -12,15 +12,14 @@ export default function SignInPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // This effect handles the case where a user who is ALREADY logged in
-    // (e.g., after a successful login or on page refresh)
-    // navigates to the sign-in page. It safely redirects them.
+    // This effect handles redirecting the user AWAY from the sign-in page
+    // once they are successfully logged in (or if they were already logged in).
     if (!loading && user) {
       router.replace('/dashboard');
     }
   }, [user, loading, router]);
   
-  // The main loading indicator for the initial auth check.
+  // Show a loading spinner while the auth state is being determined.
   if (loading) { 
       return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
@@ -41,6 +40,14 @@ export default function SignInPage() {
     );
   }
 
-  // Fallback case, should not be reached if logic is correct
-  return null;
+  // Fallback case: If there's a user but the redirect hasn't happened yet,
+  // this state can show a spinner to avoid a flash of the login form.
+  return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+          <LoadingSpinner />
+          <p className="mt-4 text-muted-foreground">
+            Redirecting to your dashboard...
+          </p>
+      </div>
+  );
 }

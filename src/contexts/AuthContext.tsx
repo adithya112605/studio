@@ -15,7 +15,6 @@ import {
   loginAction,
   signupAction
 } from '@/lib/actions';
-import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -32,7 +31,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const router = useRouter();
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -42,20 +40,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
   
-    // This listener handles session restoration on page refresh.
+    // This listener is the single source of truth for the user's auth state.
+    // It handles session restoration on page refresh.
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser && firebaseUser.email) {
-          // If we have a Firebase user but no local user yet, it's a refresh.
-          // Fetch our detailed user profile.
-          if (!user) {
-            const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
-            if (error) {
-              console.error("Error fetching user profile during auth state change:", error);
-              setUser(null);
-            } else {
-              setUser(lntUser);
-            }
+          // If we have a Firebase user, fetch our detailed user profile.
+          const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+          if (error) {
+            console.error("Error fetching user profile during auth state change:", error);
+            setUser(null);
+          } else {
+            setUser(lntUser);
           }
         } else {
           // If Firebase has no user, our app has no user.
@@ -70,16 +66,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   
     return () => unsubscribe();
-    // Intentionally not including `user` in deps to only run on mount for session restoration
   }, []);
 
   const login = async (psn: number, password?: string) => {
-    // This is now a direct, atomic login function.
-    setLoading(true);
+    // This function's only job is to attempt the login.
+    // The onAuthStateChanged listener above will handle state updates and redirects.
     const result = await loginAction(psn, password);
     if (result.success && result.user) {
-      setUser(result.user); // 1. Set user state
-      router.push('/dashboard'); // 2. Redirect
       toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
     } else {
       toast({
@@ -88,16 +81,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     }
-    setLoading(false);
   };
 
   const signup = async (psn: number, password?: string) => {
-    // This is now a direct, atomic signup function.
-    setLoading(true);
+    // This function's only job is to attempt the signup.
     const result = await signupAction(psn, password);
     if (result.success && result.user) {
-      setUser(result.user); // 1. Set user state
-      router.push('/dashboard'); // 2. Redirect
       toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
     } else {
       toast({
@@ -106,7 +95,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     }
-    setLoading(false);
   };
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
@@ -127,8 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      setUser(null); // Explicitly clear the user state immediately
-      router.push('/auth/signin'); // Then redirect
+      // The onAuthStateChanged listener will automatically set the user to null.
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
       console.error("Firebase logout error: ", error);
