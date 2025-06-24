@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ export default function SignInForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, control } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       psn: '',
@@ -47,10 +47,15 @@ export default function SignInForm() {
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     const result = await login(Number(data.psn), data.password);
     if (result.success) {
-      // Redirect to the dashboard on successful login
       router.push('/dashboard');
     }
-    // Error toast is handled within the login function in AuthContext
+  };
+
+  const onPasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit(onSubmit)();
+    }
   };
 
   return (
@@ -84,26 +89,33 @@ export default function SignInForm() {
                   <Button variant="link" size="sm" className="text-xs p-0 h-auto">Forgot?</Button>
                 </Link>
               </div>
-              <div className="relative">
-                <Input
-                  id="password-signin"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  {...register("password")}
-                  placeholder="••••••••"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
+              <Controller
+                name="password"
+                control={control}
+                render={({ field }) => (
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id="password-signin"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      onKeyDown={onPasswordKeyDown}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                )}
+              />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
           </CardContent>

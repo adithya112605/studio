@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -122,7 +122,13 @@ export default function SignUpForm() {
     if (result.success) {
       router.push('/dashboard');
     }
-    // Error toast is handled within the signup function in AuthContext
+  };
+
+  const onConfirmPasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+          e.preventDefault();
+          formStep2.handleSubmit(handlePasswordSubmit)();
+      }
   };
 
   return (
@@ -162,51 +168,64 @@ export default function SignUpForm() {
                       <Sparkles className="mr-1 h-3 w-3" /> Generate
                   </Button>
                 </div>
-                <div className="relative">
-                  <Input 
-                    id="password-signup" 
-                    type={showPassword ? "text" : "password"} 
-                    {...formStep2.register("password")}
-                    autoComplete="new-password"
-                    placeholder="••••••••" 
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+                <Controller
+                  name="password"
+                  control={formStep2.control}
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Input 
+                        {...field}
+                        id="password-signup" 
+                        type={showPassword ? "text" : "password"} 
+                        autoComplete="new-password"
+                        placeholder="••••••••" 
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  )}
+                />
                 <PasswordStrength password={watchedPassword} onStrengthChange={setPasswordStrength} />
                 {formStep2.formState.errors.password && <p className="text-sm text-destructive">{formStep2.formState.errors.password.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
-                <div className="relative">
-                  <Input 
-                    id="confirmPassword-signup" 
-                    type={showConfirmPassword ? "text" : "password"} 
-                    {...formStep2.register("confirmPassword")}
-                    autoComplete="new-password"
-                    placeholder="••••••••" 
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                    tabIndex={-1}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+                <Controller
+                  name="confirmPassword"
+                  control={formStep2.control}
+                  render={({ field }) => (
+                     <div className="relative">
+                      <Input 
+                        {...field}
+                        id="confirmPassword-signup" 
+                        type={showConfirmPassword ? "text" : "password"} 
+                        autoComplete="new-password"
+                        placeholder="••••••••" 
+                        onKeyDown={onConfirmPasswordKeyDown}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  )}
+                />
                 {formStep2.formState.errors.confirmPassword && <p className="text-sm text-destructive">{formStep2.formState.errors.confirmPassword.message}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={formStep2.formState.isSubmitting || !passwordStrength?.isValid}>
