@@ -64,17 +64,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   
     return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (psn: number, password?: string) => {
     try {
       const result = await loginAction(psn, password);
-      if (result.success && result.user) {
-        // The onAuthStateChanged listener will handle setting the user state.
-        // This ensures a single source of truth for the user object.
-        toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
-        router.push('/dashboard');
+      if (result.success) {
+        // The onAuthStateChanged listener will handle setting the user and redirecting.
+        // We just show a success toast here.
+        toast({ title: "Login Successful", description: `Welcome back!` });
       } else {
         toast({
           title: "Login Failed",
@@ -97,9 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const result = await signupAction(psn, password);
       if (result.success && result.user) {
-        // The onAuthStateChanged listener will handle setting the user state.
+        // The onAuthStateChanged listener will handle the redirect.
         toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
-        router.push('/dashboard');
       } else {
         toast({
           title: "Signup Failed",
