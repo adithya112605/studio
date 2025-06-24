@@ -42,18 +42,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
   
-    // This listener is the single source of truth for the user's auth state.
+    // This listener handles session restoration on page refresh.
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser && firebaseUser.email) {
-          // If Firebase has a user, fetch our detailed user profile.
-          const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
-           if (error) {
-             console.error("Error fetching user profile during auth state change:", error);
-             setUser(null);
-           } else {
-             setUser(lntUser);
-           }
+          // If we have a Firebase user but no local user yet, it's a refresh.
+          // Fetch our detailed user profile.
+          if (!user) {
+            const { user: lntUser, error } = await getUserByEmailAction(firebaseUser.email);
+            if (error) {
+              console.error("Error fetching user profile during auth state change:", error);
+              setUser(null);
+            } else {
+              setUser(lntUser);
+            }
+          }
         } else {
           // If Firebase has no user, our app has no user.
           setUser(null);
@@ -62,43 +65,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error during auth state change:", error);
         setUser(null);
       } finally {
-        // Only stop loading after the check is complete.
         setLoading(false);
       }
     });
   
     return () => unsubscribe();
+    // Intentionally not including `user` in deps to only run on mount for session restoration
   }, []);
 
   const login = async (psn: number, password?: string) => {
-    // This function now ONLY attempts to log in via the action.
-    // It does NOT set state or redirect. The onAuthStateChanged listener handles that.
-    // This prevents race conditions and redirect loops.
+    // This is now a direct, atomic login function.
+    setLoading(true);
     const result = await loginAction(psn, password);
-    if (result.success) {
-        toast({ title: "Login Successful", description: `Welcome back, ${result.user?.name}!` });
+    if (result.success && result.user) {
+      setUser(result.user); // 1. Set user state
+      router.push('/dashboard'); // 2. Redirect
+      toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
     } else {
-        toast({
-            title: "Login Failed",
-            description: result.message,
-            variant: "destructive",
-        });
+      toast({
+        title: "Login Failed",
+        description: result.message,
+        variant: "destructive",
+      });
     }
+    setLoading(false);
   };
 
   const signup = async (psn: number, password?: string) => {
-    // This function now ONLY attempts to sign up via the action.
-    // The onAuthStateChanged listener will handle the resulting state change.
-     const result = await signupAction(psn, password);
-     if (result.success) {
-        toast({ title: "Account Created!", description: `Welcome, ${result.user?.name}!` });
-     } else {
-        toast({
-            title: "Signup Failed",
-            description: result.message,
-            variant: "destructive",
-        });
-     }
+    // This is now a direct, atomic signup function.
+    setLoading(true);
+    const result = await signupAction(psn, password);
+    if (result.success && result.user) {
+      setUser(result.user); // 1. Set user state
+      router.push('/dashboard'); // 2. Redirect
+      toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
+    } else {
+      toast({
+        title: "Signup Failed",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
+    setLoading(false);
   };
 
   const checkPSNExists = async (psn: number): Promise<{ exists: boolean; error?: string }> => {
@@ -119,8 +127,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      // The onAuthStateChanged listener will automatically set the user to null.
-      router.push('/auth/signin');
+      setUser(null); // Explicitly clear the user state immediately
+      router.push('/auth/signin'); // Then redirect
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
       console.error("Firebase logout error: ", error);
