@@ -174,6 +174,38 @@ export const mockEmployees: Employee[] = [
     nsName: "Manish Kumar Agarwal",
     dhPSN: 20192584,
     dhName: "Uma Srinivasan"
+  },
+  {
+    psn: 20395511,
+    name: "Priya Sharma",
+    role: 'Employee',
+    grade: "S1",
+    jobCodeId: "1100148", // Accounts Executive
+    project: "P004", // Orange Gate Project
+    businessEmail: "20395511@lnthelpdesk.com",
+    dateOfBirth: "1997-11-30",
+    isPSN: 163389,
+    isName: "TSK Reddy",
+    nsPSN: 85817,
+    nsName: "Gopinath Alla",
+    dhPSN: 20192584,
+    dhName: "Uma Srinivasan"
+  },
+  {
+    psn: 20401234,
+    name: "Amit Patel",
+    role: 'Employee',
+    grade: "M1-A",
+    jobCodeId: "1100028", // Construction Manager
+    project: "P006", // Patna Metro
+    businessEmail: "20401234@lnthelpdesk.com",
+    dateOfBirth: "1990-01-15",
+    isPSN: 20076337, // Manish Kumar Agarwal (acting as IS)
+    isName: "Manish Kumar Agarwal",
+    nsPSN: 20192584,
+    nsName: "Uma Srinivasan",
+    dhPSN: 20192584, // Also Uma
+    dhName: "Uma Srinivasan"
   }
 ];
 
@@ -247,6 +279,32 @@ export const mockTickets: Ticket[] = [
     actionPerformed: "Escalated by Gopinath Alla due to access permission level required.",
     dateOfResponse: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     lastStatusUpdateDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "TKT0000006",
+    psn: 20395511,
+    employeeName: "Priya Sharma",
+    query: "I have not received my Form-16 for the last financial year. Can you please provide an update?",
+    priority: 'Medium',
+    dateOfQuery: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'Pending',
+    currentAssigneePSN: 163389,
+    project: "P004",
+    actionPerformed: "Checked with finance team. Awaiting their response.",
+    dateOfResponse: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    lastStatusUpdateDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "TKT0000007",
+    psn: 20401234,
+    employeeName: "Amit Patel",
+    query: "Request for a new set of safety gear. My current helmet is damaged.",
+    priority: 'High',
+    dateOfQuery: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'Open',
+    currentAssigneePSN: 20076337,
+    project: "P006",
+    lastStatusUpdateDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   }
 ];
 
