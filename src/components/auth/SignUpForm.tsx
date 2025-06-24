@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import type { PasswordStrengthResult } from '@/types';
 import { Loader2, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ScrollReveal from '@/components/common/ScrollReveal';
+import { useRouter } from 'next/navigation';
 
 const signUpStep1Schema = z.object({
   psn: z.string() 
@@ -57,29 +58,23 @@ const generatePassword = (length = 14): string => {
 
 export default function SignUpForm() {
   const { checkPSNExists, signup } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [psnForStep2, setPsnForStep2] = useState<number>(0);
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthResult | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isSigningUp, setIsSigningUp] = useState(false);
-
+  
   const formStep1 = useForm<SignUpStep1Values>({
     resolver: zodResolver(signUpStep1Schema),
-    defaultValues: {
-      psn: '',
-    },
+    defaultValues: { psn: '' },
   });
 
   const formStep2 = useForm<SignUpStep2Values>({
     resolver: zodResolver(signUpStep2Schema),
     mode: "onChange",
-    defaultValues: {
-      password: '',
-      confirmPassword: '',
-    },
+    defaultValues: { password: '', confirmPassword: '' },
   });
 
   const watchedPassword = formStep2.watch("password");
@@ -98,7 +93,6 @@ export default function SignUpForm() {
   };
 
   const handlePsnSubmit: SubmitHandler<SignUpStep1Values> = async (data) => {
-    setIsVerifying(true);
     const psnNumber = Number(data.psn);
     const { exists, error } = await checkPSNExists(psnNumber);
     
@@ -113,7 +107,6 @@ export default function SignUpForm() {
         duration: 8000
       });
     }
-    setIsVerifying(false);
   };
 
   const handlePasswordSubmit: SubmitHandler<SignUpStep2Values> = async (data) => {
@@ -125,10 +118,11 @@ export default function SignUpForm() {
       });
       return;
     }
-    setIsSigningUp(true);
-    await signup(psnForStep2, data.password);
-    // Let the AuthContext listener handle redirecting
-    setIsSigningUp(false);
+    const result = await signup(psnForStep2, data.password);
+    if (result.success) {
+      router.push('/dashboard');
+    }
+    // Error toast is handled within the signup function in AuthContext
   };
 
   return (
@@ -144,23 +138,17 @@ export default function SignUpForm() {
             <form onSubmit={formStep1.handleSubmit(handlePsnSubmit)} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="psn-signup">PSN (up to 8 digits)</Label>
-                <Controller
-                    name="psn"
-                    control={formStep1.control}
-                    render={({ field }) => (
-                         <Input 
-                            id="psn-signup" 
-                            {...field}
-                            onInput={handlePsnInput}
-                            maxLength={8}
-                            placeholder="e.g., 10004703" 
-                         />
-                    )}
+                <Input 
+                    id="psn-signup" 
+                    {...formStep1.register("psn")}
+                    onInput={handlePsnInput}
+                    maxLength={8}
+                    placeholder="e.g., 10004703" 
                 />
                 {formStep1.formState.errors.psn && <p className="text-sm text-destructive">{formStep1.formState.errors.psn.message}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={isVerifying}>
-                {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={formStep1.formState.isSubmitting}>
+                {formStep1.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Verify PSN
               </Button>
             </form>
@@ -175,18 +163,12 @@ export default function SignUpForm() {
                   </Button>
                 </div>
                 <div className="relative">
-                   <Controller
-                    name="password"
-                    control={formStep2.control}
-                    render={({ field }) => (
-                       <Input 
-                        id="password-signup" 
-                        type={showPassword ? "text" : "password"} 
-                        {...field} 
-                        autoComplete="new-password"
-                        placeholder="••••••••" 
-                      />
-                    )}
+                  <Input 
+                    id="password-signup" 
+                    type={showPassword ? "text" : "password"} 
+                    {...formStep2.register("password")}
+                    autoComplete="new-password"
+                    placeholder="••••••••" 
                   />
                   <Button
                     type="button"
@@ -206,18 +188,12 @@ export default function SignUpForm() {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
                 <div className="relative">
-                  <Controller
-                    name="confirmPassword"
-                    control={formStep2.control}
-                    render={({ field }) => (
-                      <Input 
-                        id="confirmPassword-signup" 
-                        type={showConfirmPassword ? "text" : "password"} 
-                        {...field}
-                        autoComplete="new-password"
-                        placeholder="••••••••" 
-                      />
-                    )}
+                  <Input 
+                    id="confirmPassword-signup" 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    {...formStep2.register("confirmPassword")}
+                    autoComplete="new-password"
+                    placeholder="••••••••" 
                   />
                   <Button
                     type="button"
@@ -233,8 +209,8 @@ export default function SignUpForm() {
                 </div>
                 {formStep2.formState.errors.confirmPassword && <p className="text-sm text-destructive">{formStep2.formState.errors.confirmPassword.message}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={isSigningUp || !passwordStrength?.isValid}>
-                {isSigningUp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={formStep2.formState.isSubmitting || !passwordStrength?.isValid}>
+                {formStep2.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account & Sign In
               </Button>
               <Button variant="outline" onClick={() => setStep(1)} className="w-full" type="button">

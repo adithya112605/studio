@@ -7,7 +7,7 @@ import {
 } from 'firebase/auth';
 import { getAuthInstance } from '@/lib/firebase';
 import {
-  getUserByPsn,
+  getUserByPsn as getUserByPsnQuery,
   getAllEmployees as getAllEmployeesQuery,
   getAllSupervisors as getAllSupervisorsQuery,
   getAllProjects as getAllProjectsQuery,
@@ -23,6 +23,7 @@ import {
   getAllTickets as getAllTicketsQuery,
   getProjectById as getProjectByIdQuery,
   getJobCodeById as getJobCodeByIdQuery,
+  getEmployeeByPsn as getEmployeeByPsnQuery,
 } from '@/lib/queries';
 import type { User, AddEmployeeFormData, AddSupervisorFormData, Ticket, TicketAttachment } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -47,7 +48,7 @@ function formatFirebaseError(error: any): string {
 // Action to check if a PSN exists
 export async function checkPSNExistsAction(psn: number): Promise<{ exists: boolean; error?: string }> {
   try {
-    const user = await getUserByPsn(psn);
+    const user = await getUserByPsnQuery(psn);
     if (!user) {
         return { exists: false, error: "This PSN is not found in the database. Please contact an administrator or run the db:seed script." };
     }
@@ -55,103 +56,6 @@ export async function checkPSNExistsAction(psn: number): Promise<{ exists: boole
   } catch (error: any) {
     console.error("[Action Error] checkPSNExistsAction:", error.message);
     return { exists: false, error: formatFirebaseError(error) };
-  }
-}
-
-// Action for user login
-export async function loginAction(psn: number, password?: string): Promise<{ success: boolean; message: string }> {
-  const auth = getAuthInstance();
-  if (!auth) {
-    return { success: false, message: "Authentication service is unavailable." };
-  }
-  let lntUser;
-  try {
-    lntUser = await getUserByPsn(psn);
-  } catch (error: any) {
-    console.error("[Action Error] loginAction fetching user:", error.message);
-    return { success: false, message: formatFirebaseError(error) };
-  }
-
-  if (!lntUser || !lntUser.businessEmail) {
-    return { success: false, message: "PSN not found or no business email is associated with it." };
-  }
-  if (!password) {
-    return { success: false, message: "Password is required." };
-  }
-
-  try {
-    await signInWithEmailAndPassword(auth, lntUser.businessEmail, password);
-    return { success: true, message: "Login successful." };
-  } catch (error: any) {
-    let errorMessage = "An unknown error occurred.";
-    if (error.code) {
-      switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          errorMessage = "Invalid PSN or password.";
-          break;
-        case 'auth/invalid-email':
-          errorMessage = "The business email for this PSN is invalid.";
-          break;
-        case 'auth/configuration-not-found':
-          errorMessage = "Firebase Authentication is not configured. Please enable Email/Password provider in your Firebase Console.";
-          break;
-        default:
-          errorMessage = error.message;
-      }
-    }
-    return { success: false, message: errorMessage };
-  }
-}
-
-// Action for user signup
-export async function signupAction(psn: number, password?: string): Promise<{ success: boolean; message: string }> {
-  const auth = getAuthInstance();
-  if (!auth) {
-    return { success: false, message: "Authentication service is unavailable." };
-  }
-
-  let lntUser;
-  try {
-    lntUser = await getUserByPsn(psn);
-  } catch (error: any) {
-    console.error("[Action Error] signupAction fetching user:", error.message);
-    return { success: false, message: formatFirebaseError(error) };
-  }
-
-  if (!lntUser || !lntUser.businessEmail) {
-    return { success: false, message: "PSN not found or no business email is associated with it." };
-  }
-  if (!password) {
-    return { success: false, message: "Password is required." };
-  }
-
-  try {
-    await createUserWithEmailAndPassword(auth, lntUser.businessEmail, password);
-    return { success: true, message: "Account created successfully! You are now logged in."};
-  } catch (error: any)
-  {
-    let errorMessage = "An unknown error occurred during signup.";
-    if (error.code) {
-        switch (error.code) {
-          case 'auth/email-already-in-use':
-            errorMessage = "This account has already been registered. Please sign in.";
-            break;
-          case 'auth/weak-password':
-            errorMessage = "The password is too weak.";
-            break;
-          case 'auth/invalid-email':
-            errorMessage = "The business email for this PSN is invalid.";
-            break;
-          case 'auth/configuration-not-found':
-            errorMessage = "Firebase Authentication is not configured. Please enable Email/Password provider in your Firebase Console.";
-            break;
-          default:
-            errorMessage = error.message;
-        }
-    }
-    return { success: false, message: errorMessage };
   }
 }
 
@@ -169,7 +73,7 @@ export async function getUserByEmailAction(email: string): Promise<{user: User |
 // Action for forgot password page
 export async function getUserForPasswordResetAction(psn: number): Promise<{ businessEmail: string | undefined } | null> {
   try {
-    const user = await getUserByPsn(psn);
+    const user = await getUserByPsnQuery(psn);
     if (user) {
       return { businessEmail: user.businessEmail };
     }
@@ -270,4 +174,8 @@ export async function getJobCodeByIdAction(id: string) {
 
 export async function getSupervisorByPsnAction(psn: number) {
     return await getSupervisorByPsnQuery(psn);
+}
+
+export async function getEmployeeByPsn(psn: number) {
+    return await getEmployeeByPsnQuery(psn);
 }
