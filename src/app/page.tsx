@@ -10,7 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import React from 'react';
 import ScrollReveal from '@/components/common/ScrollReveal';
 import ScrollTypewriter from '@/components/common/ScrollTypewriter';
-import VantaBackground from '@/components/common/VantaBackground';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -66,13 +65,21 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex flex-col items-center bg-background text-foreground min-h-screen overflow-x-hidden">
+    <div className="bg-background text-foreground">
       {/* Hero Section */}
-      <section className="w-full py-24 lg:py-40 relative overflow-hidden">
-        <VantaBackground />
+      <section className="h-screen w-full sticky top-0 flex items-center justify-center">
+        <Image
+          src="https://placehold.co/1920x1080.png"
+          alt="Modern office building background"
+          data-ai-hint="modern office building"
+          fill
+          priority
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/60" />
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="min-h-[8rem] md:min-h-[10rem]">
-            <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight">
+            <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight text-white">
               {user ? (
                 <>
                   <ScrollTypewriter text="Welcome, " tag="span" speed={50} className="inline-block" once={true} delay={200}/>
@@ -93,11 +100,11 @@ export default function HomePage() {
           </div>
           <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
             {user ? (
-              <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
+              <p className="text-lg md:text-xl lg:text-2xl text-slate-300 max-w-3xl mx-auto mb-10">
                 Your personalized helpdesk dashboard awaits. Manage your tickets and access support efficiently.
               </p>
             ) : (
-              <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
+              <p className="text-lg md:text-xl lg:text-2xl text-slate-300 max-w-3xl mx-auto mb-10">
                 <span className="text-highlight">Efficient</span>. <span className="text-highlight">Reliable</span>. Internal Support, <span className="text-highlight">Reimagined</span> for Larsen & Toubro Employees.
               </p>
             )}
@@ -123,126 +130,129 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-16 lg:py-24 w-full bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
-            <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
-              Key Features of L&T Helpdesk
-            </h2>
-          </ScrollReveal>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
-                <div className="text-center p-8 bg-background rounded-xl shadow-lg hover:shadow-2xl hover:shadow-primary/30 dark:hover:shadow-primary/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full">
-                  <div className="mb-6">{feature.icon}</div>
-                  <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm">{feature.description}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 lg:py-24 w-full">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
-            <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
-              System Performance at a Glance
-            </h2>
-          </ScrollReveal>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            {stats.map((stat, index) => (
-              <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
-                <div className="flex flex-col items-center p-8 bg-card rounded-xl shadow-md hover:shadow-xl hover:shadow-accent/30 dark:hover:shadow-accent/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full">
-                  <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-                  <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
-                  <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Image section like Vexo */}
-      <section className="py-16 lg:py-24 w-full bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-            <div className="bg-background p-8 md:p-12 rounded-xl shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:shadow-primary/20 dark:hover:shadow-primary/30 hover:-translate-y-1 overflow-hidden">
-                <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-                    <div>
-                        <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
-                          <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6 text-foreground">
-                              Built for <span className="text-highlight">Efficiency and Scale</span>
-                          </h2>
-                        </ScrollReveal>
-                        <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
-                          <p className="text-muted-foreground mb-4 leading-relaxed text-lg">
-                              Our helpdesk platform is engineered to handle the diverse needs of a large organization like Larsen & Toubro, ensuring smooth operations and quick resolutions.
-                          </p>
-                        </ScrollReveal>
-                        <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
-                          <ul className="space-y-3 text-muted-foreground">
-                              <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Intuitive user interface for all employees.</li>
-                              <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Scalable infrastructure to support thousands of users.</li>
-                              <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Robust security and data privacy measures.</li>
-                          </ul>
-                        </ScrollReveal>
-                        <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
-                          <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-full text-md font-semibold shadow-lg transition-transform hover:scale-105">
-                              <Link href={user ? "/dashboard" : "/auth/signup"}>
-                                  {user ? "Explore Dashboard" : "Get Started Now"} <ArrowRight className="ml-2 h-5 w-5"/>
-                              </Link>
-                          </Button>
-                        </ScrollReveal>
-                    </div>
-                    <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
-                      <div className="rounded-lg overflow-hidden shadow-2xl aspect-video">
-                          <Image
-                          src="https://placehold.co/600x400.png"
-                          alt="Modern Office or Tech Interface"
-                          width={600}
-                          height={400}
-                          className="object-cover w-full h-full"
-                          data-ai-hint="modern office tech interface"
-                          />
-                      </div>
-                    </ScrollReveal>
-                </div>
+      {/* Subsequent Content Wrapper */}
+      <div className="relative z-10 bg-background">
+        {/* Features Section */}
+        <section id="features" className="py-16 lg:py-24 w-full bg-card">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
+              <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+                Key Features of L&T Helpdesk
+              </h2>
+            </ScrollReveal>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {features.map((feature, index) => (
+                <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
+                  <div className="text-center p-8 bg-background rounded-xl shadow-lg hover:shadow-2xl hover:shadow-primary/30 dark:hover:shadow-primary/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full">
+                    <div className="mb-6">{feature.icon}</div>
+                    <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm">{feature.description}</p>
+                  </div>
+                </ScrollReveal>
+              ))}
             </div>
-          </ScrollReveal>
-        </div>
-      </section>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="py-16 lg:py-24 w-full">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
+              <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+                System Performance at a Glance
+              </h2>
+            </ScrollReveal>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+              {stats.map((stat, index) => (
+                <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={200 + index * 100}>
+                  <div className="flex flex-col items-center p-8 bg-card rounded-xl shadow-md hover:shadow-xl hover:shadow-accent/30 dark:hover:shadow-accent/40 transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full">
+                    <div className={`${stat.color} mb-4`}>{stat.icon}</div>
+                    <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
+                    <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+        
+        {/* Image section like Vexo */}
+        <section className="py-16 lg:py-24 w-full bg-card">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+              <div className="bg-background p-8 md:p-12 rounded-xl shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:shadow-primary/20 dark:hover:shadow-primary/30 hover:-translate-y-1 overflow-hidden">
+                  <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                      <div>
+                          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+                            <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6 text-foreground">
+                                Built for <span className="text-highlight">Efficiency and Scale</span>
+                            </h2>
+                          </ScrollReveal>
+                          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
+                            <p className="text-muted-foreground mb-4 leading-relaxed text-lg">
+                                Our helpdesk platform is engineered to handle the diverse needs of a large organization like Larsen & Toubro, ensuring smooth operations and quick resolutions.
+                            </p>
+                          </ScrollReveal>
+                          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
+                            <ul className="space-y-3 text-muted-foreground">
+                                <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Intuitive user interface for all employees.</li>
+                                <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Scalable infrastructure to support thousands of users.</li>
+                                <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Robust security and data privacy measures.</li>
+                            </ul>
+                          </ScrollReveal>
+                          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
+                            <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-full text-md font-semibold shadow-lg transition-transform hover:scale-105">
+                                <Link href={user ? "/dashboard" : "/auth/signup"}>
+                                    {user ? "Explore Dashboard" : "Get Started Now"} <ArrowRight className="ml-2 h-5 w-5"/>
+                                </Link>
+                            </Button>
+                          </ScrollReveal>
+                      </div>
+                      <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
+                        <div className="rounded-lg overflow-hidden shadow-2xl aspect-video">
+                            <Image
+                            src="https://placehold.co/600x400.png"
+                            alt="Modern Office or Tech Interface"
+                            width={600}
+                            height={400}
+                            className="object-cover w-full h-full"
+                            data-ai-hint="modern office tech interface"
+                            />
+                        </div>
+                      </ScrollReveal>
+                  </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
 
 
-      {/* Contact/CTA Section */}
-      <section id="contact" className="py-20 lg:py-32 w-full">
-        <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
-            <Handshake className="w-16 h-16 text-primary mx-auto mb-6"/>
-          </ScrollReveal>
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
-            <h2 className="font-headline text-3xl md:text-5xl font-bold mb-6 text-foreground">
-              Ready to Experience <span className="text-highlight">Streamlined Support</span>?
-            </h2>
-          </ScrollReveal>
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              Join thousands of L&T employees already benefiting from our efficient internal helpdesk system.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 rounded-full text-xl font-semibold shadow-xl transition-transform hover:scale-105">
-              <Link href={user ? "/dashboard" : "/auth/signup"}>
-                  {user ? "Go to Dashboard" : "Create Your Account"}
-              </Link>
-            </Button>
-          </ScrollReveal>
-        </div>
-      </section>
+        {/* Contact/CTA Section */}
+        <section id="contact" className="py-20 lg:py-32 w-full">
+          <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
+              <Handshake className="w-16 h-16 text-primary mx-auto mb-6"/>
+            </ScrollReveal>
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
+              <h2 className="font-headline text-3xl md:text-5xl font-bold mb-6 text-foreground">
+                Ready to Experience <span className="text-highlight">Streamlined Support</span>?
+              </h2>
+            </ScrollReveal>
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={300}>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+                Join thousands of L&T employees already benefiting from our efficient internal helpdesk system.
+              </p>
+            </ScrollReveal>
+            <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 rounded-full text-xl font-semibold shadow-xl transition-transform hover:scale-105">
+                <Link href={user ? "/dashboard" : "/auth/signup"}>
+                    {user ? "Go to Dashboard" : "Create Your Account"}
+                </Link>
+              </Button>
+            </ScrollReveal>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

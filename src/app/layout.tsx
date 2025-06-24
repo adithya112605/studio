@@ -7,7 +7,6 @@ import Footer from '@/components/common/Footer';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/AuthContext';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner'; 
-import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'L&T Helpdesk',
@@ -43,8 +42,6 @@ export default function RootLayout({
             <Toaster />
           </ThemeProvider>
         </AuthProvider>
-        <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" strategy="lazyOnload" />
-        <Script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.globe.min.js" strategy="lazyOnload" />
       </body>
     </html>
   );
