@@ -15,7 +15,7 @@ export default function SignUpPage() {
     // This effect handles the case where a user who is ALREADY logged in
     // navigates to the sign-up page. It safely redirects them.
     if (!loading && user) {
-      router.replace('/');
+      router.replace('/dashboard');
     }
   }, [user, loading, router]);
 
@@ -32,10 +32,14 @@ export default function SignUpPage() {
   }
 
   // If not loading and no user, show the form.
-  // The redirection on successful signup is now handled by this page's useEffect.
-  return (
-    <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
-      <SignUpForm />
-    </div>
-  );
+  if (!user) {
+    return (
+      <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
+        <SignUpForm />
+      </div>
+    );
+  }
+  
+  // Fallback case, should not be reached
+  return null;
 }

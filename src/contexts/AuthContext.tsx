@@ -70,9 +70,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (psn: number, password?: string) => {
     try {
       const result = await loginAction(psn, password);
-      if (result.success) {
-        // onAuthStateChanged will handle setting the user and loading state.
-        toast({ title: "Login Successful", description: `Welcome back, ${result.user?.name}!` });
+      if (result.success && result.user) {
+        // The onAuthStateChanged listener will handle setting the user state.
+        // This ensures a single source of truth for the user object.
+        toast({ title: "Login Successful", description: `Welcome back, ${result.user.name}!` });
+        router.push('/dashboard');
       } else {
         toast({
           title: "Login Failed",
@@ -94,9 +96,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (psn: number, password?: string) => {
     try {
       const result = await signupAction(psn, password);
-      if (result.success) {
-        // onAuthStateChanged will handle setting the user.
-        toast({ title: "Account Created!", description: `Welcome, ${result.user?.name}!` });
+      if (result.success && result.user) {
+        // The onAuthStateChanged listener will handle setting the user state.
+        toast({ title: "Account Created!", description: `Welcome, ${result.user.name}!` });
+        router.push('/dashboard');
       } else {
         toast({
           title: "Signup Failed",
@@ -133,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
-      // onAuthStateChanged will set user to null
+      setUser(null); // Explicitly clear the user state on logout
       router.push('/auth/signin');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {

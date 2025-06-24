@@ -16,7 +16,7 @@ export default function SignInPage() {
     // (e.g., after a successful login or on page refresh)
     // navigates to the sign-in page. It safely redirects them.
     if (!loading && user) {
-      router.replace('/');
+      router.replace('/dashboard');
     }
   }, [user, loading, router]);
   
@@ -33,7 +33,6 @@ export default function SignInPage() {
   }
 
   // If not loading and no user, it's safe to show the sign-in form.
-  // The redirection on successful login is now handled by this page's useEffect.
   if (!user) {
     return (
         <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">

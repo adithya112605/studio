@@ -13,9 +13,8 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import PasswordStrength from './PasswordStrength';
 import type { PasswordStrengthResult } from '@/types';
-import { Loader2, Eye, EyeOff, AlertTriangle, Sparkles } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import ScrollReveal from '@/components/common/ScrollReveal';
 
 const signUpStep1Schema = z.object({
@@ -64,7 +63,6 @@ export default function SignUpForm() {
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthResult | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
 
@@ -90,12 +88,6 @@ export default function SignUpForm() {
     const value = event.target.value;
     const numericValue = value.replace(/[^0-9]/g, '');
     formStep1.setValue("psn", numericValue.slice(0, 8), { shouldValidate: true });
-  };
-
-  const checkCapsLock = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (typeof event.getModifierState === 'function') {
-      setIsCapsLockOn(event.getModifierState("CapsLock"));
-    }
   };
 
   const handleGeneratePassword = () => {
@@ -192,9 +184,6 @@ export default function SignUpForm() {
                         {...field} 
                         autoComplete="new-password"
                         placeholder="••••••••" 
-                        onKeyUp={checkCapsLock}
-                        onKeyDown={checkCapsLock}
-                        onClick={checkCapsLock}
                       />
                     )}
                   />
@@ -212,14 +201,6 @@ export default function SignUpForm() {
                 </div>
                 <PasswordStrength password={watchedPassword} onStrengthChange={setPasswordStrength} />
                 {formStep2.formState.errors.password && <p className="text-sm text-destructive">{formStep2.formState.errors.password.message}</p>}
-                 {isCapsLockOn && (
-                  <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700">
-                      <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                      <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                      Caps Lock is ON.
-                      </AlertDescription>
-                  </Alert>
-                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword-signup">Confirm Password</Label>
@@ -234,9 +215,6 @@ export default function SignUpForm() {
                         {...field}
                         autoComplete="new-password"
                         placeholder="••••••••" 
-                        onKeyUp={checkCapsLock} 
-                        onKeyDown={checkCapsLock}
-                        onClick={checkCapsLock}
                       />
                     )}
                   />

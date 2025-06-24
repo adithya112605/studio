@@ -11,8 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import ScrollReveal from '@/components/common/ScrollReveal';
 
 const signInSchema = z.object({
@@ -28,7 +27,6 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 export default function SignInForm() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -44,12 +42,6 @@ export default function SignInForm() {
     setValue("psn", numericValue.slice(0, 8), { shouldValidate: true });
   };
   
-  const checkCapsLock = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (typeof event.getModifierState === 'function') {
-      setIsCapsLockOn(event.getModifierState("CapsLock"));
-    }
-  };
-
   const onSubmit: SubmitHandler<SignInFormValues> = async (data) => {
     await login(Number(data.psn), data.password);
   };
@@ -102,9 +94,6 @@ export default function SignInForm() {
                       autoComplete="current-password"
                       {...field} 
                       placeholder="••••••••" 
-                      onKeyUp={checkCapsLock}
-                      onKeyDown={checkCapsLock}
-                      onClick={checkCapsLock}
                     />
                   )}
                 />
@@ -121,14 +110,6 @@ export default function SignInForm() {
                 </Button>
               </div>
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-              {isCapsLockOn && (
-                <Alert variant="default" className="mt-2 p-2 text-xs bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                  <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                    Caps Lock is ON.
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
