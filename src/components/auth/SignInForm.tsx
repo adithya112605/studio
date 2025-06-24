@@ -32,6 +32,10 @@ export default function SignInForm() {
 
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
+    defaultValues: {
+      psn: '',
+      password: '',
+    },
   });
 
   const handlePsnInput = (event: React.ChangeEvent<HTMLInputElement>) => {

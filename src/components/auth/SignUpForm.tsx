@@ -70,11 +70,18 @@ export default function SignUpForm() {
 
   const formStep1 = useForm<SignUpStep1Values>({
     resolver: zodResolver(signUpStep1Schema),
+    defaultValues: {
+      psn: '',
+    },
   });
 
   const formStep2 = useForm<SignUpStep2Values>({
     resolver: zodResolver(signUpStep2Schema),
-    mode: "onChange" 
+    mode: "onChange",
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    },
   });
 
   const watchedPassword = formStep2.watch("password");
