@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import ScrollReveal from '@/components/common/ScrollReveal';
 
 const features = [
@@ -115,50 +116,64 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
+const MobileCardStack = ({ items, title }: { items: (typeof features | typeof stats), title: string }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end end'],
+  });
+
+  return (
+    <section ref={containerRef} className="relative h-[300vh] bg-background">
+      <div className="sticky top-0 z-10 bg-background/80 py-4 backdrop-blur-sm">
+        <h2 className="font-headline text-3xl font-bold text-center text-foreground px-4">
+          {title}
+        </h2>
+      </div>
+      <div className="sticky top-1/4 flex h-screen items-start justify-center">
+        <div className="relative w-full h-full">
+          {items.map((item, index) => {
+            const input_range = [index / items.length, (index + 1) / items.length];
+            const scale = useTransform(scrollYProgress, input_range, [1, 0.8]);
+            const opacity = useTransform(scrollYProgress, input_range, [1, 0]);
+
+            return (
+              <motion.div
+                key={index}
+                className={cn(
+                  "absolute left-1/2 -translate-x-1/2 w-[80%] max-w-sm rounded-2xl shadow-2xl flex flex-col items-center p-8 h-auto text-center",
+                  "color" in item ? item.bgColor : (item as any).bgColor
+                )}
+                style={{
+                  scale,
+                  opacity: index === items.length - 1 ? 1 : opacity,
+                  top: `${index * 2}rem`
+                }}
+              >
+                <div className={cn("mb-6", "color" in item ? item.color : '')}>
+                  {item.icon}
+                </div>
+                <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">
+                  {"title" in item ? item.title : item.value}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {"description" in item ? item.description : item.label}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+
 const MobileStackedLayout = () => {
     return (
         <div className="md:hidden">
-            {/* Features Section */}
-            <section className="relative bg-background">
-                <div className="sticky top-0 z-10 bg-background/80 py-4 backdrop-blur-sm">
-                    <h2 className="font-headline text-3xl font-bold text-center text-foreground px-4">
-                        Key Features
-                    </h2>
-                </div>
-                {features.map((feature, index) => (
-                    <div key={index} className="h-screen sticky top-0 flex items-center justify-center p-4">
-                        <div className={cn(
-                            "text-center p-8 rounded-2xl shadow-2xl flex flex-col items-center h-auto w-[90%] max-w-sm",
-                            feature.bgColor
-                        )}>
-                            <div className="mb-6">{feature.icon}</div>
-                            <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-                            <p className="text-muted-foreground text-sm">{feature.description}</p>
-                        </div>
-                    </div>
-                ))}
-            </section>
-
-            {/* Stats Section */}
-            <section className="relative bg-background">
-                <div className="sticky top-0 z-10 bg-background/80 py-4 backdrop-blur-sm">
-                    <h2 className="font-headline text-3xl font-bold text-center text-foreground px-4">
-                        System Performance
-                    </h2>
-                </div>
-                {stats.map((stat, index) => (
-                    <div key={index} className="h-screen sticky top-0 flex items-center justify-center p-4">
-                        <div className={cn(
-                            "flex flex-col items-center p-8 rounded-2xl shadow-2xl h-auto w-[90%] max-w-sm",
-                            stat.bgColor
-                        )}>
-                            <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-                            <p className={`font-headline text-4xl font-bold ${stat.color}`}>{stat.value}</p>
-                            <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
-                        </div>
-                    </div>
-                ))}
-            </section>
+            <MobileCardStack items={features} title="Key Features" />
+            <MobileCardStack items={stats} title="System Performance" />
         </div>
     );
 };
