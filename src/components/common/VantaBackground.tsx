@@ -21,8 +21,9 @@ const VantaBackground = () => {
     let effect: any = null;
 
     const initVanta = () => {
-      if (window.VANTA && window.THREE && vantaRef.current) {
-        effect = window.VANTA.NET({
+      if (window.VANTA && window.VANTA.GLOBE && window.THREE && vantaRef.current) {
+        // Use VANTA.GLOBE instead of VANTA.NET
+        effect = window.VANTA.GLOBE({
           el: vantaRef.current,
           THREE: window.THREE,
           mouseControls: true,
@@ -32,9 +33,10 @@ const VantaBackground = () => {
           minWidth: 200.00,
           scale: 1.00,
           scaleMobile: 1.00,
-          points: 13.00,
-          spacing: 17.00,
-          color: resolvedTheme === 'dark' ? 0x96b2d0 : 0xb18282, 
+          size: 0.7, // A good size for the globe
+          // Set colors based on the current theme
+          color: resolvedTheme === 'dark' ? 0x8b5cf6 : 0x6b46c1, // primary color for dots
+          color2: resolvedTheme === 'dark' ? 0x818cf8 : 0x4f46e5, // accent color for lines
           backgroundColor: resolvedTheme === 'dark' ? 0x020610 : 0xfafafa,
         });
         setVantaEffect(effect);
@@ -42,7 +44,8 @@ const VantaBackground = () => {
     };
     
     const checkScriptsAndInit = () => {
-      if (window.VANTA && window.THREE) {
+      // Check for VANTA.GLOBE specifically, as the script has changed
+      if (window.VANTA && window.VANTA.GLOBE && window.THREE) {
         initVanta();
       } else {
         setTimeout(checkScriptsAndInit, 500);

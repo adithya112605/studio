@@ -44,7 +44,7 @@ export default function RootLayout({
           </ThemeProvider>
         </AuthProvider>
         <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" strategy="lazyOnload" />
-        <Script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.net.min.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.globe.min.js" strategy="lazyOnload" />
       </body>
     </html>
   );
