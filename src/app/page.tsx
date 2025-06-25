@@ -218,7 +218,7 @@ export default function HomePage() {
             {user ? (
               <>Welcome, <span className="text-highlight">{user.name}!</span></>
             ) : (
-              <>Welcome to <span className="text-highlight">L&T Helpdesk</span></>
+              <>Welcome to <span className="text-highlight">L&amp;T Helpdesk</span></>
             )}
           </h1>
           {user ? (
@@ -227,7 +227,7 @@ export default function HomePage() {
             </p>
           ) : (
             <p className="text-lg md:text-xl lg:text-2xl text-slate-300 max-w-3xl mx-auto mb-10">
-              <span className="text-highlight">Efficient</span>. <span className="text-highlight">Reliable</span>. Internal Support, <span className="text-highlight">Reimagined</span> for Larsen & Toubro Employees.
+              <span className="text-highlight">Efficient</span>. <span className="text-highlight">Reliable</span>. Internal Support, <span className="text-highlight">Reimagined</span> for Larsen &amp; Toubro Employees.
             </p>
           )}
           <div className="space-y-4 sm:space-y-0 sm:space-x-4">
