@@ -115,6 +115,48 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
+const MobileStackedLayout = () => (
+  <section className="md:hidden py-16 space-y-8 bg-card">
+    <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+      <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
+        Key Features of L&T Helpdesk
+      </h2>
+    </ScrollReveal>
+    <div className="relative h-[180vh] px-4">
+      {features.map((feature, index) => (
+        <div key={index} className="sticky w-full" style={{ top: `${8 + index * 4}rem` }}>
+          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={50 * index}>
+             <div className={cn("text-center p-8 rounded-2xl shadow-lg flex flex-col items-center min-h-[40vh] justify-center w-[90%] mx-auto", feature.bgColor)}>
+              <div className="mb-6">{feature.icon}</div>
+              <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+              <p className="text-muted-foreground text-sm">{feature.description}</p>
+            </div>
+          </ScrollReveal>
+        </div>
+      ))}
+    </div>
+    
+    <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+      <h2 className="font-headline text-3xl font-bold text-center px-4 pt-16 text-foreground">
+        System Performance at a Glance
+      </h2>
+    </ScrollReveal>
+    <div className="relative h-[180vh] px-4">
+      {stats.map((stat, index) => (
+        <div key={index} className="sticky w-full" style={{ top: `${8 + index * 4}rem` }}>
+          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={50 * index}>
+            <div className={cn("flex flex-col items-center p-8 rounded-2xl shadow-md min-h-[40vh] justify-center w-[90%] mx-auto", stat.bgColor)}>
+              <div className={`${stat.color} mb-4`}>{stat.icon}</div>
+              <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
+            </div>
+          </ScrollReveal>
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
 export default function HomePage() {
   const { user } = useAuth();
   const [hasMounted, setHasMounted] = useState(false);
@@ -180,8 +222,13 @@ export default function HomePage() {
         
         {hasMounted && (
             <>
-                <DesktopFeaturesLayout />
-                <DesktopStatsLayout />
+                {/* Mobile View */}
+                <MobileStackedLayout />
+                {/* Desktop View */}
+                <div className="hidden md:block">
+                    <DesktopFeaturesLayout />
+                    <DesktopStatsLayout />
+                </div>
             </>
         )}
 
