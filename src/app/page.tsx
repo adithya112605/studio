@@ -17,28 +17,28 @@ const features = [
     icon: <MessageSquare className="w-10 h-10 text-sky-700 dark:text-sky-300 mb-4" />,
     title: "Effortless Ticket Submission",
     description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
-    bgColor: "bg-sky-100 dark:bg-sky-900/40",
+    bgColor: "bg-sky-100 dark:bg-sky-950",
   },
   {
     id: 2,
     icon: <ShieldCheck className="w-10 h-10 text-teal-700 dark:text-teal-300 mb-4" />,
     title: "Secure & Role-Based Access",
     description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
-    bgColor: "bg-teal-100 dark:bg-teal-900/40",
+    bgColor: "bg-teal-100 dark:bg-teal-950",
   },
   {
     id: 3,
     icon: <HardHat className="w-10 h-10 text-rose-700 dark:text-rose-300 mb-4" />,
     title: "Hierarchical Support System",
     description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
-    bgColor: "bg-rose-100 dark:bg-rose-900/40",
+    bgColor: "bg-rose-100 dark:bg-rose-950",
   },
   {
     id: 4,
     icon: <Sparkles className="w-10 h-10 text-amber-700 dark:text-amber-300 mb-4" />,
     title: "AI-Powered Insights",
     description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
-    bgColor: "bg-amber-100 dark:bg-amber-900/40",
+    bgColor: "bg-amber-100 dark:bg-amber-950",
   },
 ];
 
@@ -48,7 +48,7 @@ const stats = [
     value: "24/7",
     label: "Support Available",
     icon: <Clock className="w-10 h-10 mb-3" />,
-    bgColor: "bg-indigo-100 dark:bg-indigo-900/40",
+    bgColor: "bg-indigo-100 dark:bg-indigo-950",
     color: "text-indigo-500 dark:text-indigo-300",
   },
   {
@@ -56,7 +56,7 @@ const stats = [
     value: "98%",
     label: "Resolution Rate",
     icon: <TrendingUp className="w-10 h-10 mb-3" />,
-    bgColor: "bg-emerald-100 dark:bg-emerald-900/40",
+    bgColor: "bg-emerald-100 dark:bg-emerald-950",
     color: "text-emerald-500 dark:text-emerald-300",
   },
   {
@@ -64,7 +64,7 @@ const stats = [
     value: "<2Hrs",
     label: "Avg. Response",
     icon: <Zap className="w-10 h-10 mb-3" />,
-    bgColor: "bg-orange-100 dark:bg-orange-900/40",
+    bgColor: "bg-orange-100 dark:bg-orange-950",
     color: "text-orange-500 dark:text-orange-300",
   },
   {
@@ -72,7 +72,7 @@ const stats = [
     value: "150K+",
     label: "Employees Served",
     icon: <Users className="w-10 h-10 mb-3" />,
-    bgColor: "bg-pink-100 dark:bg-pink-900/40",
+    bgColor: "bg-pink-100 dark:bg-pink-950",
     color: "text-pink-500 dark:text-pink-300",
   }
 ];
@@ -162,7 +162,7 @@ const CardStack = ({ items, renderCard, offset = 15 }: { items: any[], renderCar
 
 const MobileStackedLayout = () => (
   <div className="md:hidden py-16 bg-background">
-      <h2 className="font-headline text-3xl font-bold text-center px-4 mb-16 text-foreground">
+      <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
         Key Features
       </h2>
     <CardStack
@@ -176,7 +176,7 @@ const MobileStackedLayout = () => (
       )}
     />
     
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mt-24 mb-16 text-foreground">
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mt-16 mb-8 text-foreground">
       System Performance
     </h2>
     <CardStack
@@ -337,5 +337,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
