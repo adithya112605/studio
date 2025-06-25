@@ -43,8 +43,8 @@
 
     --chart-1: 215 80% 55%; /* blue */
     --chart-2: 313 50% 58%; /* magenta */
-    --chart-3: 243 80% 77%; /* periwinkle */
-    --chart-4: 49 95% 82%;  /* light yellow */
+    --chart-3: 243 60% 60%; /* darker periwinkle */
+    --chart-4: 45 90% 60%;  /* darker gold */
     --chart-5: 160 70% 45%; /* green */
     --radius: 0.75rem;
   }
