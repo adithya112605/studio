@@ -14,31 +14,31 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 const features = [
   {
     id: 1,
-    icon: <MessageSquare className="w-10 h-10 text-sky-700 dark:text-sky-300 mb-4" />,
+    icon: <MessageSquare className="w-12 h-12 text-sky-700 dark:text-sky-300 mb-4" />,
     title: "Effortless Ticket Submission",
     description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
-    bgColor: "bg-sky-100 dark:bg-sky-950",
+    bgColor: "bg-sky-100 dark:bg-sky-900",
   },
   {
     id: 2,
-    icon: <ShieldCheck className="w-10 h-10 text-teal-700 dark:text-teal-300 mb-4" />,
+    icon: <ShieldCheck className="w-12 h-12 text-teal-700 dark:text-teal-300 mb-4" />,
     title: "Secure & Role-Based Access",
     description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
-    bgColor: "bg-teal-100 dark:bg-teal-950",
+    bgColor: "bg-teal-100 dark:bg-teal-900",
   },
   {
     id: 3,
-    icon: <HardHat className="w-10 h-10 text-rose-700 dark:text-rose-300 mb-4" />,
+    icon: <HardHat className="w-12 h-12 text-rose-700 dark:text-rose-300 mb-4" />,
     title: "Hierarchical Support System",
     description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
-    bgColor: "bg-rose-100 dark:bg-rose-950",
+    bgColor: "bg-rose-100 dark:bg-rose-900",
   },
   {
     id: 4,
-    icon: <Sparkles className="w-10 h-10 text-amber-700 dark:text-amber-300 mb-4" />,
+    icon: <Sparkles className="w-12 h-12 text-amber-700 dark:text-amber-300 mb-4" />,
     title: "AI-Powered Insights",
     description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
-    bgColor: "bg-amber-100 dark:bg-amber-950",
+    bgColor: "bg-amber-100 dark:bg-amber-900",
   },
 ];
 
@@ -47,32 +47,32 @@ const stats = [
     id: 1,
     value: "24/7",
     label: "Support Available",
-    icon: <Clock className="w-10 h-10 mb-3" />,
-    bgColor: "bg-indigo-100 dark:bg-indigo-950",
+    icon: <Clock className="w-12 h-12 mb-3" />,
+    bgColor: "bg-indigo-100 dark:bg-indigo-900",
     color: "text-indigo-500 dark:text-indigo-300",
   },
   {
     id: 2,
     value: "98%",
     label: "Resolution Rate",
-    icon: <TrendingUp className="w-10 h-10 mb-3" />,
-    bgColor: "bg-emerald-100 dark:bg-emerald-950",
+    icon: <TrendingUp className="w-12 h-12 mb-3" />,
+    bgColor: "bg-emerald-100 dark:bg-emerald-900",
     color: "text-emerald-500 dark:text-emerald-300",
   },
   {
     id: 3,
     value: "<2Hrs",
     label: "Avg. Response",
-    icon: <Zap className="w-10 h-10 mb-3" />,
-    bgColor: "bg-orange-100 dark:bg-orange-950",
+    icon: <Zap className="w-12 h-12 mb-3" />,
+    bgColor: "bg-orange-100 dark:bg-orange-900",
     color: "text-orange-500 dark:text-orange-300",
   },
   {
     id: 4,
     value: "150K+",
     label: "Employees Served",
-    icon: <Users className="w-10 h-10 mb-3" />,
-    bgColor: "bg-pink-100 dark:bg-pink-950",
+    icon: <Users className="w-12 h-12 mb-3" />,
+    bgColor: "bg-pink-100 dark:bg-pink-900",
     color: "text-pink-500 dark:text-pink-300",
   }
 ];
@@ -123,30 +123,34 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-const CardStack = ({ items, renderCard, offset = 15 }: { items: any[], renderCard: (item: any) => React.ReactNode, offset?: number }) => {
-  const targetRef = useRef<HTMLDivElement>(null);
+const CardStack = ({ items, renderCard, offset = 10, scaleFactor = 0.05 }: { items: any[], renderCard: (item: any) => React.ReactNode, offset?: number, scaleFactor?: number }) => {
+  const targetRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: targetRef,
     offset: ["start start", "end end"],
   });
 
   return (
-    <div ref={targetRef} className="relative" style={{ height: `${items.length * 100}vh` }}>
-      <div className="sticky top-1/4 left-0 flex h-[50vh] items-center justify-center">
+    <div ref={targetRef} className="relative" style={{ height: `${items.length * 80}vh` }}>
+      <div className="sticky top-[15vh] h-[70vh]">
         {items.map((item, i) => {
+          // Calculate the start and end of the scroll progress for this card
           const start = i / items.length;
-          const end = start + (1 / items.length);
+          const end = start + 1 / items.length;
 
-          const scale = useTransform(scrollYProgress, [start, end], [1, 0.7]);
-          const top = useTransform(scrollYProgress, [start, end], [i * offset, (i - 1) * offset]);
+          // Animate the scale of the card based on its position in the stack and scroll progress
+          const scale = useTransform(scrollYProgress, [start, end], [1, 0.8]);
+
+          // Animate the y-position to create the stacking effect
+          const y = useTransform(scrollYProgress, [start, end], [`${i * offset}px`, `${(i - 1) * offset}px`]);
 
           return (
             <motion.div
               key={item.id}
-              className="absolute flex h-full w-full items-center justify-center"
+              className="absolute flex h-full w-full items-start justify-center"
               style={{
                 scale,
-                top,
+                y,
                 zIndex: items.length - i,
               }}
             >
@@ -161,31 +165,31 @@ const CardStack = ({ items, renderCard, offset = 15 }: { items: any[], renderCar
 
 
 const MobileStackedLayout = () => (
-  <div className="md:hidden py-16 bg-background">
+  <div className="md:hidden py-12 bg-background overflow-x-hidden">
       <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
         Key Features
       </h2>
     <CardStack
       items={features}
       renderCard={(feature) => (
-        <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-lg", feature.bgColor)}>
+        <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", feature.bgColor)}>
           <div className="mb-6">{feature.icon}</div>
-          <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-          <p className="text-muted-foreground text-sm">{feature.description}</p>
+          <h3 className="font-headline text-2xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+          <p className="text-muted-foreground text-base">{feature.description}</p>
         </div>
       )}
     />
     
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mt-16 mb-8 text-foreground">
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mt-8 mb-8 text-foreground">
       System Performance
     </h2>
     <CardStack
       items={stats}
       renderCard={(stat) => (
-         <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-md", stat.bgColor)}>
+         <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", stat.bgColor)}>
             <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-            <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
+            <p className={`font-headline text-5xl md:text-6xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-base text-muted-foreground mt-2">{stat.label}</p>
           </div>
       )}
     />
@@ -204,7 +208,7 @@ export default function HomePage() {
   return (
     <div className="text-foreground overflow-x-hidden">
       {/* Hero Section - fixed to the viewport */}
-      <section className="fixed top-0 left-0 h-screen w-full flex items-center justify-center">
+      <section className="h-screen w-full flex items-center justify-center sticky top-0">
         <Image
           src="https://placehold.co/1920x1080.png"
           alt="Modern office building background"
@@ -249,9 +253,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Spacer div to push the scrollable content down, making space for the fixed hero */}
-      <div className="h-screen" />
 
       {/* Subsequent Content Wrapper - This will scroll over the fixed hero */}
       <div className="relative z-10 bg-background">
