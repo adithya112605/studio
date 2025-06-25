@@ -111,7 +111,7 @@ const DesktopStatsLayout = () => (
 );
 
 const CardScroller = ({ items, title }: { items: any[], title: string }) => {
-  const [currentCard, setCurrentCard] = useState(0);
+  const [currentCard, setCurrentCard] = useState(-1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const progressDotsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -207,7 +207,7 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
                   ) : (
                     <div className="card-content">
                       <div className="card-header">
-                        <div className="card-image text-primary-foreground">{item.icon}</div>
+                        <div className="card-image">{item.icon}</div>
                         <div>
                           <h2 className="card-title">{item.title}</h2>
                           <p className="card-description">{item.description}</p>
@@ -233,7 +233,7 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
 
 const MobileHomePage = () => {
   return (
-    <div className="md:hidden bg-background overflow-x-hidden">
+    <div className="md:hidden bg-background">
         <CardScroller items={features} title="Key Features of L&T Helpdesk" />
         <CardScroller items={stats} title="System Performance at a Glance" />
     </div>
@@ -250,7 +250,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="text-foreground overflow-x-hidden">
+    <div className="text-foreground">
       <section className="h-screen w-full flex items-center justify-center sticky top-0">
         <Image
           src="https://placehold.co/1920x1080.png"
