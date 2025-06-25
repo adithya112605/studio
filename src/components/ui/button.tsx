@@ -18,6 +18,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:brightness-[.95] active:brightness-[.90]",
         ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground active:brightness-[.95]",
         link: "text-primary underline-offset-4 hover:underline",
+        shiny: "btn-shiny border bg-transparent text-foreground dark:border-highlight dark:text-highlight",
       },
       size: {
         default: "h-10 px-4 py-2",

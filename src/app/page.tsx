@@ -288,15 +288,15 @@ export default function HomePage() {
           )}
           <div className="space-y-4 sm:space-y-0 sm:space-x-4">
             {user ? (
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+              <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
                 <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-2 h-5 w-5"/></Link>
               </Button>
             ) : (
               <>
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+                <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+                <Button asChild variant="shiny" size="lg" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
                   <Link href="/auth/signup">Get Started</Link>
                 </Button>
               </>
@@ -336,7 +336,7 @@ export default function HomePage() {
                       <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Scalable infrastructure to support thousands of users.</li>
                       <li className="flex items-center"><CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0"/> Robust security and data privacy measures.</li>
                     </ul>
-                    <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-full text-md font-semibold shadow-lg transition-transform hover:scale-105">
+                    <Button asChild size="lg" variant="shiny" className="mt-8 px-8 py-4 rounded-full text-md font-semibold shadow-lg transition-transform hover:scale-105">
                       <Link href={user ? "/dashboard" : "/auth/signup"}>
                         {user ? "Explore Dashboard" : "Get Started Now"} <ArrowRight className="ml-2 h-5 w-5"/>
                       </Link>
@@ -374,7 +374,7 @@ export default function HomePage() {
               </p>
             </ScrollReveal>
             <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={400}>
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 rounded-full text-xl font-semibold shadow-xl transition-transform hover:scale-105">
+              <Button asChild size="lg" variant="shiny" className="px-12 py-6 rounded-full text-xl font-semibold shadow-xl transition-transform hover:scale-105">
                 <Link href={user ? "/dashboard" : "/auth/signup"}>
                     {user ? "Go to Dashboard" : "Create Your Account"}
                 </Link>
