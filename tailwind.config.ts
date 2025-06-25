@@ -18,9 +18,22 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'], 
-        headline: ['"Roboto Slab"', 'serif'], 
+        body: ['"Nunito Sans"', 'sans-serif'],
+        headline: ['Poppins', 'sans-serif'],
         code: ['monospace'],
+      },
+      fontSize: {
+        xs: '0.8rem',
+        sm: '0.925rem',
+        base: '1.05rem',
+        lg: '1.175rem',
+        xl: '1.3rem',
+        '2xl': '1.6rem',
+        '3xl': '2rem',
+        '4xl': '2.5rem',
+        '5xl': '3.25rem',
+        '6xl': '4rem',
+        '7xl': '5rem',
       },
       colors: {
         background: 'hsl(var(--background))',
