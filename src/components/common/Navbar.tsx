@@ -169,8 +169,10 @@ const Navbar = () => {
                             <Link
                             href={item.href}
                             className={cn(
-                                "group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                                "group flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                                isActive 
+                                    ? "bg-primary/10 text-primary" 
+                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                             )}
                             >
                             {item.icon ? React.cloneElement(item.icon, { className: cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground") }) : <div className="w-5 h-5 shrink-0"></div>}
@@ -222,7 +224,7 @@ const Navbar = () => {
               item.isDropdown && item.subItems ? (
                 <DropdownMenu key={item.label}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="px-3 py-2 text-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
+                    <Button variant="ghost" className="px-3 py-2 text-foreground hover:bg-muted/50 hover:text-foreground font-medium h-9 text-sm">
                       {item.label} <ChevronDown className="ml-1 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -243,7 +245,7 @@ const Navbar = () => {
               ) : (
                 <Tooltip key={item.label}>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" asChild className="px-3 py-2 text-foreground hover:text-primary hover:bg-primary/10 font-medium h-9 text-sm">
+                    <Button variant="ghost" asChild className="px-3 py-2 text-foreground hover:bg-muted/50 hover:text-foreground font-medium h-9 text-sm">
                       <Link href={item.href!}>{item.label}</Link>
                     </Button>
                   </TooltipTrigger>
@@ -266,7 +268,7 @@ const Navbar = () => {
              <div className="flex items-center space-x-1">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-foreground hover:text-primary hover:bg-primary/5">
+                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-foreground hover:bg-muted/50 hover:text-foreground">
                             <Link href="/notifications" aria-label="Notifications"><Bell className="w-5 h-5"/></Link>
                         </Button>
                     </TooltipTrigger>
@@ -278,7 +280,7 @@ const Navbar = () => {
              <div className="hidden md:flex items-center space-x-2">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button asChild variant="ghost" className="font-medium text-foreground px-4 h-9 text-sm">
+                        <Button asChild variant="ghost" className="font-medium text-foreground px-4 h-9 text-sm hover:bg-muted/50 hover:text-foreground">
                             <Link href="/auth/signin">SIGN IN</Link>
                         </Button>
                     </TooltipTrigger>
@@ -357,8 +359,8 @@ const DropdownMenuUser = ({ user, logout }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-          <UserCircle2 className="h-5 w-5 text-foreground hover:text-primary" />
+        <Button variant="ghost" className="group relative h-9 w-9 rounded-full hover:bg-muted/50">
+          <UserCircle2 className="h-5 w-5 text-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-72 bg-popover text-popover-foreground border-border" align="end" forceMount>
@@ -383,7 +385,7 @@ const DropdownMenuUser = ({ user, logout }: {
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>
         {commonDropdownItems.map(item => (
-          <DropdownMenuItem key={item.href} asChild className="cursor-pointer hover:bg-accent/50 focus:bg-accent/50">
+          <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
             <Link href={item.href} className="flex items-center w-full">
               {item.icon}
               <span className="text-popover-foreground">{item.label}</span>
@@ -396,19 +398,19 @@ const DropdownMenuUser = ({ user, logout }: {
           <>
             <DropdownMenuSeparator className="bg-border"/>
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="hover:bg-accent/50 focus:bg-accent/50 data-[state=open]:bg-accent/50">
+              <DropdownMenuSubTrigger>
                 <Building className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span className="text-popover-foreground">Admin Management</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="w-72 bg-popover text-popover-foreground border-border"> 
                   {managementSubItems.map(subItem => (
-                    <DropdownMenuItem key={subItem.href} asChild className="hover:bg-accent/50 focus:bg-accent/50">
+                    <DropdownMenuItem key={subItem.href} asChild>
                        <Link href={subItem.href} className="flex items-start w-full group p-2">
-                          <div className="flex-shrink-0 mr-2 mt-0.5 text-muted-foreground group-hover:text-accent-foreground"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
+                          <div className="flex-shrink-0 mr-2 mt-0.5 text-muted-foreground group-hover:text-foreground"> {subItem.icon || <div className="h-4 w-4"></div>}</div>
                           <div className="flex flex-col">
                               <span className="text-sm font-medium text-popover-foreground group-hover:text-primary">{subItem.label}</span>
-                              {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal leading-tight group-hover:text-accent-foreground">{subItem.description}</p>}
+                              {subItem.description && <p className="text-xs text-muted-foreground whitespace-normal leading-tight group-hover:text-foreground">{subItem.description}</p>}
                           </div>
                       </Link>
                     </DropdownMenuItem>
