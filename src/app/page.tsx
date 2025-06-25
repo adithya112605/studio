@@ -122,8 +122,7 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-
-const ScrollStackedCards = ({ items, itemType, title }: { items: any[], itemType: 'feature' | 'stat', title: string }) => {
+const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) => {
   const [currentCard, setCurrentCard] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const totalCards = items.length;
@@ -190,7 +189,6 @@ const ScrollStackedCards = ({ items, itemType, title }: { items: any[], itemType
 
               return (
                 <div key={item.id} className={cn(cardClass, item.bgColor)}>
-                  {itemType === 'feature' ? (
                     <div className="card-content">
                       <div className="card-header">
                         <div className="card-image">{item.icon}</div>
@@ -200,13 +198,6 @@ const ScrollStackedCards = ({ items, itemType, title }: { items: any[], itemType
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className={cn("card-content-stat", item.color)}>
-                      {item.icon}
-                      <p className="card-stat-value">{item.value}</p>
-                      <p className="card-stat-label">{item.label}</p>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -215,18 +206,16 @@ const ScrollStackedCards = ({ items, itemType, title }: { items: any[], itemType
       </div>
       <div className="progress-indicator">
         {items.map((_, index) => (
-          <div key={`${itemType}-${index}`} className={`progress-dot ${index === currentCard ? 'active' : ''}`}></div>
+          <div key={`${title}-${index}`} className={`progress-dot ${index === currentCard ? 'active' : ''}`}></div>
         ))}
       </div>
     </div>
   );
 };
 
-
-const MobileStackedLayout = () => (
+const MobileLayout = () => (
   <div className="md:hidden bg-background overflow-x-hidden">
-    <ScrollStackedCards items={features} itemType="feature" title="Key Features" />
-    <ScrollStackedCards items={stats} itemType="stat" title="System Performance" />
+    <ScrollStackedCards items={features} title="Key Features" />
   </div>
 );
 
@@ -292,7 +281,7 @@ export default function HomePage() {
         {isClient && (
             <>
                 {/* Mobile View */}
-                <MobileStackedLayout />
+                <MobileLayout />
                 {/* Desktop View */}
                 <div className="hidden md:block">
                     <DesktopFeaturesLayout />
