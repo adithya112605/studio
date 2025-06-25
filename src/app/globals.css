@@ -172,8 +172,30 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
 }
+
+.card-floating-icon {
+    position: absolute;
+    z-index: 1;
+    top: -30px;
+    right: -30px;
+    color: hsl(var(--primary-foreground));
+    opacity: 0.1;
+    transform: rotate(15deg);
+    pointer-events: none;
+}
+.card-floating-icon.is-stat {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 0.05;
+}
+.card-floating-icon.is-stat svg {
+    width: 150px !important;
+    height: 150px !important;
+}
+
 .card-content-stat {
     display: flex;
     flex-direction: column;
@@ -181,6 +203,8 @@
     justify-content: center;
     height: 100%;
     text-align: center;
+    position: relative;
+    z-index: 2;
 }
 
 .card-header {
@@ -203,11 +227,13 @@
 }
 
 .card-title {
+  font-family: var(--font-headline);
   font-size: 1.8rem;
   font-weight: 700;
   line-height: 1.2;
   color: hsl(var(--primary-foreground));
   margin-bottom: 16px;
+  max-width: 90%;
 }
 
 .card-description {
@@ -215,6 +241,7 @@
   line-height: 1.6;
   color: hsla(var(--primary-foreground), 0.8);
   margin-bottom: 20px;
+  max-w: 85%;
 }
 
 .card-content-stat svg {
@@ -226,11 +253,15 @@
     font-weight: 700;
     font-family: var(--font-headline);
     color: hsl(var(--primary-foreground));
+    position: relative;
+    z-index: 2;
 }
 .card-stat-label {
     font-size: 1rem;
     color: hsla(var(--primary-foreground), 0.8);
     margin-top: 0.5rem;
+    position: relative;
+    z-index: 2;
 }
 
 .progress-indicator {
@@ -264,9 +295,11 @@
   }
   .card-title {
     font-size: 1.4rem;
+    max-width: 100%;
   }
   .card-description {
     font-size: 0.9rem;
+    max-width: 100%;
   }
   .card-header {
     flex-direction: column;

@@ -19,7 +19,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['"Nunito Sans"', 'sans-serif'],
-        headline: ['Poppins', 'sans-serif'],
+        headline: ['"Roboto Slab"', 'serif'],
         code: ['monospace'],
       },
       fontSize: {

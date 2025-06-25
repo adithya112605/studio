@@ -13,27 +13,27 @@ import ScrollReveal from '@/components/common/ScrollReveal';
 const features = [
   {
     id: 1,
-    icon: <FilePlus2 className="w-16 h-16 mb-4" />,
+    icon: <FilePlus2 />,
     title: "Streamlined Ticket Submission",
-    description: "Raise support tickets in seconds. Our intuitive form captures all necessary details, ensuring your issue is routed to the right expert instantly. No more guesswork, just swift action.",
+    description: "Raise support tickets in seconds through our intuitive, guided form. Captures all necessary details, ensuring your issue is routed to the right expert instantly. No more guesswork, just swift action and resolution.",
   },
   {
     id: 2,
-    icon: <ShieldCheck className="w-16 h-16 mb-4" />,
+    icon: <ShieldCheck />,
     title: "Role-Based Secure Access",
-    description: "Your security is paramount. With PSN-based authentication, the system provides tailored access levels, ensuring employees and supervisors only see what's relevant to their roles.",
+    description: "Security is paramount. With PSN-based authentication, the system provides tailored access levels, ensuring employees, supervisors, and department heads only see information and actions relevant to their roles.",
   },
   {
     id: 3,
-    icon: <Network className="w-16 h-16 mb-4" />,
+    icon: <Network />,
     title: "Intelligent Support Hierarchy",
-    description: "Tickets are automatically escalated through the proper channels, from Immediate Supervisor (IS) to Department Head (DH), ensuring accountability and timely resolutions at every level.",
+    description: "Tickets are automatically escalated through the proper L&T channels—from Immediate Supervisor (IS) to Department Head (DH)—ensuring accountability, oversight, and timely resolutions at every level.",
   },
   {
     id: 4,
-    icon: <BrainCircuit className="w-16 h-16 mb-4" />,
+    icon: <BrainCircuit />,
     title: "AI-Powered Resolution",
-    description: "Supervisors are empowered with AI-driven suggestions and insights, helping them diagnose issues and identify the fastest path to resolution, improving efficiency across the board.",
+    description: "Empower supervisors with AI-driven suggestions and insights. Our system analyzes ticket content to identify the fastest path to resolution, suggest common solutions, and improve efficiency across the board.",
   },
 ];
 
@@ -42,25 +42,25 @@ const stats = [
     id: 1,
     value: "99.8%",
     label: "System Uptime",
-    icon: <Gauge className="w-16 h-16 mb-3" />,
+    icon: <Gauge />,
   },
   {
     id: 2,
     value: "98%",
     label: "First-Contact Resolution",
-    icon: <CheckCircle2 className="w-16 h-16 mb-3" />,
+    icon: <CheckCircle2 />,
   },
   {
     id: 3,
     value: "<2Hrs",
     label: "Avg. Initial Response",
-    icon: <Rocket className="w-16 h-16 mb-3" />,
+    icon: <Rocket />,
   },
   {
     id: 4,
     value: "150K+",
     label: "Employees Supported",
-    icon: <Building2 className="w-16 h-16 mb-3" />,
+    icon: <Building2 />,
   }
 ];
 
@@ -78,7 +78,7 @@ const DesktopFeaturesLayout = () => {
           {features.map((feature, index) => (
             <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
               <div className={cn("text-center p-8 rounded-xl shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full text-primary-foreground", featureColors[index % featureColors.length])}>
-                <div className="text-primary-foreground mb-6">{feature.icon}</div>
+                <div className="text-primary-foreground mb-6">{React.cloneElement(feature.icon, { className: 'w-16 h-16' })}</div>
                 <h3 className="font-headline text-xl font-semibold mb-3 text-primary-foreground">{feature.title}</h3>
                 <p className="text-primary-foreground/80 text-sm">{feature.description}</p>
               </div>
@@ -104,7 +104,7 @@ const DesktopStatsLayout = () => {
           {stats.map((stat, index) => (
             <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
               <div className={cn("flex flex-col items-center p-8 rounded-xl shadow-md hover:shadow-xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full text-primary-foreground", statColors[index % statColors.length])}>
-                <div className="text-primary-foreground mb-4">{stat.icon}</div>
+                <div className="text-primary-foreground mb-4">{React.cloneElement(stat.icon, { className: 'w-16 h-16' })}</div>
                 <p className="font-headline text-4xl md:text-5xl font-bold text-primary-foreground">{stat.value}</p>
                 <p className="text-sm text-primary-foreground/80 mt-2">{stat.label}</p>
               </div>
@@ -206,18 +206,20 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
                 <div key={item.id} className="card mobile-stack-card" ref={el => cardsRef.current[index] = el}>
                   {isStatCard ? (
                     <div className="card-content-stat">
-                        <div className="text-primary-foreground">{item.icon}</div>
+                        <div className="card-floating-icon is-stat">
+                          {React.cloneElement(item.icon, { className: 'w-32 h-32' })}
+                        </div>
                         <p className="card-stat-value">{item.value}</p>
                         <p className="card-stat-label">{item.label}</p>
                     </div>
                   ) : (
                     <div className="card-content">
-                      <div className="card-header">
-                        <div className="card-image">{item.icon}</div>
-                        <div>
-                          <h2 className="card-title">{item.title}</h2>
-                          <p className="card-description">{item.description}</p>
-                        </div>
+                      <div className="card-floating-icon">
+                        {React.cloneElement(item.icon, { className: 'w-40 h-40' })}
+                      </div>
+                      <div className="relative z-10">
+                        <h2 className="card-title">{item.title}</h2>
+                        <p className="card-description">{item.description}</p>
                       </div>
                     </div>
                   )}
