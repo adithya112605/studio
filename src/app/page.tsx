@@ -130,19 +130,15 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
     offset: ["start start", "end end"],
   });
 
-  // This maps the overall scroll progress (0-1) to the number of cards.
   const motionValue = useTransform(scrollYProgress, [0, 1], [0, items.length]);
 
   return (
-    // The height of this container determines the scrollable area for the animation.
-    // A smaller multiplier means a faster scroll through the cards.
     <div ref={targetRef} className="relative" style={{ height: `${items.length * 60}vh` }}>
-      {/* This container is sticky, holding the cards in place as the user scrolls. */}
       <div className="sticky top-[10vh] h-[80vh]">
         {items.map((item, i) => {
-          // Animate each card based on its position in the stack relative to the scroll progress.
-          const y = useTransform(motionValue, [i - 1, i, i + 1], [10, 0, -50]); // Moves incoming cards up, and outgoing cards further up and away.
-          const scale = useTransform(motionValue, [i - 1, i, i + 1], [0.95, 1, 0.9]); // Scales the active card to 1, and others to a bit smaller.
+          const y = useTransform(motionValue, [i - 1, i, i + 1], [10, 0, -50]);
+          const scale = useTransform(motionValue, [i - 1, i, i + 1], [0.95, 1, 0.9]);
+          const opacity = useTransform(motionValue, [i - 0.5, i, i + 0.5], [1, 1, 0]);
 
           return (
             <motion.div
@@ -151,7 +147,6 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
               style={{
                 y,
                 scale,
-                // Opacity is removed to ensure the card remains visible as it moves to the back.
                 zIndex: items.length - i,
               }}
             >
@@ -166,8 +161,8 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
 
 
 const MobileStackedLayout = () => (
-  <div className="md:hidden bg-background overflow-x-hidden pt-24 pb-12">
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-12 text-foreground">
+  <div className="md:hidden bg-background overflow-x-hidden pt-16 pb-12">
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
       Key Features
     </h2>
     <CardStack
@@ -181,7 +176,7 @@ const MobileStackedLayout = () => (
       )}
     />
 
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-12 text-foreground">
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
       System Performance
     </h2>
     <CardStack
@@ -208,7 +203,6 @@ export default function HomePage() {
 
   return (
     <div className="text-foreground overflow-x-hidden">
-      {/* Hero Section - fixed to the viewport */}
       <section className="h-screen w-full flex items-center justify-center sticky top-0">
         <Image
           src="https://placehold.co/1920x1080.png"
@@ -255,7 +249,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Subsequent Content Wrapper - This will scroll over the fixed hero */}
       <div className="relative z-10 bg-background">
         
         {isClient && (
@@ -270,7 +263,6 @@ export default function HomePage() {
             </>
         )}
 
-        {/* Image section like Vexo */}
         <section className="py-16 lg:py-24 w-full bg-card">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
@@ -310,7 +302,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Contact/CTA Section */}
         <section id="contact" className="py-20 lg:py-32 w-full">
           <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
             <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
