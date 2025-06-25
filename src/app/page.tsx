@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, ShieldCheck, HardHat, Sparkles, ArrowRight, Zap, TrendingUp, Clock, Users, CheckCircle, Handshake } from 'lucide-react';
+import { FilePlus2, ShieldCheck, Network, BrainCircuit, ArrowRight, Gauge, CheckCircle2, Rocket, Building2, CheckCircle, Handshake } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import React, { useState, useEffect, useRef } from 'react';
@@ -13,54 +13,54 @@ import ScrollReveal from '@/components/common/ScrollReveal';
 const features = [
   {
     id: 1,
-    icon: <MessageSquare className="w-12 h-12 mb-4" />,
-    title: "Effortless Ticket Submission",
-    description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
+    icon: <FilePlus2 className="w-16 h-16 mb-4" />,
+    title: "Streamlined Ticket Submission",
+    description: "Raise support tickets in seconds. Our intuitive form captures all necessary details, ensuring your issue is routed to the right expert instantly. No more guesswork, just swift action.",
   },
   {
     id: 2,
-    icon: <ShieldCheck className="w-12 h-12 mb-4" />,
-    title: "Secure & Role-Based Access",
-    description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
+    icon: <ShieldCheck className="w-16 h-16 mb-4" />,
+    title: "Role-Based Secure Access",
+    description: "Your security is paramount. With PSN-based authentication, the system provides tailored access levels, ensuring employees and supervisors only see what's relevant to their roles.",
   },
   {
     id: 3,
-    icon: <HardHat className="w-12 h-12 mb-4" />,
-    title: "Hierarchical Support System",
-    description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
+    icon: <Network className="w-16 h-16 mb-4" />,
+    title: "Intelligent Support Hierarchy",
+    description: "Tickets are automatically escalated through the proper channels, from Immediate Supervisor (IS) to Department Head (DH), ensuring accountability and timely resolutions at every level.",
   },
   {
     id: 4,
-    icon: <Sparkles className="w-12 h-12 mb-4" />,
-    title: "AI-Powered Insights",
-    description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
+    icon: <BrainCircuit className="w-16 h-16 mb-4" />,
+    title: "AI-Powered Resolution",
+    description: "Supervisors are empowered with AI-driven suggestions and insights, helping them diagnose issues and identify the fastest path to resolution, improving efficiency across the board.",
   },
 ];
 
 const stats = [
   {
     id: 1,
-    value: "24/7",
-    label: "Support Available",
-    icon: <Clock className="w-12 h-12 mb-3" />,
+    value: "99.8%",
+    label: "System Uptime",
+    icon: <Gauge className="w-16 h-16 mb-3" />,
   },
   {
     id: 2,
     value: "98%",
-    label: "Resolution Rate",
-    icon: <TrendingUp className="w-12 h-12 mb-3" />,
+    label: "First-Contact Resolution",
+    icon: <CheckCircle2 className="w-16 h-16 mb-3" />,
   },
   {
     id: 3,
     value: "<2Hrs",
-    label: "Avg. Response",
-    icon: <Zap className="w-12 h-12 mb-3" />,
+    label: "Avg. Initial Response",
+    icon: <Rocket className="w-16 h-16 mb-3" />,
   },
   {
     id: 4,
     value: "150K+",
-    label: "Employees Served",
-    icon: <Users className="w-12 h-12 mb-3" />,
+    label: "Employees Supported",
+    icon: <Building2 className="w-16 h-16 mb-3" />,
   }
 ];
 

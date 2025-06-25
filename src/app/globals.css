@@ -10,82 +10,82 @@
 
 @layer base {
   :root {
-    /* Light Theme (Vexo Inspired) */
-    --background: 0 0% 98%; /* Almost White */
-    --foreground: 224 71% 10%; /* Dark Blue-Gray for text */
-    
-    --card: 0 0% 100%; /* White for cards */
-    --card-foreground: 224 71% 10%; /* Dark text on cards */
+    /* New Light Theme */
+    --background: 0 0% 99%; /* Almost white */
+    --foreground: 222 47% 11%; /* Dark blue-gray for text */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 10%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 263 70% 52%; /* Vibrant Purple (slightly adjusted for light bg) */
-    --primary-foreground: 0 0% 99%; /* Very Light text on primary */
+    --primary: 215 90% 60%; /* Vibrant, professional blue */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
 
-    --secondary: 210 40% 93%; /* Light Gray for secondary elements */
-    --secondary-foreground: 217 33% 25%; /* Darker blue text on secondary */
+    --secondary: 210 40% 96.1%; /* Very light gray */
+    --secondary-foreground: 215.4 16.3% 46.9%;
 
-    --muted: 210 40% 95%; /* Lighter muted gray */
-    --muted-foreground: 210 20% 45%; /* Darker muted text for less emphasis */
+    --muted: 210 40% 95%;
+    --muted-foreground: 210 20% 45%;
 
-    --accent: 240 60% 55%; /* Bright Blue for accents (slightly adjusted) */
-    --accent-foreground: 0 0% 99%; /* Very Light text on accent */
+    --accent: 25 95% 53%; /* Bright Orange */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%; /* Clearer red for errors */
+    --destructive: 0 84% 60%; /* Clearer red */
     --destructive-foreground: 0 0% 99%;
 
-    --border: 210 20% 88%; /* Light gray for borders */
-    --input: 210 30% 96%; /* Slightly off-white input backgrounds */
-    --ring: 263 60% 62%; /* Ring color related to primary */
+    --border: 210 20% 88%;
+    --input: 210 30% 96%;
+    --ring: 215 90% 70%;
 
-    --highlight: 25 55% 35%; /* Dark Brown for light theme highlights */
+    --highlight: 215 90% 60%; /* Using primary blue for highlights */
 
-    --chart-1: 263 70% 52%;
-    --chart-2: 240 60% 55%;
-    --chart-3: 220 60% 55%;
-    --chart-4: 190 65% 35%;
-    --chart-5: 210 55% 65%;
-    --radius: 0.75rem; /* More rounded corners */
+    --chart-1: 215 80% 55%;
+    --chart-2: 25 90% 55%;
+    --chart-3: 160 70% 45%;
+    --chart-4: 280 80% 60%;
+    --chart-5: 50 95% 55%;
+    --radius: 0.75rem;
   }
 
   .dark {
-    /* Dark Theme (Vexo Inspired) */
-    --background: 224 71% 4%;
-    --foreground: 210 40% 96%;
-    
-    --card: 223 47% 11%;
-    --card-foreground: 210 40% 96%;
+    /* New Dark Theme */
+    --background: 222 84% 5%; /* Very dark blue */
+    --foreground: 210 40% 98%; /* Almost white text */
 
-    --popover: 223 47% 11%;
-    --popover-foreground: 210 40% 96%;
+    --card: 222 84% 8%; /* Slightly lighter dark blue */
+    --card-foreground: 210 40% 98%;
 
-    --primary: 263 80% 62%;
-    --primary-foreground: 210 40% 98%;
+    --popover: 222 84% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 190 85% 55%; /* Bright Cyan/Teal */
+    --primary-foreground: 190 95% 10%; /* Dark text on primary */
 
     --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 217 33% 25%;
     --muted-foreground: 210 20% 65%;
 
-    --accent: 240 70% 65%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 310 90% 65%; /* Bright Magenta/Pink */
+    --accent-foreground: 310 95% 10%;
 
-    --destructive: 0 63% 40%;
+    --destructive: 0 72% 51%; /* Brighter Red */
     --destructive-foreground: 0 0% 98%;
 
     --border: 217 33% 25%;
     --input: 217 33% 20%;
-    --ring: 263 70% 72%;
+    --ring: 190 85% 65%;
     
-    --highlight: 54 95% 65%; /* Bright Yellow for dark theme highlights */
+    --highlight: 45 100% 50%; /* Bright Yellow */
 
-    --chart-1: 263 80% 62%;
-    --chart-2: 240 70% 65%;
-    --chart-3: 220 70% 65%;
-    --chart-4: 190 75% 45%;
-    --chart-5: 210 65% 75%;
+    --chart-1: 190 85% 55%;
+    --chart-2: 310 90% 65%;
+    --chart-3: 45 100% 50%;
+    --chart-4: 100 80% 60%;
+    --chart-5: 250 85% 70%;
   }
 }
 
