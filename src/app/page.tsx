@@ -123,23 +123,25 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any) => React.ReactNode }) => {
+const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any, index: number) => React.ReactNode }) => {
   const targetRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: targetRef,
     offset: ["start start", "end end"],
   });
 
+  // Create a motion value that maps the scroll progress (0 to 1) to the number of cards.
+  // This value will represent the "current card index" as we scroll.
   const motionValue = useTransform(scrollYProgress, [0, 1], [0, items.length]);
 
   return (
-    <div ref={targetRef} className="relative" style={{ height: `${items.length * 60}vh` }}>
+    <div ref={targetRef} className="relative" style={{ height: `${items.length * 50}vh` }}>
       <div className="sticky top-[10vh] h-[80vh]">
         {items.map((item, i) => {
+          // Animate each card based on its index relative to the current scroll-driven motionValue.
           const y = useTransform(motionValue, [i - 1, i, i + 1], [10, 0, -50]);
           const scale = useTransform(motionValue, [i - 1, i, i + 1], [0.95, 1, 0.9]);
-          const opacity = useTransform(motionValue, [i - 0.5, i, i + 0.5], [1, 1, 0]);
-
+          
           return (
             <motion.div
               key={item.id}
@@ -150,7 +152,7 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
                 zIndex: items.length - i,
               }}
             >
-              {renderCard(item)}
+              {renderCard(item, i)}
             </motion.div>
           );
         })}
@@ -161,13 +163,15 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
 
 
 const MobileStackedLayout = () => (
-  <div className="md:hidden bg-background overflow-x-hidden pt-16 pb-12">
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
-      Key Features
-    </h2>
+  <div className="md:hidden bg-background overflow-x-hidden">
+    <div className="pt-16 pb-8">
+      <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
+        Key Features
+      </h2>
+    </div>
     <CardStack
       items={features}
-      renderCard={(feature) => (
+      renderCard={(feature, index) => (
         <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", feature.bgColor)}>
           <div className="mb-6">{feature.icon}</div>
           <h3 className="font-headline text-3xl font-semibold mb-3 text-foreground">{feature.title}</h3>
@@ -176,12 +180,14 @@ const MobileStackedLayout = () => (
       )}
     />
 
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
-      System Performance
-    </h2>
+    <div className="pt-16 pb-8">
+      <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
+        System Performance
+      </h2>
+    </div>
     <CardStack
       items={stats}
-      renderCard={(stat) => (
+      renderCard={(stat, index) => (
         <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", stat.bgColor)}>
           <div className={`${stat.color} mb-4`}>{stat.icon}</div>
           <p className={`font-headline text-6xl font-bold ${stat.color}`}>{stat.value}</p>
