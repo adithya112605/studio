@@ -124,18 +124,18 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="bg-background text-foreground overflow-x-hidden">
-      {/* Hero Section - now fixed to the background */}
-      <section className="fixed top-0 left-0 h-screen w-full flex items-center justify-center -z-10">
+    <div className="text-foreground overflow-x-hidden">
+      {/* Hero Section - fixed to the viewport */}
+      <section className="fixed top-0 left-0 h-screen w-full flex items-center justify-center">
         <Image
           src="https://placehold.co/1920x1080.png"
           alt="Modern office building background"
           data-ai-hint="modern office building"
           fill
           priority
-          className="object-cover"
+          className="object-cover -z-10"
         />
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/60 -z-10" />
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative">
           <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight text-white">
             {user ? (
@@ -176,7 +176,7 @@ export default function HomePage() {
       <div className="h-screen" />
 
       {/* Subsequent Content Wrapper - This will scroll over the fixed hero */}
-      <div className="relative z-0 bg-background">
+      <div className="relative z-10 bg-background">
         
         {hasMounted && (
             <>
