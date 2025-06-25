@@ -10,7 +10,7 @@
 
 @layer base {
   :root {
-    /* New Light Theme */
+    /* New Light Theme based on user feedback */
     --background: 0 0% 99%; /* Almost white */
     --foreground: 222 47% 11%; /* Dark blue-gray for text */
 
@@ -20,7 +20,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 215 90% 60%; /* Vibrant, professional blue */
+    --primary: 215 90% 60%; /* Keep the professional vibrant blue */
     --primary-foreground: 0 0% 100%; /* White text on primary */
 
     --secondary: 210 40% 96.1%; /* Very light gray */
@@ -29,7 +29,7 @@
     --muted: 210 40% 95%;
     --muted-foreground: 210 20% 45%;
 
-    --accent: 25 95% 53%; /* Bright Orange */
+    --accent: 313 50% 58%; /* Magenta from palette 1 (#C562AF) */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%; /* Clearer red */
@@ -39,18 +39,18 @@
     --input: 210 30% 96%;
     --ring: 215 90% 70%;
 
-    --highlight: 215 90% 60%; /* Using primary blue for highlights */
+    --highlight: 313 50% 58%; /* Use magenta for highlights */
 
-    --chart-1: 215 80% 55%;
-    --chart-2: 25 90% 55%;
-    --chart-3: 160 70% 45%;
-    --chart-4: 280 80% 60%;
-    --chart-5: 50 95% 55%;
+    --chart-1: 215 80% 55%; /* blue */
+    --chart-2: 313 50% 58%; /* magenta */
+    --chart-3: 243 80% 77%; /* periwinkle */
+    --chart-4: 49 95% 82%;  /* light yellow */
+    --chart-5: 160 70% 45%; /* green */
     --radius: 0.75rem;
   }
 
   .dark {
-    /* New Dark Theme */
+    /* New Dark Theme based on user feedback and palettes */
     --background: 222 84% 5%; /* Very dark blue */
     --foreground: 210 40% 98%; /* Almost white text */
 
@@ -60,8 +60,8 @@
     --popover: 222 84% 8%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 190 85% 55%; /* Bright Cyan/Teal */
-    --primary-foreground: 190 95% 10%; /* Dark text on primary */
+    --primary: 243 80% 77%; /* Periwinkle from palette 3 (#8F87F1) */
+    --primary-foreground: 243 80% 10%; /* Dark text on primary */
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -69,23 +69,23 @@
     --muted: 217 33% 25%;
     --muted-foreground: 210 20% 65%;
 
-    --accent: 25 95% 53%; /* Bright Orange */
-    --accent-foreground: 25 95% 10%;
+    --accent: 49 95% 82%; /* Light Yellow from palette 3 (#FDE9A5) */
+    --accent-foreground: 49 95% 10%;
 
     --destructive: 0 72% 51%; /* Brighter Red */
     --destructive-foreground: 0 0% 98%;
 
     --border: 217 33% 25%;
     --input: 217 33% 20%;
-    --ring: 190 85% 65%;
+    --ring: 243 80% 82%;
     
-    --highlight: 45 100% 50%; /* Bright Yellow */
+    --highlight: 49 95% 82%; /* Light Yellow for highlight */
 
-    --chart-1: 190 85% 55%;
-    --chart-2: 25 95% 53%; /* Orange */
-    --chart-3: 45 100% 50%; /* Yellow */
-    --chart-4: 100 80% 60%;
-    --chart-5: 250 85% 70%;
+    --chart-1: 243 80% 77%; /* periwinkle */
+    --chart-2: 49 95% 82%;  /* light yellow */
+    --chart-3: 313 50% 65%; /* magenta (lighter) */
+    --chart-4: 160 70% 50%; /* green */
+    --chart-5: 334 81% 83%; /* light pink from palette 3 (#FED2E2) */
   }
 }
 
