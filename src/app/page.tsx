@@ -64,51 +64,57 @@ const stats = [
   }
 ];
 
-const DesktopFeaturesLayout = () => (
-  <section id="features" className="py-16 lg:py-24 w-full bg-card">
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-      <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-        <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
-          Key Features of L&amp;T Helpdesk
-        </h2>
-      </ScrollReveal>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {features.map((feature, index) => (
-          <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
-            <div className={cn("text-center p-8 rounded-xl shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full", "bg-background")}>
-              <div className="text-primary mb-6">{feature.icon}</div>
-              <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm">{feature.description}</p>
-            </div>
-          </ScrollReveal>
-        ))}
+const DesktopFeaturesLayout = () => {
+  const featureColors = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4"];
+  return (
+    <section id="features" className="py-16 lg:py-24 w-full bg-card">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+            Key Features of L&amp;T Helpdesk
+          </h2>
+        </ScrollReveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => (
+            <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
+              <div className={cn("text-center p-8 rounded-xl shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full text-primary-foreground", featureColors[index % featureColors.length])}>
+                <div className="text-primary-foreground mb-6">{feature.icon}</div>
+                <h3 className="font-headline text-xl font-semibold mb-3 text-primary-foreground">{feature.title}</h3>
+                <p className="text-primary-foreground/80 text-sm">{feature.description}</p>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
-const DesktopStatsLayout = () => (
-  <section className="py-16 lg:py-24 w-full">
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-      <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-        <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
-          System Performance at a Glance
-        </h2>
-      </ScrollReveal>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-        {stats.map((stat, index) => (
-          <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
-            <div className={cn("flex flex-col items-center p-8 rounded-xl shadow-md hover:shadow-xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full", "bg-background")}>
-              <div className="text-primary mb-4">{stat.icon}</div>
-              <p className="font-headline text-4xl md:text-5xl font-bold text-primary">{stat.value}</p>
-              <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
-            </div>
-          </ScrollReveal>
-        ))}
+const DesktopStatsLayout = () => {
+  const statColors = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4"];
+  return (
+    <section className="py-16 lg:py-24 w-full">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
+          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+            System Performance at a Glance
+          </h2>
+        </ScrollReveal>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+          {stats.map((stat, index) => (
+            <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
+              <div className={cn("flex flex-col items-center p-8 rounded-xl shadow-md hover:shadow-xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full text-primary-foreground", statColors[index % statColors.length])}>
+                <div className="text-primary-foreground mb-4">{stat.icon}</div>
+                <p className="font-headline text-4xl md:text-5xl font-bold text-primary-foreground">{stat.value}</p>
+                <p className="text-sm text-primary-foreground/80 mt-2">{stat.label}</p>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 const CardScroller = ({ items, title }: { items: any[], title: string }) => {
   const [currentCard, setCurrentCard] = useState(-1);
