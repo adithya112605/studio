@@ -3,7 +3,6 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, ShieldCheck, HardHat, Sparkles, ArrowRight, Zap, TrendingUp, Clock, Users, CheckCircle, Handshake } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
@@ -124,37 +123,30 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any) => React.ReactNode }) => {
-  const targetRef = useRef<HTMLDivElement | null>(null);
+const CardStack = ({ items, renderCard, offset = 15 }: { items: any[], renderCard: (item: any) => React.ReactNode, offset?: number }) => {
+  const targetRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: targetRef,
-    offset: ['start start', 'end end'],
+    offset: ["start start", "end end"],
   });
 
   return (
     <div ref={targetRef} className="relative" style={{ height: `${items.length * 100}vh` }}>
-      <div className="sticky top-1/2 left-0 h-screen w-full -translate-y-1/2 overflow-hidden">
+      <div className="sticky top-1/4 left-0 flex h-[50vh] items-center justify-center">
         {items.map((item, i) => {
-          const scale = useTransform(
-            scrollYProgress,
-            [i / items.length, (i + 1) / items.length],
-            [1, 0.85]
-          );
+          const start = i / items.length;
+          const end = start + (1 / items.length);
 
-          const rotate = useTransform(
-            scrollYProgress,
-            [i / items.length, (i + 1) / items.length],
-            [0, -5]
-          );
+          const scale = useTransform(scrollYProgress, [start, end], [1, 0.7]);
+          const top = useTransform(scrollYProgress, [start, end], [i * offset, (i - 1) * offset]);
 
           return (
             <motion.div
               key={item.id}
-              className="absolute top-0 left-0 flex h-full w-full items-center justify-center"
+              className="absolute flex h-full w-full items-center justify-center"
               style={{
                 scale,
-                rotate,
-                top: `calc(-5% + ${i * 15}px)`,
+                top,
                 zIndex: items.length - i,
               }}
             >
@@ -167,17 +159,16 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
   );
 };
 
+
 const MobileStackedLayout = () => (
   <div className="md:hidden py-16 bg-background">
-    <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-      <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
+      <h2 className="font-headline text-3xl font-bold text-center px-4 mb-16 text-foreground">
         Key Features
       </h2>
-    </ScrollReveal>
     <CardStack
       items={features}
       renderCard={(feature) => (
-        <div className={cn("flex h-[50vh] w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-lg", feature.bgColor)}>
+        <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-lg", feature.bgColor)}>
           <div className="mb-6">{feature.icon}</div>
           <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
           <p className="text-muted-foreground text-sm">{feature.description}</p>
@@ -185,15 +176,13 @@ const MobileStackedLayout = () => (
       )}
     />
     
-    <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-      <h2 className="font-headline text-3xl font-bold text-center px-4 mt-24 mb-8 text-foreground">
-        System Performance
-      </h2>
-    </ScrollReveal>
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mt-24 mb-16 text-foreground">
+      System Performance
+    </h2>
     <CardStack
       items={stats}
       renderCard={(stat) => (
-         <div className={cn("flex h-[50vh] w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-md", stat.bgColor)}>
+         <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-md", stat.bgColor)}>
             <div className={`${stat.color} mb-4`}>{stat.icon}</div>
             <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
             <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
@@ -348,3 +337,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
