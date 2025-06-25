@@ -113,26 +113,44 @@ const DesktopStatsLayout = () => (
 const CardScroller = ({ items, title }: { items: any[], title: string }) => {
   const [currentCard, setCurrentCard] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const progressDotsRef = useRef<(HTMLDivElement | null)[]>([]);
   const totalCards = items.length;
 
   useEffect(() => {
-    const cardsContainer = containerRef.current;
-    if (!cardsContainer) return;
+    cardsRef.current = cardsRef.current.slice(0, totalCards);
+    progressDotsRef.current = progressDotsRef.current.slice(0, totalCards);
+  }, [items, totalCards]);
 
-    const cards = cardsContainer.querySelectorAll('.card.mobile-stack-card');
-    const progressDots = document.querySelectorAll(`.progress-indicator[data-title="${title}"] .progress-dot`);
+  const updateCardClasses = (cardIndex: number) => {
+    if (cardIndex === currentCard) return;
 
-    const updateCards = (scrollProgress: number) => {
-      const cardIndex = Math.floor(scrollProgress * totalCards);
-      const clampedIndex = Math.max(0, Math.min(cardIndex, totalCards - 1));
+    setCurrentCard(cardIndex);
 
-      if (clampedIndex !== currentCard) {
-        setCurrentCard(clampedIndex);
+    cardsRef.current.forEach((card, index) => {
+      card?.classList.remove('active', 'prev', 'next', 'hidden');
+      if (index === cardIndex) {
+        card?.classList.add('active');
+      } else if (index === cardIndex - 1) {
+        card?.classList.add('prev');
+      } else if (index === cardIndex + 1) {
+        card?.classList.add('next');
+      } else {
+        card?.classList.add('hidden');
       }
-    };
+    });
+
+    progressDotsRef.current.forEach((dot, index) => {
+      dot?.classList.toggle('active', index === cardIndex);
+    });
+  };
+
+  useEffect(() => {
+    const cardsContainerNode = containerRef.current;
+    if (!cardsContainerNode) return;
 
     const handleScroll = () => {
-      const containerRect = cardsContainer.getBoundingClientRect();
+      const containerRect = cardsContainerNode.getBoundingClientRect();
       const containerTop = containerRect.top;
       const containerHeight = containerRect.height;
       const viewportHeight = window.innerHeight;
@@ -141,9 +159,14 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
         const scrolled = Math.abs(containerTop);
         const scrollableHeight = containerHeight - viewportHeight;
         const scrollProgress = scrollableHeight > 0 ? Math.min(scrolled / scrollableHeight, 1) : 0;
-        updateCards(scrollProgress);
+        const cardIndex = Math.floor(scrollProgress * totalCards);
+        const clampedIndex = Math.max(0, Math.min(cardIndex, totalCards - 1));
+        updateCardClasses(clampedIndex);
       }
     };
+    
+    // Initial setup
+    updateCardClasses(0);
 
     let ticking = false;
     const requestTick = () => {
@@ -156,12 +179,10 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
       }
     };
 
-    // Initial call
-    requestTick();
-
     window.addEventListener('scroll', requestTick);
     return () => window.removeEventListener('scroll', requestTick);
-  }, [totalCards, currentCard, title]); // Re-run if totalCards changes, use currentCard to avoid stale closure issues
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalCards]);
 
   return (
     <div className="relative">
@@ -174,26 +195,19 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
         <div className="sticky-wrapper">
           <div className="stacked-cards">
             {items.map((item, index) => {
-              let cardClass = 'card mobile-stack-card';
-              if (index === currentCard) cardClass += ' active';
-              else if (index === currentCard - 1) cardClass += ' prev';
-              else if (index === currentCard + 1) cardClass += ' next';
-              else cardClass += ' hidden';
-
               const isStatCard = !!item.value;
-
               return (
-                <div key={item.id} className={cardClass}>
+                <div key={item.id} className="card mobile-stack-card" ref={el => cardsRef.current[index] = el}>
                   {isStatCard ? (
                     <div className="card-content-stat">
-                        <div className="text-primary">{item.icon}</div>
+                        <div className="text-primary-foreground">{item.icon}</div>
                         <p className="card-stat-value">{item.value}</p>
                         <p className="card-stat-label">{item.label}</p>
                     </div>
                   ) : (
                     <div className="card-content">
                       <div className="card-header">
-                        <div className="card-image text-primary">{item.icon}</div>
+                        <div className="card-image text-primary-foreground">{item.icon}</div>
                         <div>
                           <h2 className="card-title">{item.title}</h2>
                           <p className="card-description">{item.description}</p>
@@ -207,9 +221,9 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
           </div>
         </div>
       </div>
-      <div className="progress-indicator" data-title={title}>
+      <div className="progress-indicator">
         {items.map((_, index) => (
-          <div key={`${title}-${index}`} className={`progress-dot ${index === currentCard ? 'active' : ''}`}></div>
+          <div key={`${title}-dot-${index}`} className="progress-dot" ref={el => progressDotsRef.current[index] = el}></div>
         ))}
       </div>
     </div>
