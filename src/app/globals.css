@@ -11,7 +11,7 @@
 @layer base {
   :root {
     /* New Light Theme based on user feedback */
-    --background: 0 0% 99%; /* Almost white */
+    --background: 0 0% 100%; /* White */
     --foreground: 222 47% 11%; /* Dark blue-gray for text */
 
     --card: 0 0% 100%; /* White */
@@ -20,7 +20,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 215 90% 60%; /* Keep the professional vibrant blue */
+    --primary: 215 90% 55%; /* Deeper, more professional blue */
     --primary-foreground: 0 0% 100%; /* White text on primary */
 
     --secondary: 210 40% 96.1%; /* Very light gray */
@@ -29,7 +29,7 @@
     --muted: 210 40% 95%;
     --muted-foreground: 210 20% 45%;
 
-    --accent: 313 50% 58%; /* Magenta from palette 1 (#C562AF) */
+    --accent: 340 82% 52%; /* Strong pink/red for accent */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%; /* Clearer red */
@@ -39,7 +39,7 @@
     --input: 210 30% 96%;
     --ring: 215 90% 70%;
 
-    --highlight: 313 50% 58%; /* Use magenta for highlights */
+    --highlight: 340 82% 52%; /* Use accent for highlights */
 
     --chart-1: 215 80% 55%; /* blue */
     --chart-2: 313 50% 58%; /* magenta */
@@ -50,7 +50,7 @@
   }
 
   .dark {
-    /* New Dark Theme based on user feedback and palettes */
+    /* Dark Theme using user-provided palette */
     --background: 222 84% 5%; /* Very dark blue */
     --foreground: 210 40% 98%; /* Almost white text */
 
@@ -98,12 +98,11 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  /* === SHINY BUTTON STYLES === */
+  /* === SHINY BUTTON STYLES (REFINED) === */
   .btn-shiny {
     position: relative;
     overflow: hidden;
     z-index: 1;
-    /* Match text color transition to the fill animation */
     transition: color 0.6s ease-out;
   }
 
@@ -116,7 +115,7 @@
     right: 2px;
     bottom: 2px;
     z-index: -1;
-    /* Slower, more fluid animation curve for a liquid-like wipe */
+    border-radius: 9999px; /* Match rounded-full */
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     will-change: transform;
   }
@@ -137,12 +136,11 @@
 
   /* Dark Theme overrides */
   .dark .btn-shiny::before {
-    background-color: hsl(var(--accent)); /* Orange fill */
+    background-color: hsl(var(--accent)); /* Light yellow fill */
     transform: translateX(-101%);
   }
   .dark .btn-shiny:hover {
-    /* Changed from yellow to black per your request */
-    color: black;
+    color: black; /* Black text on hover */
   }
   .dark .btn-shiny:hover::before {
     transform: translateX(0);
@@ -291,7 +289,7 @@
   line-height: 1.6;
   color: hsla(var(--primary-foreground), 0.8);
   margin-bottom: 20px;
-  max-w: 85%;
+  max-width: 85%;
 }
 
 .card-content-stat svg {
