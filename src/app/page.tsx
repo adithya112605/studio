@@ -9,33 +9,32 @@ import { useAuth } from '@/contexts/AuthContext';
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import ScrollReveal from '@/components/common/ScrollReveal';
-import { motion, useScroll, useTransform } from 'framer-motion';
 
 const features = [
   {
     id: 1,
-    icon: <MessageSquare className="w-12 h-12 text-sky-700 dark:text-sky-300 mb-4" />,
+    icon: <MessageSquare className="w-12 h-12 mb-4" />,
     title: "Effortless Ticket Submission",
     description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
     bgColor: "bg-sky-100 dark:bg-sky-900",
   },
   {
     id: 2,
-    icon: <ShieldCheck className="w-12 h-12 text-teal-700 dark:text-teal-300 mb-4" />,
+    icon: <ShieldCheck className="w-12 h-12 mb-4" />,
     title: "Secure & Role-Based Access",
     description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
     bgColor: "bg-teal-100 dark:bg-teal-900",
   },
   {
     id: 3,
-    icon: <HardHat className="w-12 h-12 text-rose-700 dark:text-rose-300 mb-4" />,
+    icon: <HardHat className="w-12 h-12 mb-4" />,
     title: "Hierarchical Support System",
     description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
     bgColor: "bg-rose-100 dark:bg-rose-900",
   },
   {
     id: 4,
-    icon: <Sparkles className="w-12 h-12 text-amber-700 dark:text-amber-300 mb-4" />,
+    icon: <Sparkles className="w-12 h-12 mb-4" />,
     title: "AI-Powered Insights",
     description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
     bgColor: "bg-amber-100 dark:bg-amber-900",
@@ -123,39 +122,101 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any, index: number) => React.ReactNode }) => {
-  const targetRef = useRef<HTMLDivElement | null>(null);
-  const { scrollYProgress } = useScroll({
-    target: targetRef,
-    offset: ["start start", "end end"],
-  });
 
-  // Create a motion value that maps the scroll progress (0 to 1) to the number of cards.
-  // This value will represent the "current card index" as we scroll.
-  const motionValue = useTransform(scrollYProgress, [0, 1], [0, items.length]);
+const ScrollStackedCards = ({ items, itemType, title }: { items: any[], itemType: 'feature' | 'stat', title: string }) => {
+  const [currentCard, setCurrentCard] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const totalCards = items.length;
+
+  useEffect(() => {
+    const cardsContainer = containerRef.current;
+    if (!cardsContainer) return;
+
+    const handleScroll = () => {
+      const containerRect = cardsContainer.getBoundingClientRect();
+      const containerTop = containerRect.top;
+      const containerHeight = containerRect.height;
+      const viewportHeight = window.innerHeight;
+
+      if (containerTop <= 0 && containerTop >= -containerHeight + viewportHeight) {
+        const scrolled = Math.abs(containerTop);
+        const scrollableHeight = containerHeight - viewportHeight;
+        const scrollProgress = scrollableHeight > 0 ? Math.min(scrolled / scrollableHeight, 1) : 0;
+        
+        const cardIndex = Math.floor(scrollProgress * totalCards);
+        const clampedIndex = Math.max(0, Math.min(cardIndex, totalCards - 1));
+        
+        setCurrentCard(clampedIndex);
+      } else if (containerTop > 0) {
+        setCurrentCard(0);
+      } else {
+        setCurrentCard(totalCards - 1);
+      }
+    };
+
+    let ticking = false;
+    const requestTick = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', requestTick);
+    requestTick();
+
+    return () => window.removeEventListener('scroll', requestTick);
+  }, [totalCards]);
 
   return (
-    <div ref={targetRef} className="relative" style={{ height: `${items.length * 50}vh` }}>
-      <div className="sticky top-[10vh] h-[80vh]">
-        {items.map((item, i) => {
-          // Animate each card based on its index relative to the current scroll-driven motionValue.
-          const y = useTransform(motionValue, [i - 1, i, i + 1], [10, 0, -50]);
-          const scale = useTransform(motionValue, [i - 1, i, i + 1], [0.95, 1, 0.9]);
-          
-          return (
-            <motion.div
-              key={item.id}
-              className="absolute flex h-full w-full items-center justify-center"
-              style={{
-                y,
-                scale,
-                zIndex: items.length - i,
-              }}
-            >
-              {renderCard(item, i)}
-            </motion.div>
-          );
-        })}
+    <div className="relative">
+      <div className="pt-16 pb-8">
+        <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
+            {title}
+        </h2>
+      </div>
+      <div className="cards-container" ref={containerRef} style={{ height: `${totalCards * 100}vh` }}>
+        <div className="sticky-wrapper">
+          <div className="stacked-cards">
+            {items.map((item, index) => {
+              let cardClass = 'card mobile-stack-card';
+              if (index === currentCard) cardClass += ' active';
+              else if (index === currentCard - 1) cardClass += ' prev';
+              else if (index === currentCard + 1) cardClass += ' next';
+              else cardClass += ' hidden';
+
+              return (
+                <div key={item.id} className={cn(cardClass, item.bgColor)}>
+                  {itemType === 'feature' ? (
+                    <div className="card-content">
+                      <div className="card-header">
+                        <div className="card-image">{item.icon}</div>
+                        <div>
+                          <h2 className="card-title">{item.title}</h2>
+                          <p className="card-description">{item.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={cn("card-content-stat", item.color)}>
+                      {item.icon}
+                      <p className="card-stat-value">{item.value}</p>
+                      <p className="card-stat-label">{item.label}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      <div className="progress-indicator">
+        {items.map((_, index) => (
+          <div key={`${itemType}-${index}`} className={`progress-dot ${index === currentCard ? 'active' : ''}`}></div>
+        ))}
       </div>
     </div>
   );
@@ -164,37 +225,8 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
 
 const MobileStackedLayout = () => (
   <div className="md:hidden bg-background overflow-x-hidden">
-    <div className="pt-16 pb-8">
-      <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
-        Key Features
-      </h2>
-    </div>
-    <CardStack
-      items={features}
-      renderCard={(feature, index) => (
-        <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", feature.bgColor)}>
-          <div className="mb-6">{feature.icon}</div>
-          <h3 className="font-headline text-3xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-          <p className="text-muted-foreground text-lg">{feature.description}</p>
-        </div>
-      )}
-    />
-
-    <div className="pt-16 pb-8">
-      <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
-        System Performance
-      </h2>
-    </div>
-    <CardStack
-      items={stats}
-      renderCard={(stat, index) => (
-        <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", stat.bgColor)}>
-          <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-          <p className={`font-headline text-6xl font-bold ${stat.color}`}>{stat.value}</p>
-          <p className="text-lg text-muted-foreground mt-2">{stat.label}</p>
-        </div>
-      )}
-    />
+    <ScrollStackedCards items={features} itemType="feature" title="Key Features" />
+    <ScrollStackedCards items={stats} itemType="stat" title="System Performance" />
   </div>
 );
 
