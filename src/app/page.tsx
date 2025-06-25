@@ -130,15 +130,19 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
     offset: ["start start", "end end"],
   });
 
+  // This maps the overall scroll progress (0-1) to the number of cards.
   const motionValue = useTransform(scrollYProgress, [0, 1], [0, items.length]);
 
   return (
-    <div ref={targetRef} className="relative" style={{ height: `${items.length * 100}vh` }}>
+    // The height of this container determines the scrollable area for the animation.
+    // A smaller multiplier means a faster scroll through the cards.
+    <div ref={targetRef} className="relative" style={{ height: `${items.length * 60}vh` }}>
+      {/* This container is sticky, holding the cards in place as the user scrolls. */}
       <div className="sticky top-[10vh] h-[80vh]">
         {items.map((item, i) => {
-          const y = useTransform(motionValue, [i - 1, i, i + 1], [20, 0, -200]);
-          const scale = useTransform(motionValue, [i - 1, i, i + 1], [0.9, 1, 0.5]);
-          const opacity = useTransform(motionValue, [i, i + 0.5, i + 1], [1, 1, 0]);
+          // Animate each card based on its position in the stack relative to the scroll progress.
+          const y = useTransform(motionValue, [i - 1, i, i + 1], [10, 0, -50]); // Moves incoming cards up, and outgoing cards further up and away.
+          const scale = useTransform(motionValue, [i - 1, i, i + 1], [0.95, 1, 0.9]); // Scales the active card to 1, and others to a bit smaller.
 
           return (
             <motion.div
@@ -147,7 +151,7 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
               style={{
                 y,
                 scale,
-                opacity,
+                // Opacity is removed to ensure the card remains visible as it moves to the back.
                 zIndex: items.length - i,
               }}
             >
@@ -162,8 +166,8 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
 
 
 const MobileStackedLayout = () => (
-  <div className="md:hidden py-12 bg-background overflow-x-hidden">
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
+  <div className="md:hidden bg-background overflow-x-hidden pt-24 pb-12">
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-12 text-foreground">
       Key Features
     </h2>
     <CardStack
@@ -177,7 +181,7 @@ const MobileStackedLayout = () => (
       )}
     />
 
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-12 text-foreground">
       System Performance
     </h2>
     <CardStack
@@ -335,5 +339,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
