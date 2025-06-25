@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -15,25 +14,25 @@ const features = [
     id: 1,
     icon: <FilePlus2 />,
     title: "Streamlined Ticket Submission",
-    description: "Raise support tickets in seconds through our intuitive, guided form. Captures all necessary details, ensuring your issue is routed to the right expert instantly. No more guesswork, just swift action and resolution.",
+    description: "Raise support tickets in seconds through our intuitive, guided form. This smart process captures all necessary details upfront, eliminating confusing back-and-forth communication and ensuring your issue is routed to the right expert instantly. No more guesswork, just swift action and resolution.",
   },
   {
     id: 2,
     icon: <ShieldCheck />,
     title: "Role-Based Secure Access",
-    description: "Security is paramount. With PSN-based authentication, the system provides tailored access levels, ensuring employees, supervisors, and department heads only see information and actions relevant to their roles.",
+    description: "Security is paramount. With PSN-based authentication, the system provides tailored access levels for every user. This granular control ensures that employees, supervisors, and department heads only see information and actions that are directly relevant to their specific roles and responsibilities.",
   },
   {
     id: 3,
     icon: <Network />,
     title: "Intelligent Support Hierarchy",
-    description: "Tickets are automatically escalated through the proper L&T channels—from Immediate Supervisor (IS) to Department Head (DH)—ensuring accountability, oversight, and timely resolutions at every level.",
+    description: "Tickets are automatically escalated through the proper L&T channels—from Immediate Supervisor (IS) to Department Head (DH)—ensuring complete accountability. This intelligent routing guarantees that your issue gets the right attention at the right time, preventing delays and promoting timely resolutions at every level of the organization.",
   },
   {
     id: 4,
     icon: <BrainCircuit />,
     title: "AI-Powered Resolution",
-    description: "Empower supervisors with AI-driven suggestions and insights. Our system analyzes ticket content to identify the fastest path to resolution, suggest common solutions, and improve efficiency across the board.",
+    description: "Empower your support staff with AI-driven suggestions and deep insights. Our system analyzes ticket content to identify the fastest path to resolution, suggest proven solutions for recurring problems, and improve overall efficiency across the board, leading to faster turnaround times.",
   },
 ];
 
