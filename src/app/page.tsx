@@ -81,7 +81,7 @@ const DesktopFeaturesLayout = () => (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
         <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
-          Key Features of L&T Helpdesk
+          Key Features of L&amp;T Helpdesk
         </h2>
       </ScrollReveal>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -187,8 +187,17 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
               else if (index === currentCard + 1) cardClass += ' next';
               else cardClass += ' hidden';
 
+              const isStatCard = !!item.value;
+
               return (
                 <div key={item.id} className={cn(cardClass, item.bgColor)}>
+                  {isStatCard ? (
+                    <div className="card-content-stat">
+                        {item.icon}
+                        <p className="card-stat-value">{item.value}</p>
+                        <p className="card-stat-label">{item.label}</p>
+                    </div>
+                  ) : (
                     <div className="card-content">
                       <div className="card-header">
                         <div className="card-image">{item.icon}</div>
@@ -198,6 +207,7 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
                         </div>
                       </div>
                     </div>
+                  )}
                 </div>
               );
             })}
@@ -215,7 +225,8 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
 
 const MobileLayout = () => (
   <div className="md:hidden bg-background overflow-x-hidden">
-    <ScrollStackedCards items={features} title="Key Features" />
+    <ScrollStackedCards items={features} title="Key Features of L&T Helpdesk" />
+    <ScrollStackedCards items={stats} title="System Performance at a Glance" />
   </div>
 );
 
