@@ -136,6 +136,12 @@
   color: hsl(var(--card-foreground));
 }
 
+.card.mobile-stack-card:nth-child(1) { background-color: hsl(var(--chart-1)); }
+.card.mobile-stack-card:nth-child(2) { background-color: hsl(var(--chart-2)); }
+.card.mobile-stack-card:nth-child(3) { background-color: hsl(var(--chart-3)); }
+.card.mobile-stack-card:nth-child(4) { background-color: hsl(var(--chart-4)); }
+.card.mobile-stack-card:nth-child(5) { background-color: hsl(var(--chart-5)); }
+
 .card.mobile-stack-card.active {
   opacity: 1;
   transform: translateY(0) rotate(0deg) scale(1);
@@ -200,14 +206,14 @@
   font-size: 1.8rem;
   font-weight: 700;
   line-height: 1.2;
-  color: hsl(var(--foreground));
+  color: hsl(var(--primary-foreground));
   margin-bottom: 16px;
 }
 
 .card-description {
   font-size: 1rem;
   line-height: 1.6;
-  color: hsl(var(--muted-foreground));
+  color: hsla(var(--primary-foreground), 0.8);
   margin-bottom: 20px;
 }
 
@@ -218,11 +224,11 @@
     font-size: 4rem;
     font-weight: 700;
     font-family: var(--font-headline);
-    color: hsl(var(--foreground));
+    color: hsl(var(--primary-foreground));
 }
 .card-stat-label {
     font-size: 1rem;
-    color: hsl(var(--muted-foreground));
+    color: hsla(var(--primary-foreground), 0.8);
     margin-top: 0.5rem;
 }
 

@@ -16,28 +16,24 @@ const features = [
     icon: <MessageSquare className="w-12 h-12 mb-4" />,
     title: "Effortless Ticket Submission",
     description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
-    bgColor: "bg-sky-100 dark:bg-sky-900",
   },
   {
     id: 2,
     icon: <ShieldCheck className="w-12 h-12 mb-4" />,
     title: "Secure & Role-Based Access",
     description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
-    bgColor: "bg-teal-100 dark:bg-teal-900",
   },
   {
     id: 3,
     icon: <HardHat className="w-12 h-12 mb-4" />,
     title: "Hierarchical Support System",
     description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
-    bgColor: "bg-rose-100 dark:bg-rose-900",
   },
   {
     id: 4,
     icon: <Sparkles className="w-12 h-12 mb-4" />,
     title: "AI-Powered Insights",
     description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
-    bgColor: "bg-amber-100 dark:bg-amber-900",
   },
 ];
 
@@ -47,32 +43,24 @@ const stats = [
     value: "24/7",
     label: "Support Available",
     icon: <Clock className="w-12 h-12 mb-3" />,
-    bgColor: "bg-indigo-100 dark:bg-indigo-900",
-    color: "text-indigo-500 dark:text-indigo-300",
   },
   {
     id: 2,
     value: "98%",
     label: "Resolution Rate",
     icon: <TrendingUp className="w-12 h-12 mb-3" />,
-    bgColor: "bg-emerald-100 dark:bg-emerald-900",
-    color: "text-emerald-500 dark:text-emerald-300",
   },
   {
     id: 3,
     value: "<2Hrs",
     label: "Avg. Response",
     icon: <Zap className="w-12 h-12 mb-3" />,
-    bgColor: "bg-orange-100 dark:bg-orange-900",
-    color: "text-orange-500 dark:text-orange-300",
   },
   {
     id: 4,
     value: "150K+",
     label: "Employees Served",
     icon: <Users className="w-12 h-12 mb-3" />,
-    bgColor: "bg-pink-100 dark:bg-pink-900",
-    color: "text-pink-500 dark:text-pink-300",
   }
 ];
 
@@ -87,8 +75,8 @@ const DesktopFeaturesLayout = () => (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {features.map((feature, index) => (
           <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
-            <div className={cn("text-center p-8 rounded-xl shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full", feature.bgColor)}>
-              <div className="mb-6">{feature.icon}</div>
+            <div className={cn("text-center p-8 rounded-xl shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full", "bg-background")}>
+              <div className="text-primary mb-6">{feature.icon}</div>
               <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
               <p className="text-muted-foreground text-sm">{feature.description}</p>
             </div>
@@ -110,9 +98,9 @@ const DesktopStatsLayout = () => (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
         {stats.map((stat, index) => (
           <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
-            <div className={cn("flex flex-col items-center p-8 rounded-xl shadow-md hover:shadow-xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full", stat.bgColor)}>
-              <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-              <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
+            <div className={cn("flex flex-col items-center p-8 rounded-xl shadow-md hover:shadow-xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 h-full", "bg-background")}>
+              <div className="text-primary mb-4">{stat.icon}</div>
+              <p className="font-headline text-4xl md:text-5xl font-bold text-primary">{stat.value}</p>
               <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
             </div>
           </ScrollReveal>
@@ -122,7 +110,7 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) => {
+const CardScroller = ({ items, title }: { items: any[], title: string }) => {
   const [currentCard, setCurrentCard] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const totalCards = items.length;
@@ -130,6 +118,18 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
   useEffect(() => {
     const cardsContainer = containerRef.current;
     if (!cardsContainer) return;
+
+    const cards = cardsContainer.querySelectorAll('.card.mobile-stack-card');
+    const progressDots = document.querySelectorAll(`.progress-indicator[data-title="${title}"] .progress-dot`);
+
+    const updateCards = (scrollProgress: number) => {
+      const cardIndex = Math.floor(scrollProgress * totalCards);
+      const clampedIndex = Math.max(0, Math.min(cardIndex, totalCards - 1));
+
+      if (clampedIndex !== currentCard) {
+        setCurrentCard(clampedIndex);
+      }
+    };
 
     const handleScroll = () => {
       const containerRect = cardsContainer.getBoundingClientRect();
@@ -141,15 +141,7 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
         const scrolled = Math.abs(containerTop);
         const scrollableHeight = containerHeight - viewportHeight;
         const scrollProgress = scrollableHeight > 0 ? Math.min(scrolled / scrollableHeight, 1) : 0;
-        
-        const cardIndex = Math.floor(scrollProgress * totalCards);
-        const clampedIndex = Math.max(0, Math.min(cardIndex, totalCards - 1));
-        
-        setCurrentCard(clampedIndex);
-      } else if (containerTop > 0) {
-        setCurrentCard(0);
-      } else {
-        setCurrentCard(totalCards - 1);
+        updateCards(scrollProgress);
       }
     };
 
@@ -164,17 +156,18 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
       }
     };
 
-    window.addEventListener('scroll', requestTick);
-    requestTick(); // Initial call to set state
+    // Initial call
+    requestTick();
 
+    window.addEventListener('scroll', requestTick);
     return () => window.removeEventListener('scroll', requestTick);
-  }, [totalCards]);
+  }, [totalCards, currentCard, title]); // Re-run if totalCards changes, use currentCard to avoid stale closure issues
 
   return (
     <div className="relative">
-      <div className="pt-16 pb-8">
+      <div className="py-12">
         <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
-            {title}
+          {title}
         </h2>
       </div>
       <div className="cards-container" ref={containerRef} style={{ height: `${totalCards * 100}vh` }}>
@@ -190,17 +183,17 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
               const isStatCard = !!item.value;
 
               return (
-                <div key={item.id} className={cn(cardClass, item.bgColor)}>
+                <div key={item.id} className={cardClass}>
                   {isStatCard ? (
                     <div className="card-content-stat">
-                        {item.icon}
+                        <div className="text-primary">{item.icon}</div>
                         <p className="card-stat-value">{item.value}</p>
                         <p className="card-stat-label">{item.label}</p>
                     </div>
                   ) : (
                     <div className="card-content">
                       <div className="card-header">
-                        <div className="card-image">{item.icon}</div>
+                        <div className="card-image text-primary">{item.icon}</div>
                         <div>
                           <h2 className="card-title">{item.title}</h2>
                           <p className="card-description">{item.description}</p>
@@ -214,7 +207,7 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
           </div>
         </div>
       </div>
-      <div className="progress-indicator">
+      <div className="progress-indicator" data-title={title}>
         {items.map((_, index) => (
           <div key={`${title}-${index}`} className={`progress-dot ${index === currentCard ? 'active' : ''}`}></div>
         ))}
@@ -223,12 +216,15 @@ const ScrollStackedCards = ({ items, title }: { items: any[], title: string }) =
   );
 };
 
-const MobileLayout = () => (
-  <div className="md:hidden bg-background overflow-x-hidden">
-    <ScrollStackedCards items={features} title="Key Features of L&T Helpdesk" />
-    <ScrollStackedCards items={stats} title="System Performance at a Glance" />
-  </div>
-);
+
+const MobileHomePage = () => {
+  return (
+    <div className="md:hidden bg-background overflow-x-hidden">
+        <CardScroller items={features} title="Key Features of L&T Helpdesk" />
+        <CardScroller items={stats} title="System Performance at a Glance" />
+    </div>
+  );
+};
 
 
 export default function HomePage() {
@@ -292,7 +288,7 @@ export default function HomePage() {
         {isClient && (
             <>
                 {/* Mobile View */}
-                <MobileLayout />
+                <MobileHomePage />
                 {/* Desktop View */}
                 <div className="hidden md:block">
                     <DesktopFeaturesLayout />
