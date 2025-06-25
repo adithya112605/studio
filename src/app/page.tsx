@@ -132,8 +132,8 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
   });
 
   return (
-    <div ref={targetRef} className="relative h-[${items.length * 100}vh]">
-      <div className="sticky top-1/2 left-0 h-screen w-full -translate-y-1/2">
+    <div ref={targetRef} className="relative" style={{ height: `${items.length * 100}vh` }}>
+      <div className="sticky top-1/2 left-0 h-screen w-full -translate-y-1/2 overflow-hidden">
         {items.map((item, i) => {
           const scale = useTransform(
             scrollYProgress,
@@ -154,7 +154,7 @@ const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any
               style={{
                 scale,
                 rotate,
-                top: `calc(-5% + ${i * 25}px)`,
+                top: `calc(-5% + ${i * 15}px)`,
                 zIndex: items.length - i,
               }}
             >
