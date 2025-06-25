@@ -166,7 +166,7 @@ const ScrollStackedCards = ({ items, itemType, title }: { items: any[], itemType
     };
 
     window.addEventListener('scroll', requestTick);
-    requestTick();
+    requestTick(); // Initial call to set state
 
     return () => window.removeEventListener('scroll', requestTick);
   }, [totalCards]);
