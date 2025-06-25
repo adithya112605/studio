@@ -7,30 +7,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MessageSquare, ShieldCheck, HardHat, Sparkles, ArrowRight, Zap, TrendingUp, Clock, Users, CheckCircle, Handshake } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import ScrollReveal from '@/components/common/ScrollReveal';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 const features = [
   {
+    id: 1,
     icon: <MessageSquare className="w-10 h-10 text-sky-700 dark:text-sky-300 mb-4" />,
     title: "Effortless Ticket Submission",
     description: "Employees can quickly raise support tickets for any issue, ensuring swift attention and resolution.",
     bgColor: "bg-sky-100 dark:bg-sky-900/40",
   },
   {
+    id: 2,
     icon: <ShieldCheck className="w-10 h-10 text-teal-700 dark:text-teal-300 mb-4" />,
     title: "Secure & Role-Based Access",
     description: "Robust PSN-based authentication ensures secure access, tailored to employee and supervisor roles.",
     bgColor: "bg-teal-100 dark:bg-teal-900/40",
   },
   {
+    id: 3,
     icon: <HardHat className="w-10 h-10 text-rose-700 dark:text-rose-300 mb-4" />,
     title: "Hierarchical Support System",
     description: "Dedicated interfaces for Employees and Supervisors (IS, NS, DH, IC Head) with clear escalation paths.",
     bgColor: "bg-rose-100 dark:bg-rose-900/40",
   },
   {
+    id: 4,
     icon: <Sparkles className="w-10 h-10 text-amber-700 dark:text-amber-300 mb-4" />,
     title: "AI-Powered Insights",
     description: "Supervisors receive AI-driven resolution suggestions to expedite ticket handling and improve efficiency.",
@@ -40,6 +45,7 @@ const features = [
 
 const stats = [
   {
+    id: 1,
     value: "24/7",
     label: "Support Available",
     icon: <Clock className="w-10 h-10 mb-3" />,
@@ -47,6 +53,7 @@ const stats = [
     color: "text-indigo-500 dark:text-indigo-300",
   },
   {
+    id: 2,
     value: "98%",
     label: "Resolution Rate",
     icon: <TrendingUp className="w-10 h-10 mb-3" />,
@@ -54,6 +61,7 @@ const stats = [
     color: "text-emerald-500 dark:text-emerald-300",
   },
   {
+    id: 3,
     value: "<2Hrs",
     label: "Avg. Response",
     icon: <Zap className="w-10 h-10 mb-3" />,
@@ -61,6 +69,7 @@ const stats = [
     color: "text-orange-500 dark:text-orange-300",
   },
   {
+    id: 4,
     value: "150K+",
     label: "Employees Served",
     icon: <Users className="w-10 h-10 mb-3" />,
@@ -115,54 +124,92 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
+const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any) => React.ReactNode }) => {
+  const targetRef = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ['start start', 'end end'],
+  });
+
+  return (
+    <div ref={targetRef} className="relative h-[${items.length * 100}vh]">
+      <div className="sticky top-1/2 left-0 h-screen w-full -translate-y-1/2">
+        {items.map((item, i) => {
+          const scale = useTransform(
+            scrollYProgress,
+            [i / items.length, (i + 1) / items.length],
+            [1, 0.85]
+          );
+
+          const rotate = useTransform(
+            scrollYProgress,
+            [i / items.length, (i + 1) / items.length],
+            [0, -5]
+          );
+
+          return (
+            <motion.div
+              key={item.id}
+              className="absolute top-0 left-0 flex h-full w-full items-center justify-center"
+              style={{
+                scale,
+                rotate,
+                top: `calc(-5% + ${i * 25}px)`,
+                zIndex: items.length - i,
+              }}
+            >
+              {renderCard(item)}
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const MobileStackedLayout = () => (
-  <section className="md:hidden py-16 space-y-8 bg-card">
+  <div className="md:hidden py-16 bg-background">
     <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-      <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
-        Key Features of L&T Helpdesk
+      <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
+        Key Features
       </h2>
     </ScrollReveal>
-    <div className="relative h-[180vh] px-4">
-      {features.map((feature, index) => (
-        <div key={index} className="sticky w-full" style={{ top: `${8 + index * 4}rem` }}>
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={50 * index}>
-             <div className={cn("text-center p-8 rounded-2xl shadow-lg flex flex-col items-center min-h-[40vh] justify-center w-[90%] mx-auto", feature.bgColor)}>
-              <div className="mb-6">{feature.icon}</div>
-              <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm">{feature.description}</p>
-            </div>
-          </ScrollReveal>
+    <CardStack
+      items={features}
+      renderCard={(feature) => (
+        <div className={cn("flex h-[50vh] w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-lg", feature.bgColor)}>
+          <div className="mb-6">{feature.icon}</div>
+          <h3 className="font-headline text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+          <p className="text-muted-foreground text-sm">{feature.description}</p>
         </div>
-      ))}
-    </div>
+      )}
+    />
     
     <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-      <h2 className="font-headline text-3xl font-bold text-center px-4 pt-16 text-foreground">
-        System Performance at a Glance
+      <h2 className="font-headline text-3xl font-bold text-center px-4 mt-24 mb-8 text-foreground">
+        System Performance
       </h2>
     </ScrollReveal>
-    <div className="relative h-[180vh] px-4">
-      {stats.map((stat, index) => (
-        <div key={index} className="sticky w-full" style={{ top: `${8 + index * 4}rem` }}>
-          <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={50 * index}>
-            <div className={cn("flex flex-col items-center p-8 rounded-2xl shadow-md min-h-[40vh] justify-center w-[90%] mx-auto", stat.bgColor)}>
-              <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-              <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
-            </div>
-          </ScrollReveal>
-        </div>
-      ))}
-    </div>
-  </section>
+    <CardStack
+      items={stats}
+      renderCard={(stat) => (
+         <div className={cn("flex h-[50vh] w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-md", stat.bgColor)}>
+            <div className={`${stat.color} mb-4`}>{stat.icon}</div>
+            <p className={`font-headline text-4xl md:text-5xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
+          </div>
+      )}
+    />
+  </div>
 );
+
 
 export default function HomePage() {
   const { user } = useAuth();
-  const [hasMounted, setHasMounted] = useState(false);
-
+  const [isClient, setIsClient] = useState(false);
+  
   useEffect(() => {
-    setHasMounted(true);
+      setIsClient(true);
   }, []);
 
   return (
@@ -220,7 +267,7 @@ export default function HomePage() {
       {/* Subsequent Content Wrapper - This will scroll over the fixed hero */}
       <div className="relative z-10 bg-background">
         
-        {hasMounted && (
+        {isClient && (
             <>
                 {/* Mobile View */}
                 <MobileStackedLayout />
