@@ -123,34 +123,31 @@ const DesktopStatsLayout = () => (
   </section>
 );
 
-const CardStack = ({ items, renderCard, offset = 10, scaleFactor = 0.05 }: { items: any[], renderCard: (item: any) => React.ReactNode, offset?: number, scaleFactor?: number }) => {
+const CardStack = ({ items, renderCard }: { items: any[], renderCard: (item: any) => React.ReactNode }) => {
   const targetRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: targetRef,
     offset: ["start start", "end end"],
   });
 
+  const motionValue = useTransform(scrollYProgress, [0, 1], [0, items.length]);
+
   return (
-    <div ref={targetRef} className="relative" style={{ height: `${items.length * 80}vh` }}>
-      <div className="sticky top-[15vh] h-[70vh]">
+    <div ref={targetRef} className="relative" style={{ height: `${items.length * 100}vh` }}>
+      <div className="sticky top-[10vh] h-[80vh]">
         {items.map((item, i) => {
-          // Calculate the start and end of the scroll progress for this card
-          const start = i / items.length;
-          const end = start + 1 / items.length;
-
-          // Animate the scale of the card based on its position in the stack and scroll progress
-          const scale = useTransform(scrollYProgress, [start, end], [1, 0.8]);
-
-          // Animate the y-position to create the stacking effect
-          const y = useTransform(scrollYProgress, [start, end], [`${i * offset}px`, `${(i - 1) * offset}px`]);
+          const y = useTransform(motionValue, [i - 1, i, i + 1], [20, 0, -200]);
+          const scale = useTransform(motionValue, [i - 1, i, i + 1], [0.9, 1, 0.5]);
+          const opacity = useTransform(motionValue, [i, i + 0.5, i + 1], [1, 1, 0]);
 
           return (
             <motion.div
               key={item.id}
-              className="absolute flex h-full w-full items-start justify-center"
+              className="absolute flex h-full w-full items-center justify-center"
               style={{
-                scale,
                 y,
+                scale,
+                opacity,
                 zIndex: items.length - i,
               }}
             >
@@ -166,31 +163,31 @@ const CardStack = ({ items, renderCard, offset = 10, scaleFactor = 0.05 }: { ite
 
 const MobileStackedLayout = () => (
   <div className="md:hidden py-12 bg-background overflow-x-hidden">
-      <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
-        Key Features
-      </h2>
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
+      Key Features
+    </h2>
     <CardStack
       items={features}
       renderCard={(feature) => (
         <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", feature.bgColor)}>
           <div className="mb-6">{feature.icon}</div>
-          <h3 className="font-headline text-2xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-          <p className="text-muted-foreground text-base">{feature.description}</p>
+          <h3 className="font-headline text-3xl font-semibold mb-3 text-foreground">{feature.title}</h3>
+          <p className="text-muted-foreground text-lg">{feature.description}</p>
         </div>
       )}
     />
-    
-    <h2 className="font-headline text-3xl font-bold text-center px-4 mt-8 mb-8 text-foreground">
+
+    <h2 className="font-headline text-3xl font-bold text-center px-4 mb-8 text-foreground">
       System Performance
     </h2>
     <CardStack
       items={stats}
       renderCard={(stat) => (
-         <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", stat.bgColor)}>
-            <div className={`${stat.color} mb-4`}>{stat.icon}</div>
-            <p className={`font-headline text-5xl md:text-6xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-base text-muted-foreground mt-2">{stat.label}</p>
-          </div>
+        <div className={cn("flex h-full w-[90%] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl", stat.bgColor)}>
+          <div className={`${stat.color} mb-4`}>{stat.icon}</div>
+          <p className={`font-headline text-6xl font-bold ${stat.color}`}>{stat.value}</p>
+          <p className="text-lg text-muted-foreground mt-2">{stat.label}</p>
+        </div>
       )}
     />
   </div>
@@ -338,3 +335,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
