@@ -288,15 +288,15 @@ export default function HomePage() {
           )}
           <div className="space-y-4 sm:space-y-0 sm:space-x-4">
             {user ? (
-              <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+              <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto text-white">
                 <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-2 h-5 w-5"/></Link>
               </Button>
             ) : (
               <>
-                <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+                <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto text-white">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button asChild variant="shiny" size="lg" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto">
+                <Button asChild variant="shiny" size="lg" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto text-white">
                   <Link href="/auth/signup">Get Started</Link>
                 </Button>
               </>
@@ -386,5 +386,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
