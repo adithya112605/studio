@@ -31,7 +31,7 @@ const LTLogo = ({ className }: LTLogoProps) => {
     <div className={className} style={{ width: '32px', height: '32px' }} data-ai-hint="company logo">
       <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <rect width="100" height="100" rx="15" fill={bgColor} />
-        <text x="50" y="55" dominantBaseline="middle" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="60" fontWeight="bold" fill={textColor}>
+        <text x="50" y="55" dominantBaseline="middle" textAnchor="middle" fontFamily="'Roboto Slab', serif" fontSize="60" fontWeight="bold" fill={textColor}>
             LT
         </text>
       </svg>
@@ -40,5 +40,3 @@ const LTLogo = ({ className }: LTLogoProps) => {
 };
 
 export default LTLogo;
-
-    
