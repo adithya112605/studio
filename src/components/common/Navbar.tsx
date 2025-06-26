@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { PanelLeft, X, Home, Briefcase, Bell, Settings, LogOut, UserPlus, FileText, UserCircle2, Ticket, Users, FileSpreadsheet, BarChart3, UserCog, ChevronDown, Building, LogIn, Info, Sparkles, Sun, Moon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,80 +47,86 @@ const Navbar = () => {
   };
 
   
-  const commonAuthenticatedNavItemsBaseMobile = [
-    { href: '/', label: 'Home', icon: <Home /> },
-    { href: '/dashboard', label: 'Dashboard', icon: <Briefcase /> },
-    { href: '/profile', label: 'My Profile', icon: <UserCircle2 /> },
-  ];
-  const employeeNavItemsMobile = [
-    ...commonAuthenticatedNavItemsBaseMobile,
-    { href: '/tickets/new', label: 'Create Ticket', icon: <Ticket /> },
-    { href: '/employee/tickets', label: 'My Tickets', icon: <FileText /> },
-    { href: '/notifications', label: 'Notifications', icon: <Bell /> },
-    { href: '/settings', label: 'Settings', icon: <Settings /> },
-  ];
-  const supervisorBaseNavItemsMobile = [
-    ...commonAuthenticatedNavItemsBaseMobile,
-    { href: '/hr/tickets', label: 'Ticket Management', icon: <FileSpreadsheet /> },
-    { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Users /> },
-    { href: '/reports', label: 'Reports', icon: <BarChart3 /> },
-    { href: '/notifications', label: 'Notifications', icon: <Bell /> },
-    { href: '/settings', label: 'Settings', icon: <Settings /> },
-  ];
-  const adminManagementNavItemsMobile = [
-     { href: '/admin/add-employee', label: 'Manage Employees', icon: <UserPlus /> },
-     { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog /> },
-  ];
-  const unauthenticatedNavItemsMobile = [
-    { href: '/auth/signin', label: 'Sign In', icon: <LogIn /> },
-    { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus /> },
-    { href: '/', label: 'Home', icon: <Home /> },
-    { href: '/#features', label: 'Features', icon: <Sparkles /> },
-    { href: '/#contact', label: 'Contact', icon: <Info /> },
-  ];
+  const navItemsForMobile = useMemo(() => {
+    const commonAuthenticatedNavItemsBaseMobile = [
+        { href: '/', label: 'Home', icon: <Home /> },
+        { href: '/dashboard', label: 'Dashboard', icon: <Briefcase /> },
+        { href: '/profile', label: 'My Profile', icon: <UserCircle2 /> },
+    ];
+    const employeeNavItemsMobile = [
+        ...commonAuthenticatedNavItemsBaseMobile,
+        { href: '/tickets/new', label: 'Create Ticket', icon: <Ticket /> },
+        { href: '/employee/tickets', label: 'My Tickets', icon: <FileText /> },
+        { href: '/notifications', label: 'Notifications', icon: <Bell /> },
+        { href: '/settings', label: 'Settings', icon: <Settings /> },
+    ];
+    const supervisorBaseNavItemsMobile = [
+        ...commonAuthenticatedNavItemsBaseMobile,
+        { href: '/hr/tickets', label: 'Ticket Management', icon: <FileSpreadsheet /> },
+        { href: '/supervisor/employee-details', label: 'Employee Details', icon: <Users /> },
+        { href: '/reports', label: 'Reports', icon: <BarChart3 /> },
+        { href: '/notifications', label: 'Notifications', icon: <Bell /> },
+        { href: '/settings', label: 'Settings', icon: <Settings /> },
+    ];
+    const adminManagementNavItemsMobile = [
+        { href: '/admin/add-employee', label: 'Manage Employees', icon: <UserPlus /> },
+        { href: '/admin/add-supervisor', label: 'Manage Supervisors', icon: <UserCog /> },
+    ];
+    const unauthenticatedNavItemsMobile = [
+        { href: '/auth/signin', label: 'Sign In', icon: <LogIn /> },
+        { href: '/auth/signup', label: 'Sign Up', icon: <UserPlus /> },
+        { href: '/', label: 'Home', icon: <Home /> },
+        { href: '/#features', label: 'Features', icon: <Sparkles /> },
+        { href: '/#contact', label: 'Contact', icon: <Info /> },
+    ];
 
-  let navItemsForMobile = unauthenticatedNavItemsMobile;
-  if (user) {
-    if (user.role === 'Employee') {
-      navItemsForMobile = employeeNavItemsMobile;
-    } else {
-      navItemsForMobile = [...supervisorBaseNavItemsMobile];
-      if ((user as Supervisor).functionalRole === 'DH' || (user as Supervisor).functionalRole === 'IC Head') {
-        navItemsForMobile.push(...adminManagementNavItemsMobile);
-      }
+    if (!user) {
+        return unauthenticatedNavItemsMobile;
     }
-  }
 
-  
-  let desktopNavLinks: Array<{href?:string; label:string; isDropdown?: boolean; subItems?: Array<{href:string; label:string; icon?: React.ReactNode; description?: string}>; description?: string}> = [];
-  if (user) {
-    desktopNavLinks.push({ href: '/dashboard', label: 'Dashboard', description: 'Access your personalized overview, recent activities, and quick links to key system functionalities. Manage your tasks and stay updated with important notifications.'});
     if (user.role === 'Employee') {
-      desktopNavLinks.push({ href: '/employee/tickets', label: 'My Tickets', description: 'View a comprehensive list of all support tickets you have raised. Check their current status, review historical interactions, and add follow-up information.'});
-      desktopNavLinks.push({ href: '/tickets/new', label: 'Create Ticket', description: 'Initiate a new support request by detailing your issue or query for the HR team to address. Attach relevant files and set priority for faster resolution.'});
-    } else { 
-      const supervisorUser = user as Supervisor;
-      desktopNavLinks.push({ href: '/hr/tickets', label: 'Ticket Mgt.', description: 'Oversee, assign, and manage the lifecycle of support tickets relevant to your team or department. Escalate issues and monitor resolution progress.'});
-      desktopNavLinks.push({ href: '/supervisor/employee-details', label: 'Employees', description: 'Access and review detailed information about employees under your supervision or within your designated scope. View their project assignments and hierarchy.'});
-      desktopNavLinks.push({ href: '/reports', label: 'Reports', description: 'Generate, view, and analyze various system reports related to ticket trends, employee performance, and operational metrics to gain insights.'});
-      if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
-        desktopNavLinks.push({
-          label: 'Admin Tools',
-          isDropdown: true,
-          subItems: [
-            { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: 'Create new employee profiles in the system, assigning them to projects, job codes, and relevant supervisors.' },
-            { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: 'Onboard new supervisors, defining their roles, project affiliations, and city access levels within the helpdesk system.' },
-          ]
-        });
-      }
+        return employeeNavItemsMobile;
     }
-  } else {
-    // Nav links for non-authenticated users
-    desktopNavLinks.push(
-        { href: '/#features', label: 'Features', description: 'Explore the key functionalities of the L&T Helpdesk system designed for efficient internal support.' },
-        { href: '/#contact', label: 'Contact Us', description: 'Get in touch with support for assistance or inquiries about the L&T Helpdesk platform.' }
-    );
-  }
+    
+    let items = [...supervisorBaseNavItemsMobile];
+    const supervisorUser = user as Supervisor;
+    if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
+        items.push(...adminManagementNavItemsMobile);
+    }
+    return items;
+  }, [user]);
+
+  const desktopNavLinks = useMemo(() => {
+      let links: Array<{href?:string; label:string; isDropdown?: boolean; subItems?: Array<{href:string; label:string; icon?: React.ReactNode; description?: string}>; description?: string}> = [];
+      if (user) {
+        links.push({ href: '/dashboard', label: 'Dashboard', description: 'Access your personalized overview, recent activities, and quick links to key system functionalities. Manage your tasks and stay updated with important notifications.'});
+        if (user.role === 'Employee') {
+          links.push({ href: '/employee/tickets', label: 'My Tickets', description: 'View a comprehensive list of all support tickets you have raised. Check their current status, review historical interactions, and add follow-up information.'});
+          links.push({ href: '/tickets/new', label: 'Create Ticket', description: 'Initiate a new support request by detailing your issue or query for the HR team to address. Attach relevant files and set priority for faster resolution.'});
+        } else { 
+          const supervisorUser = user as Supervisor;
+          links.push({ href: '/hr/tickets', label: 'Ticket Mgt.', description: 'Oversee, assign, and manage the lifecycle of support tickets relevant to your team or department. Escalate issues and monitor resolution progress.'});
+          links.push({ href: '/supervisor/employee-details', label: 'Employees', description: 'Access and review detailed information about employees under your supervision or within your designated scope. View their project assignments and hierarchy.'});
+          links.push({ href: '/reports', label: 'Reports', description: 'Generate, view, and analyze various system reports related to ticket trends, employee performance, and operational metrics to gain insights.'});
+          if (supervisorUser.functionalRole === 'DH' || supervisorUser.functionalRole === 'IC Head') {
+            links.push({
+              label: 'Admin Tools',
+              isDropdown: true,
+              subItems: [
+                { href: '/admin/add-employee', label: 'Add Employee', icon: <UserPlus className="mr-2 h-4 w-4"/>, description: 'Create new employee profiles in the system, assigning them to projects, job codes, and relevant supervisors.' },
+                { href: '/admin/add-supervisor', label: 'Add Supervisor', icon: <UserCog className="mr-2 h-4 w-4"/>, description: 'Onboard new supervisors, defining their roles, project affiliations, and city access levels within the helpdesk system.' },
+              ]
+            });
+          }
+        }
+      } else {
+        links.push(
+            { href: '/#features', label: 'Features', description: 'Explore the key functionalities of the L&T Helpdesk system designed for efficient internal support.' },
+            { href: '/#contact', label: 'Contact Us', description: 'Get in touch with support for assistance or inquiries about the L&T Helpdesk platform.' }
+        );
+      }
+      return links;
+  }, [user]);
 
 
   if (!isMounted) {
@@ -268,7 +274,7 @@ const Navbar = () => {
              <div className="flex items-center space-x-1">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-foreground hover:bg-muted/50 hover:text-foreground">
+                        <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                             <Link href="/notifications" aria-label="Notifications"><Bell className="w-5 h-5"/></Link>
                         </Button>
                     </TooltipTrigger>
@@ -359,8 +365,8 @@ const DropdownMenuUser = ({ user, logout }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="group relative h-9 w-9 rounded-full hover:bg-muted/50">
-          <UserCircle2 className="h-5 w-5 text-foreground" />
+        <Button variant="ghost" className="group relative h-9 w-9 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground">
+          <UserCircle2 className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-72 bg-popover text-popover-foreground border-border" align="end" forceMount>
@@ -385,7 +391,7 @@ const DropdownMenuUser = ({ user, logout }: {
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>
         {commonDropdownItems.map(item => (
-          <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
+          <DropdownMenuItem key={item.href} asChild className="cursor-pointer hover:bg-muted/50 focus:bg-muted/50 hover:text-foreground focus:text-foreground">
             <Link href={item.href} className="flex items-center w-full">
               {item.icon}
               <span className="text-popover-foreground">{item.label}</span>
@@ -422,7 +428,7 @@ const DropdownMenuUser = ({ user, logout }: {
         )}
 
         <DropdownMenuSeparator className="bg-border"/>
-        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive/90 hover:bg-destructive/10!important">
+        <DropdownMenuItem onClick={logout} className="flex items-center cursor-pointer text-destructive focus:text-destructive-foreground focus:bg-destructive hover:bg-destructive/90">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
