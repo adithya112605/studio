@@ -48,24 +48,18 @@ const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> 
 }) => {
   const filteredTickets = useMemo(() => {
     let tickets: Ticket[] = [];
+
+    // Correctly filter tickets based on the supervisor's scope of management
     if (currentUser.functionalRole === 'IC Head') {
         tickets = allTickets;
     } else if (currentUser.functionalRole === 'DH') {
-        tickets = allTickets.filter(ticket => 
-            ticket.currentAssigneePSN === currentUser.psn || 
-            (ticket.status === 'Escalated to DH' && allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn)
-        );
+        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn);
     } else if (currentUser.functionalRole === 'NS') {
-        tickets = allTickets.filter(ticket => 
-            ticket.currentAssigneePSN === currentUser.psn || 
-            (ticket.status === 'Escalated to NS' && allEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn)
-        );
+        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn);
     } else if (currentUser.functionalRole === 'IS') {
-         tickets = allTickets.filter(ticket => 
-            ticket.currentAssigneePSN === currentUser.psn || 
-            (ticket.status === 'Open' && allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
-        );
+         tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn);
     }
+
     return tickets.filter(ticket => {
         const searchMatch = ticket.query.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             ticket.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||

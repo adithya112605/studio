@@ -138,26 +138,15 @@ export default function ReportsPage() {
   const getFilteredTicketsForCharts = (currentUser: Supervisor) => {
     let tickets: Ticket[] = [];
     
+    // Correctly filter tickets based on the supervisor's scope of management
     if (currentUser.functionalRole === 'IC Head') {
         tickets = allTickets;
     } else if (currentUser.functionalRole === 'DH') {
-        const dhManagedEmployeePSNs = allEmployees.filter(e => e.dhPSN === currentUser.psn).map(e => e.psn);
-        tickets = allTickets.filter(ticket => 
-            ticket.currentAssigneePSN === currentUser.psn ||
-            (ticket.status === 'Escalated to DH' && dhManagedEmployeePSNs.includes(ticket.psn)) ||
-            (allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn)
-        );
+        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn);
     } else if (currentUser.functionalRole === 'NS') {
-        const nsManagedEmployeePSNs = allEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn);
-        tickets = allTickets.filter(ticket =>
-            ticket.currentAssigneePSN === currentUser.psn ||
-            (ticket.status === 'Escalated to NS' && nsManagedEmployeePSNs.includes(ticket.psn))
-        );
+        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn);
     } else if (currentUser.functionalRole === 'IS') {
-         tickets = allTickets.filter(ticket =>
-            ticket.currentAssigneePSN === currentUser.psn ||
-            (ticket.status === 'Open' && allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn)
-        );
+         tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn);
     }
     
     return tickets.filter(ticket => {
