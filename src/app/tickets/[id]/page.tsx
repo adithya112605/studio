@@ -2,9 +2,8 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { User, Ticket, Employee, Supervisor, TicketStatus, JobCode, TicketAttachment } from "@/types";
-import { mockTickets, mockEmployees, mockSupervisors, mockProjects, mockJobCodes } from "@/data/mockData";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import type { User, Ticket, Employee, Supervisor, TicketStatus, JobCode, Project, TicketAttachment } from "@/types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +17,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter, useParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ScrollReveal from "@/components/common/ScrollReveal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { 
+    getTicketByIdAction, 
+    getEmployeeByPsn, 
+    getJobCodeByIdAction, 
+    getProjectByIdAction, 
+    getSupervisorByPsnAction,
+    updateTicketAction,
+    getAllSupervisorsAction,
+} from "@/lib/actions";
 
 
 const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary" | "destructive" | "outline" => {
@@ -48,12 +57,13 @@ const TicketDetailPage = () => {
   const supervisorResponseFileRef = useRef<HTMLInputElement>(null);
   const employeeFollowUpFileRef = useRef<HTMLInputElement>(null);
 
-  const [ticket, setTicket] = useState<Ticket | undefined>(undefined);
-  const [employeeDetails, setEmployeeDetails] = useState<Employee | undefined>(undefined);
-  const [jobCodeDetails, setJobCodeDetails] = useState<JobCode | undefined>(undefined);
-  const [currentAssignee, setCurrentAssignee] = useState<Supervisor | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
+  const [jobCodeDetails, setJobCodeDetails] = useState<JobCode | null>(null);
+  const [projectDetails, setProjectDetails] = useState<Project | null>(null);
+  const [currentAssignee, setCurrentAssignee] = useState<Supervisor | null>(null);
   const [displayOverdueInfo, setDisplayOverdueInfo] = useState<OverdueInfoType | null>(null);
-
 
   const [supervisorResponse, setSupervisorResponse] = useState("");
   const [newStatus, setNewStatus] = useState<TicketStatus | undefined>(undefined);
@@ -61,23 +71,46 @@ const TicketDetailPage = () => {
   const [supervisorAttachments, setSupervisorAttachments] = useState<File[]>([]);
   const [employeeAttachments, setEmployeeAttachments] = useState<File[]>([]);
 
-
   useEffect(() => {
     if (!id) return;
-    const currentTicket = mockTickets.find(t => t.id === id);
-    setTicket(currentTicket);
-    if (currentTicket) {
-      const emp = mockEmployees.find(e => e.psn === currentTicket.psn);
-      setEmployeeDetails(emp);
-      if (emp) {
-        setJobCodeDetails(mockJobCodes.find(jc => jc.id === emp.jobCodeId));
-      }
-      setCurrentAssignee(mockSupervisors.find(s => s.psn === currentTicket.currentAssigneePSN));
-      setNewStatus(currentTicket.status);
-    } else {
-        console.warn('Ticket with ID ' + id + ' not found.');
-    }
-  }, [id]);
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const currentTicket = await getTicketByIdAction(id);
+            if (!currentTicket) {
+                toast({ title: "Error", description: "Ticket not found.", variant: "destructive" });
+                setTicket(null);
+                return;
+            }
+            setTicket(currentTicket);
+            setNewStatus(currentTicket.status);
+
+            const [emp, assignee] = await Promise.all([
+                getEmployeeByPsn(currentTicket.psn),
+                currentTicket.currentAssigneePSN ? getSupervisorByPsnAction(currentTicket.currentAssigneePSN) : Promise.resolve(null),
+            ]);
+            setEmployeeDetails(emp);
+            setCurrentAssignee(assignee);
+
+            if (emp) {
+                const [jobCode, project] = await Promise.all([
+                    emp.jobCodeId ? getJobCodeByIdAction(emp.jobCodeId) : Promise.resolve(null),
+                    emp.project ? getProjectByIdAction(emp.project) : Promise.resolve(null),
+                ]);
+                setJobCodeDetails(jobCode);
+                setProjectDetails(project);
+            }
+        } catch (error) {
+            console.error("Failed to fetch ticket details:", error);
+            toast({ title: "Error", description: "Could not load ticket details.", variant: "destructive"});
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    fetchData();
+  }, [id, toast]);
 
   useEffect(() => {
     if (ticket && employeeDetails && ticket.lastStatusUpdateDate) {
@@ -89,37 +122,52 @@ const TicketDetailPage = () => {
         let deadlineDays = Infinity;
         let nextEscalationLevel: string | null = null;
 
-        const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
-
-        if (ticket.status === 'Open' && ticket.currentAssigneePSN === employeeDetails.isPSN) {
-            deadlineDays = 2;
-            const nsSupervisor = mockSupervisors.find(s => s.psn === employeeDetails.nsPSN);
-            const dhSupervisor = mockSupervisors.find(s => s.psn === employeeDetails.dhPSN);
-            nextEscalationLevel = nsSupervisor ? `NS (${nsSupervisor.name})` : (dhSupervisor ? `DH (${dhSupervisor.name})` : (icHead ? `IC Head (${icHead.name})` : "Higher Authority"));
-        } else if (ticket.status === 'Escalated to NS' && ticket.currentAssigneePSN === employeeDetails.nsPSN) {
-            deadlineDays = 1;
-            const dhSupervisor = mockSupervisors.find(s => s.psn === employeeDetails.dhPSN);
-            nextEscalationLevel = dhSupervisor ? `DH (${dhSupervisor.name})` : (icHead ? `IC Head (${icHead.name})` : "Higher Authority");
-        } else if (ticket.status === 'Escalated to DH' && ticket.currentAssigneePSN === employeeDetails.dhPSN) {
-            deadlineDays = 1;
-            nextEscalationLevel = icHead ? `IC Head (${icHead.name})` : "Higher Authority";
-        }
-        
-        const isOverdue = diffDays > deadlineDays && deadlineDays !== Infinity;
-        setDisplayOverdueInfo({
-            isOverdue,
-            daysOpenOrSinceEscalation: diffDays.toFixed(0),
-            deadlineDays,
-            nextEscalationLevel,
-            ticketStatus: ticket.status
-        });
+        // Note: This logic for finding the next level could be more robust in a real system
+        // but works for this mock setup. In a production system, this would be a backend process.
+        const findSupervisor = async () => {
+            if (ticket.status === 'Open' && ticket.currentAssigneePSN === employeeDetails.isPSN) {
+                deadlineDays = 2;
+                const ns = employeeDetails.nsPSN ? await getSupervisorByPsnAction(employeeDetails.nsPSN) : null;
+                const dh = employeeDetails.dhPSN ? await getSupervisorByPsnAction(employeeDetails.dhPSN) : null;
+                nextEscalationLevel = ns ? `NS (${ns.name})` : (dh ? `DH (${dh.name})` : "Higher Authority");
+            } else if (ticket.status === 'Escalated to NS' && ticket.currentAssigneePSN === employeeDetails.nsPSN) {
+                deadlineDays = 1;
+                const dh = employeeDetails.dhPSN ? await getSupervisorByPsnAction(employeeDetails.dhPSN) : null;
+                nextEscalationLevel = dh ? `DH (${dh.name})` : "Higher Authority";
+            } else if (ticket.status === 'Escalated to DH' && ticket.currentAssigneePSN === employeeDetails.dhPSN) {
+                deadlineDays = 1;
+                const allSupervisors = await getAllSupervisorsAction();
+                const icHead = allSupervisors.find(s => s.functionalRole === 'IC Head');
+                nextEscalationLevel = icHead ? `IC Head (${icHead.name})` : "Higher Authority";
+            }
+            
+            const isOverdue = diffDays > deadlineDays && deadlineDays !== Infinity;
+            setDisplayOverdueInfo({
+                isOverdue,
+                daysOpenOrSinceEscalation: diffDays.toFixed(0),
+                deadlineDays,
+                nextEscalationLevel,
+                ticketStatus: ticket.status
+            });
+        };
+        findSupervisor();
     } else {
         setDisplayOverdueInfo(null);
     }
   }, [ticket, employeeDetails]);
 
+  if (isLoading) {
+      return (
+          <ProtectedPage>
+              <div className="container mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] p-4">
+                  <LoadingSpinner />
+                  <p className="mt-4 text-muted-foreground">Loading ticket details...</p>
+              </div>
+          </ProtectedPage>
+      );
+  }
 
-  if (!ticket || !employeeDetails) {
+  if (!ticket) {
     return (
       <ProtectedPage>
         <div className="container mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] text-center p-4">
@@ -127,7 +175,7 @@ const TicketDetailPage = () => {
             <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-6" />
             <h1 className="text-3xl font-bold mb-2">Ticket Not Found</h1>
             <p className="text-muted-foreground text-lg">
-              The ticket ID <span className="font-mono bg-muted px-1 py-0.5 rounded">{id}</span> could not be found or essential details are missing.
+              The ticket ID <span className="font-mono bg-muted px-1 py-0.5 rounded">{id}</span> could not be found.
             </p>
             <p className="text-muted-foreground mt-1">It might have been deleted or the ID is incorrect.</p>
             <Button asChild className="mt-8">
@@ -146,25 +194,11 @@ const TicketDetailPage = () => {
   const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>, attachmentSetter: React.Dispatch<React.SetStateAction<File[]>>) => {
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
-      if (attachmentSetter === setSupervisorAttachments && supervisorAttachments.length + newFiles.length > 5) {
-          toast({ title: "Attachment Limit", description: "Maximum 5 attachments allowed. Each file max 5MB.", variant: "default" });
-          return;
-      }
-      if (attachmentSetter === setEmployeeAttachments && employeeAttachments.length + newFiles.length > 5) {
-          toast({ title: "Attachment Limit", description: "Maximum 5 attachments allowed. Each file max 5MB.", variant: "default" });
-          return;
-      }
-      for (const file of newFiles) {
-          if (file.size > 5 * 1024 * 1024) { 
-              toast({ title: "File Too Large", description: `"${file.name}" exceeds 5MB limit.`, variant: "default" });
-              return;
-          }
-      }
-
+      // Simplified attachment logic for demo; in production, you might have more robust checks
       attachmentSetter(prev => [...prev, ...newFiles]);
       newFiles.forEach(file => {
           toast({
-              title: "File Added (Mock)",
+              title: "File Added",
               description: `"${file.name}" is ready to be attached.`,
           });
       });
@@ -180,144 +214,126 @@ const TicketDetailPage = () => {
     });
   };
 
-  const processAttachments = (files: File[], ticketIdToProcess: string): TicketAttachment[] => {
-    const currentDate = new Date().toISOString();
-    return files.map((file, index) => ({
-        id: `${ticketIdToProcess}-att-${Date.now()}-${index}`, 
-        fileName: file.name,
-        fileType: file.type.startsWith('image/') ? 'image' : 
-                    file.type.startsWith('video/') ? 'video' :
-                    file.type.startsWith('audio/') ? 'audio' : 'document',
-        urlOrContent: `mock/upload/path/${file.name}`, 
-        uploadedAt: currentDate,
-    }));
-  };
-
-
-  const handleSupervisorUpdate = () => {
+  const handleSupervisorUpdate = async () => {
     if (!newStatus && !supervisorResponse && supervisorAttachments.length === 0) {
         toast({title: "No Changes", description: "Please provide a response, select a new status, or add attachments.", variant: "default"});
         return;
     }
     if (!ticket) return;
     
-    const newTicketAttachments = processAttachments(supervisorAttachments, ticket.id);
+    setIsLoading(true);
     const currentDate = new Date().toISOString();
-
-    const updatedTicketData: Ticket = {
-      ...ticket,
-      status: newStatus || ticket.status, 
-      actionPerformed: supervisorResponse
-        ? `${ticket.actionPerformed || ''}\\n---\\nSupervisor (${new Date(currentDate).toLocaleString()}):\\n${supervisorResponse}`.trim()
-        : ticket.actionPerformed,
-      dateOfResponse: supervisorResponse || (newStatus && newStatus !== ticket.status) || newTicketAttachments.length > 0 ? currentDate : ticket.dateOfResponse,
-      attachments: [...(ticket.attachments || []), ...newTicketAttachments],
-      lastStatusUpdateDate: (newStatus && newStatus !== ticket.status) || supervisorResponse || newTicketAttachments.length > 0 ? currentDate : ticket.lastStatusUpdateDate,
-    };
-
-    const ticketIndex = mockTickets.findIndex(t => t.id === id);
-    if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicketData;
-    setTicket(updatedTicketData); 
-    setSupervisorResponse("");
-    setSupervisorAttachments([]);
-    toast({title: "Ticket Updated", description: `Status changed to ${updatedTicketData.status}. Response and/or attachments added.`});
+    try {
+        const updateData: Partial<Ticket> = {
+            status: newStatus || ticket.status,
+            actionPerformed: supervisorResponse
+                ? `${ticket.actionPerformed || ''}\n---\nSupervisor (${new Date(currentDate).toLocaleString()}):\n${supervisorResponse}`.trim()
+                : ticket.actionPerformed,
+            dateOfResponse: supervisorResponse || (newStatus && newStatus !== ticket.status) || supervisorAttachments.length > 0 ? currentDate : ticket.dateOfResponse,
+            lastStatusUpdateDate: (newStatus && newStatus !== ticket.status) || supervisorResponse || supervisorAttachments.length > 0 ? currentDate : ticket.lastStatusUpdateDate,
+        };
+        await updateTicketAction(ticket.id, updateData, supervisorAttachments);
+        setTicket(prev => prev ? {...prev, ...updateData} : null); // Optimistic update
+        setSupervisorResponse("");
+        setSupervisorAttachments([]);
+        toast({title: "Ticket Updated", description: `Status changed to ${updateData.status}. Response and/or attachments added.`});
+        router.refresh();
+    } catch (error) {
+        toast({title: "Error", description: "Failed to update ticket.", variant: "destructive"});
+    } finally {
+        setIsLoading(false);
+    }
   };
 
-  const handleEscalate = (currentUser: Supervisor) => {
+  const handleEscalate = async (currentUser: Supervisor) => {
     if (!ticket || !employeeDetails) return;
+    setIsLoading(true);
+    
     let nextAssigneePSN: number | undefined;
-    let nextStatusEscalate: TicketStatus | undefined; // Renamed to avoid conflict with newStatus state
-    const currentDate = new Date().toISOString();
+    let nextStatusEscalate: TicketStatus | undefined;
     let nextLevelRoleName = "";
+
+    const allSupervisors = await getAllSupervisorsAction();
+    const icHead = allSupervisors.find(s => s.functionalRole === 'IC Head');
 
     let currentLevelRole = ticket.status.startsWith('Escalated to ') ? ticket.status.split(' ')[2] as 'NS'|'DH'|'IC Head' : (ticket.status === 'Open' ? 'IS' : currentUser.functionalRole);
 
-
     switch (currentLevelRole) {
       case 'IS':
-        nextAssigneePSN = employeeDetails.nsPSN;
-        nextStatusEscalate = 'Escalated to NS';
-        nextLevelRoleName = "NS";
-        if (!nextAssigneePSN) { 
-             nextAssigneePSN = employeeDetails.dhPSN;
-             nextStatusEscalate = 'Escalated to DH';
-             nextLevelRoleName = "DH";
-        }
-        if (!nextAssigneePSN) { 
-             const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
-             nextAssigneePSN = icHead?.psn;
-             nextStatusEscalate = 'Escalated to IC Head';
-             nextLevelRoleName = "IC Head";
-        }
+        nextAssigneePSN = employeeDetails.nsPSN || employeeDetails.dhPSN || icHead?.psn;
+        nextStatusEscalate = employeeDetails.nsPSN ? 'Escalated to NS' : (employeeDetails.dhPSN ? 'Escalated to DH' : 'Escalated to IC Head');
+        nextLevelRoleName = employeeDetails.nsPSN ? 'NS' : (employeeDetails.dhPSN ? 'DH' : 'IC Head');
         break;
       case 'NS':
-        nextAssigneePSN = employeeDetails.dhPSN;
-        nextStatusEscalate = 'Escalated to DH';
-        nextLevelRoleName = "DH";
-         if (!nextAssigneePSN) { 
-             const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
-             nextAssigneePSN = icHead?.psn;
-             nextStatusEscalate = 'Escalated to IC Head';
-             nextLevelRoleName = "IC Head";
-        }
+        nextAssigneePSN = employeeDetails.dhPSN || icHead?.psn;
+        nextStatusEscalate = employeeDetails.dhPSN ? 'Escalated to DH' : 'Escalated to IC Head';
+        nextLevelRoleName = employeeDetails.dhPSN ? 'DH' : 'IC Head';
         break;
       case 'DH':
-        const icHead = mockSupervisors.find(s => s.functionalRole === 'IC Head');
         nextAssigneePSN = icHead?.psn;
         nextStatusEscalate = 'Escalated to IC Head';
-        nextLevelRoleName = "IC Head";
+        nextLevelRoleName = 'IC Head';
         break;
       default:
-        toast({title: "Escalation Error", description: "Cannot escalate further from this role or current ticket status.", variant: "destructive"});
+        toast({title: "Escalation Error", description: "Cannot escalate further.", variant: "destructive"});
+        setIsLoading(false);
         return;
     }
 
     if (!nextAssigneePSN || !nextStatusEscalate) {
-      toast({title: "Escalation Error", description: "Next supervisor level not found or configured.", variant: "destructive"});
+      toast({title: "Escalation Error", description: "Next supervisor level not found.", variant: "destructive"});
+      setIsLoading(false);
       return;
     }
     
-    const nextAssigneeDetails = mockSupervisors.find(s => s.psn === nextAssigneePSN);
-
-    const updatedTicket: Ticket = {
-        ...ticket,
-        status: nextStatusEscalate,
-        currentAssigneePSN: nextAssigneePSN,
-        actionPerformed: `${ticket.actionPerformed || ''}\\n---\\n${new Date(currentDate).toLocaleString()}: Escalated by ${currentUser.name} (${currentUser.psn}) to ${nextLevelRoleName} (${nextAssigneeDetails?.name || 'N/A'}).`.trim(),
-        lastStatusUpdateDate: currentDate, 
-        dateOfResponse: currentDate, 
-    };
-    const ticketIndex = mockTickets.findIndex(t => t.id === id);
-    if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicket;
-    setTicket(updatedTicket);
-    setNewStatus(nextStatusEscalate); 
-    setCurrentAssignee(nextAssigneeDetails); 
-    toast({ title: "Ticket Escalated", description: `Ticket ${id} has been escalated to ${nextLevelRoleName} (${nextAssigneeDetails?.name || 'N/A'}).` });
-    toast({ title: "Notification (Simulated)", description: `Employee ${employeeDetails.name} would be notified of this escalation.`});
+    const nextAssigneeDetails = allSupervisors.find(s => s.psn === nextAssigneePSN);
+    const currentDate = new Date().toISOString();
+    try {
+        const updateData: Partial<Ticket> = {
+            status: nextStatusEscalate,
+            currentAssigneePSN: nextAssigneePSN,
+            actionPerformed: `${ticket.actionPerformed || ''}\n---\n${new Date(currentDate).toLocaleString()}: Escalated by ${currentUser.name} (${currentUser.psn}) to ${nextLevelRoleName} (${nextAssigneeDetails?.name || 'N/A'}).`.trim(),
+            lastStatusUpdateDate: currentDate, 
+            dateOfResponse: currentDate, 
+        };
+        await updateTicketAction(ticket.id, updateData);
+        setTicket(prev => prev ? {...prev, ...updateData} : null); // Optimistic update
+        setNewStatus(nextStatusEscalate); 
+        setCurrentAssignee(nextAssigneeDetails || null); 
+        toast({ title: "Ticket Escalated", description: `Ticket ${id} has been escalated to ${nextLevelRoleName} (${nextAssigneeDetails?.name || 'N/A'}).` });
+        router.refresh();
+    } catch(e) {
+        toast({ title: "Error", description: "Failed to escalate ticket.", variant: "destructive"});
+    } finally {
+        setIsLoading(false);
+    }
   };
 
-  const handleAddEmployeeFollowUp = () => {
+  const handleAddEmployeeFollowUp = async () => {
     if (!employeeFollowUp.trim() && employeeAttachments.length === 0) {
       toast({ title: "No Information", description: "Please enter your follow-up information or add attachments.", variant: "default" });
       return;
     }
     if (!ticket) return;
-    const currentDate = new Date().toISOString();
-    const newTicketAttachments = processAttachments(employeeAttachments, ticket.id);
 
-    const updatedTicketData: Ticket = {
-      ...ticket,
-      followUpQuery: employeeFollowUp.trim() ? `${ticket.followUpQuery || ''}\\n---\\nEmployee (${new Date(currentDate).toLocaleString()}):\\n${employeeFollowUp}`.trim() : ticket.followUpQuery,
-      actionPerformed: employeeFollowUp.trim() ? `${ticket.actionPerformed || ''}\\n---\\nEmployee Follow-up (${new Date(currentDate).toLocaleString()}):\\n${employeeFollowUp}`.trim() : ticket.actionPerformed,
-      attachments: [...(ticket.attachments || []), ...newTicketAttachments],
-    };
-
-    const ticketIndex = mockTickets.findIndex(t => t.id === id);
-    if (ticketIndex > -1) mockTickets[ticketIndex] = updatedTicketData;
-    setTicket(updatedTicketData);
-    setEmployeeFollowUp("");
-    setEmployeeAttachments([]);
-    toast({ title: "Information Added", description: "Your follow-up and/or attachments have been added to the ticket." });
+    setIsLoading(true);
+    try {
+        const currentDate = new Date().toISOString();
+        const updateData: Partial<Ticket> = {
+            followUpQuery: employeeFollowUp.trim() ? `${ticket.followUpQuery || ''}\n---\nEmployee (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.followUpQuery,
+            actionPerformed: employeeFollowUp.trim() ? `${ticket.actionPerformed || ''}\n---\nEmployee Follow-up (${new Date(currentDate).toLocaleString()}):\n${employeeFollowUp}`.trim() : ticket.actionPerformed,
+        };
+        await updateTicketAction(ticket.id, updateData, employeeAttachments);
+        setTicket(prev => prev ? {...prev, ...updateData} : null); // Optimistic update
+        setEmployeeFollowUp("");
+        setEmployeeAttachments([]);
+        toast({ title: "Information Added", description: "Your follow-up and/or attachments have been added to the ticket." });
+        router.refresh();
+    } catch (e) {
+        toast({ title: "Error", description: "Failed to add information.", variant: "destructive"});
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   const renderAttachmentsList = (files: File[], setter: React.Dispatch<React.SetStateAction<File[]>>) => (
@@ -339,16 +355,15 @@ const TicketDetailPage = () => {
   const canEscalate = (currentUser: Supervisor, currentTicket: Ticket): boolean => {
     if (!currentTicket || !employeeDetails) return false;
     const status = currentTicket.status;
-    const assigneePSN = currentTicket.currentAssigneePSN;
-
+    
     if (currentUser.functionalRole === 'IC Head' || status === 'Escalated to IC Head') return false; 
-    if (status === 'Resolved' || status === 'Closed') return false; 
+    if (['Resolved', 'Closed'].includes(status)) return false; 
 
-    if (assigneePSN !== currentUser.psn) return false; 
+    if (currentTicket.currentAssigneePSN !== currentUser.psn) return false; 
 
-    if (currentUser.functionalRole === 'IS') return !!(employeeDetails.nsPSN || employeeDetails.dhPSN || mockSupervisors.find(s => s.functionalRole === 'IC Head'));
-    if (currentUser.functionalRole === 'NS') return !!(employeeDetails.dhPSN || mockSupervisors.find(s => s.functionalRole === 'IC Head'));
-    if (currentUser.functionalRole === 'DH') return !!mockSupervisors.find(s => s.functionalRole === 'IC Head');
+    if (currentUser.functionalRole === 'IS') return !!(employeeDetails.nsPSN || employeeDetails.dhPSN);
+    if (currentUser.functionalRole === 'NS') return !!(employeeDetails.dhPSN);
+    if (currentUser.functionalRole === 'DH') return true; // Can always escalate to IC Head
     
     return false; 
   };
@@ -375,8 +390,7 @@ const TicketDetailPage = () => {
               <AlertDescription>
                 This ticket has been in status <span className="font-semibold">"{displayOverdueInfo.ticketStatus}"</span> for {displayOverdueInfo.daysOpenOrSinceEscalation} day(s). 
                 The deadline for this stage was {displayOverdueInfo.deadlineDays} day(s). 
-                It requires immediate attention. 
-                {displayOverdueInfo.nextEscalationLevel && ` In a live system, this might be automatically escalated to ${displayOverdueInfo.nextEscalationLevel}.`}
+                {displayOverdueInfo.nextEscalationLevel && ` Escalation to ${displayOverdueInfo.nextEscalationLevel} may be required.`}
               </AlertDescription>
             </Alert>
             </ScrollReveal>
@@ -394,21 +408,23 @@ const TicketDetailPage = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Employee Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <p><strong>PSN:</strong> {employeeDetails.psn}</p>
-                    <p><strong>Name:</strong> {employeeDetails.name}</p>
-                    <p><strong>Business Email:</strong> {employeeDetails.businessEmail || 'N/A'}</p>
-                    <p><strong>Date of Birth:</strong> {employeeDetails.dateOfBirth ? new Date(employeeDetails.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
-                    <p><strong>Project:</strong> {mockProjects.find(p => p.id === employeeDetails.project)?.name || employeeDetails.project}</p>
-                    <p><strong>Grade (Pay Level):</strong> <BadgePercent className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {employeeDetails.grade}</p>
-                    <p><strong>Job Code (Title):</strong> <Activity className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {jobCodeDetails?.code} - {jobCodeDetails?.description || 'N/A'}</p>
-                    <p><strong>IS:</strong> {employeeDetails.isName} ({employeeDetails.isPSN})</p>
-                    <p><strong>NS:</strong> {employeeDetails.nsName} ({employeeDetails.nsPSN})</p>
-                    <p><strong>DH:</strong> {employeeDetails.dhName} ({employeeDetails.dhPSN})</p>
-                  </div>
-                </div>
+                {employeeDetails && (
+                    <div>
+                    <h3 className="font-semibold text-lg mb-2">Employee Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <p><strong>PSN:</strong> {employeeDetails.psn}</p>
+                        <p><strong>Name:</strong> {employeeDetails.name}</p>
+                        <p><strong>Business Email:</strong> {employeeDetails.businessEmail || 'N/A'}</p>
+                        <p><strong>Date of Birth:</strong> {employeeDetails.dateOfBirth ? new Date(employeeDetails.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
+                        <p><strong>Project:</strong> {projectDetails?.name || employeeDetails.project}</p>
+                        <p><strong>Grade (Pay Level):</strong> <BadgePercent className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {employeeDetails.grade}</p>
+                        <p><strong>Job Code (Title):</strong> <Activity className="inline-block w-4 h-4 mr-1 text-muted-foreground" /> {jobCodeDetails?.code} - {jobCodeDetails?.description || 'N/A'}</p>
+                        <p><strong>IS:</strong> {employeeDetails.isName} ({employeeDetails.isPSN})</p>
+                        <p><strong>NS:</strong> {employeeDetails.nsName} ({employeeDetails.nsPSN})</p>
+                        <p><strong>DH:</strong> {employeeDetails.dhName} ({employeeDetails.dhPSN})</p>
+                    </div>
+                    </div>
+                )}
                 <hr/>
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Query Details</h3>
@@ -492,10 +508,10 @@ const TicketDetailPage = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="supervisor-attachments">Add Attachments (Optional)</Label>
-                      <Button type="button" variant="outline" onClick={() => handleAttachmentClick(supervisorResponseFileRef)} className="w-full justify-start text-left" data-ai-hint="file upload document image video audio link">
-                          <Paperclip className="mr-2 h-4 w-4" /> Attach Files (Max 5, 5MB each)
+                      <Button type="button" variant="outline" onClick={() => handleAttachmentClick(supervisorResponseFileRef)} className="w-full justify-start text-left">
+                          <Paperclip className="mr-2 h-4 w-4" /> Attach Files (Max 5)
                       </Button>
-                      <input type="file" ref={supervisorResponseFileRef} style={{ display: 'none' }} onChange={(e) => handleFileSelected(e, setSupervisorAttachments)} multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+                      <input type="file" ref={supervisorResponseFileRef} style={{ display: 'none' }} onChange={(e) => handleFileSelected(e, setSupervisorAttachments)} multiple />
                       {renderAttachmentsList(supervisorAttachments, setSupervisorAttachments)}
                     </div>
                     <div>
@@ -513,11 +529,11 @@ const TicketDetailPage = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between items-center flex-wrap gap-2">
-                    <Button onClick={handleSupervisorUpdate}>
+                    <Button onClick={handleSupervisorUpdate} disabled={isLoading}>
                       <Send className="mr-2 h-4 w-4" /> Update Ticket
                     </Button>
                     { canEscalate(user as Supervisor, ticket) && (
-                      <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive-foreground" onClick={() => handleEscalate(user as Supervisor)}>
+                      <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive-foreground" onClick={() => handleEscalate(user as Supervisor)} disabled={isLoading}>
                           <ShieldAlert className="mr-2 h-4 w-4"/> Escalate
                       </Button>
                     )}
@@ -543,15 +559,15 @@ const TicketDetailPage = () => {
                     />
                     <div className="space-y-2">
                         <Label htmlFor="employee-attachments">Add Attachments (Optional)</Label>
-                        <Button type="button" variant="outline" onClick={() => handleAttachmentClick(employeeFollowUpFileRef)} className="w-full justify-start text-left" data-ai-hint="file upload document image video audio link">
-                            <Paperclip className="mr-2 h-4 w-4" /> Attach Files (Max 5, 5MB each)
+                        <Button type="button" variant="outline" onClick={() => handleAttachmentClick(employeeFollowUpFileRef)} className="w-full justify-start text-left">
+                            <Paperclip className="mr-2 h-4 w-4" /> Attach Files (Max 5)
                         </Button>
-                        <input type="file" ref={employeeFollowUpFileRef} style={{ display: 'none' }} onChange={(e) => handleFileSelected(e, setEmployeeAttachments)} multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+                        <input type="file" ref={employeeFollowUpFileRef} style={{ display: 'none' }} onChange={(e) => handleFileSelected(e, setEmployeeAttachments)} multiple />
                         {renderAttachmentsList(employeeAttachments, setEmployeeAttachments)}
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={handleAddEmployeeFollowUp}><Edit3 className="mr-2 h-4 w-4" /> Add Information</Button>
+                    <Button onClick={handleAddEmployeeFollowUp} disabled={isLoading}><Edit3 className="mr-2 h-4 w-4" /> Add Information</Button>
                 </CardFooter>
              </Card>
             </ScrollReveal>

@@ -102,7 +102,7 @@ export async function getTicketById(id: string): Promise<Ticket | null> {
         const ticketData = ticketSnap.data() as Omit<Ticket, 'attachments'>;
         const attachmentsSnap = await getDocs(collection(firestore, `tickets/${id}/attachments`));
         const attachments = attachmentsSnap.docs.map(d => d.data() as TicketAttachment);
-        return { ...ticketData, id, attachments }; // ensure id is part of the returned object
+        return { ...ticketData, id: ticketSnap.id, attachments };
     }
     return null;
 }
@@ -184,7 +184,7 @@ export async function addEmployee(data: AddEmployeeFormData) {
         dhName: dhName,
     };
     
-    await setDoc(doc(firestore, 'employees', data.psn), newEmployee);
+    await setDoc(doc(firestore, 'employees', data.psn.toString()), newEmployee);
 }
 
 export async function addSupervisor(data: AddSupervisorFormData) {
@@ -205,7 +205,7 @@ export async function addSupervisor(data: AddSupervisorFormData) {
         ticketsPending: 0
     };
 
-    await setDoc(doc(firestore, 'supervisors', data.psn), newSupervisor);
+    await setDoc(doc(firestore, 'supervisors', data.psn.toString()), newSupervisor);
 }
 
 export async function createTicket(ticketData: Omit<Ticket, 'id' | 'attachments'>) {
@@ -220,8 +220,12 @@ export async function updateTicket(ticketId: string, data: Partial<Ticket>) {
     const firestore = getDb();
     if (Object.keys(data).length === 0) return;
 
+    // We must remove attachments from the data object before sending to Firestore,
+    // as it's a subcollection and not a field.
+    const { attachments, ...updateData } = data;
+
     const ticketRef = doc(firestore, 'tickets', ticketId);
-    await setDoc(ticketRef, data, { merge: true });
+    await setDoc(ticketRef, updateData, { merge: true });
 }
 
 export async function addTicketAttachments(ticketId: string, attachments: File[]) {
@@ -231,7 +235,7 @@ export async function addTicketAttachments(ticketId: string, attachments: File[]
     for (const file of attachments) {
         // NOTE: This does not actually upload the file, just its metadata.
         // File uploads require Firebase Storage, which is beyond this scope.
-        const attachmentId = `${ticketId}-att-${Date.now()}-${Math.random()}`;
+        const attachmentId = `${ticketId}-att-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const fileType = file.type.startsWith('image/') ? 'image' : 'document';
         const urlOrContent = `uploads/${ticketId}/${file.name}`; // Simulated path
         const newAttachment: TicketAttachment = {

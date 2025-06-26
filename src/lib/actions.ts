@@ -24,6 +24,8 @@ import {
   getProjectById as getProjectByIdQuery,
   getJobCodeById as getJobCodeByIdQuery,
   getEmployeeByPsn as getEmployeeByPsnQuery,
+  updateTicket as updateTicketQuery,
+  addTicketAttachments as addTicketAttachmentsQuery,
 } from '@/lib/queries';
 import type { User, Employee, Supervisor, AddEmployeeFormData, AddSupervisorFormData, Ticket, TicketAttachment, NewTicketFormData, TicketStatus } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -181,12 +183,10 @@ export async function createTicketAction(formData: NewTicketFormData, creator: U
 }
 
 export async function updateTicketAction(ticketId: string, data: Partial<Ticket>, attachments?: File[]) {
-    const { updateTicket, addTicketAttachments } = require('@/lib/queries');
-    
-    await updateTicket(ticketId, data);
+    await updateTicketQuery(ticketId, data);
     
     if (attachments && attachments.length > 0) {
-        await addTicketAttachments(ticketId, attachments);
+        await addTicketAttachmentsQuery(ticketId, attachments);
     }
 
     revalidatePath(`/tickets/${ticketId}`);
