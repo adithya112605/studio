@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -260,7 +261,7 @@ export default function HomePage() {
     <div className="text-foreground">
       <section className="h-screen w-full flex items-center justify-center sticky top-0">
         <Image
-          src="https://placehold.co/1920x1080.png"
+          src="https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg"
           alt="Modern office building background"
           data-ai-hint="modern office building"
           fill
@@ -343,7 +344,7 @@ export default function HomePage() {
                   </div>
                   <div className="rounded-lg overflow-hidden shadow-2xl aspect-video">
                     <Image
-                      src="https://placehold.co/600x400.png"
+                      src="https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg"
                       alt="Modern Office or Tech Interface"
                       width={600}
                       height={400}
@@ -385,3 +386,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

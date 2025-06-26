@@ -1,8 +1,8 @@
+
 // src/components/common/LTLogo.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useTheme } from 'next-themes';
 
 interface LTLogoProps {
@@ -17,40 +17,28 @@ const LTLogo = ({ className }: LTLogoProps) => {
     setMounted(true);
   }, []);
 
-  const lightThemeLogoSrc = "https://placehold.co/32x32/005BAC/FFFFFF.png?text=LT"; // L&T Blue background, White text
-  const darkThemeLogoSrc = "https://placehold.co/32x32/FFFFFF/005BAC.png?text=LT";   // White background, L&T Blue text
-
+  // For SSR or before theme is resolved, we can render a static version or nothing.
+  // A simple div with background might be best to avoid content layout shift.
   if (!mounted) {
-    // Fallback for SSR or before theme is resolved, matching the light theme visual
-    return (
-      <div className={className} style={{ width: '32px', height: '32px' }}>
-        <Image
-          src={lightThemeLogoSrc}
-          alt="L&T Helpdesk Logo"
-          width={32}
-          height={32}
-          priority
-          data-ai-hint="company logo"
-        />
-      </div>
-    );
+    return <div className={className} style={{ width: '32px', height: '32px', backgroundColor: '#005BAC' }} data-ai-hint="company logo placeholder"></div>;
   }
 
-  const logoSrc = resolvedTheme === 'dark' ? darkThemeLogoSrc : lightThemeLogoSrc;
+  const isDark = resolvedTheme === 'dark';
+  const bgColor = isDark ? '#FFFFFF' : '#005BAC';
+  const textColor = isDark ? '#005BAC' : '#FFFFFF';
 
   return (
-    <div className={className} style={{ width: '32px', height: '32px' }}>
-      <Image
-        src={logoSrc}
-        alt="L&T Helpdesk Logo"
-        width={32}
-        height={32}
-        priority 
-        key={resolvedTheme} // Add key to force re-render on theme change if needed
-        data-ai-hint="company logo"
-      />
+    <div className={className} style={{ width: '32px', height: '32px' }} data-ai-hint="company logo">
+      <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="15" fill={bgColor} />
+        <text x="50" y="55" dominantBaseline="middle" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="60" fontWeight="bold" fill={textColor}>
+            LT
+        </text>
+      </svg>
     </div>
   );
 };
 
 export default LTLogo;
+
+    
