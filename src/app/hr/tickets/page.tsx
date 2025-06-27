@@ -173,7 +173,7 @@ export default function SupervisorTicketsPage() {
             <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 space-y-6">
               <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                  <h1 className="font-headline text-2xl md:text-3xl font-bold">Manage Tickets ({currentSupervisorUser.title})</h1>
+                  <h1 className="font-headline text-2xl md:text-3xl font-normal tracking-wide">Manage Tickets ({currentSupervisorUser.title})</h1>
                   <div className="flex gap-2">
                     <Button variant="outline" asChild>
                         <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4"/> Back to Dashboard</Link>

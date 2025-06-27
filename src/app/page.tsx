@@ -70,7 +70,7 @@ const DesktopFeaturesLayout = () => {
     <section id="features" className="py-16 lg:py-24 w-full bg-card">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+          <h2 className="font-headline text-3xl md:text-4xl font-normal text-center mb-16 tracking-wide text-foreground">
             Key Features of L&amp;T Helpdesk
           </h2>
         </ScrollReveal>
@@ -79,7 +79,7 @@ const DesktopFeaturesLayout = () => {
             <ScrollReveal key={index} animationInClass="animate-fadeInUp" once={false} delayIn={100 * index}>
               <div className={cn("text-center p-8 rounded-xl shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col items-center h-full text-primary-foreground", featureColors[index % featureColors.length])}>
                 <div className="text-primary-foreground mb-6">{React.cloneElement(feature.icon, { className: 'w-16 h-16' })}</div>
-                <h3 className="font-headline text-xl font-semibold mb-3 text-primary-foreground">{feature.title}</h3>
+                <h3 className="font-headline text-xl font-normal mb-3 tracking-wide text-primary-foreground">{feature.title}</h3>
                 <p className="text-primary-foreground/80 text-sm">{feature.description}</p>
               </div>
             </ScrollReveal>
@@ -96,7 +96,7 @@ const DesktopStatsLayout = () => {
     <section className="py-16 lg:py-24 w-full">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
-          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+          <h2 className="font-headline text-3xl md:text-4xl font-normal text-center mb-16 tracking-wide text-foreground">
             System Performance at a Glance
           </h2>
         </ScrollReveal>
@@ -193,7 +193,7 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
   return (
     <div className="relative">
       <div className="py-12">
-        <h2 className="font-headline text-3xl font-bold text-center px-4 text-foreground">
+        <h2 className="font-headline text-3xl font-normal tracking-wide text-center px-4 text-foreground">
           {title}
         </h2>
       </div>
@@ -259,10 +259,10 @@ export default function HomePage() {
 
   return (
     <div className="text-foreground">
-      <section className="h-screen w-full flex items-center justify-center sticky top-0">
+      <section className="h-screen w-full flex items-center justify-center top-0">
         <div className="absolute inset-0 -z-10">
           <Image
-            src="https://storage.googleapis.com/project-spark-files/e334a173-9a74-42f5-9610-1845293a54b9"
+            src="https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg"
             alt="A team of people collaborating on a user interface project"
             data-ai-hint="teamwork collaboration illustration"
             fill
@@ -272,7 +272,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-black/60" />
         </div>
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative">
-          <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight text-white">
+          <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-normal mb-6 tracking-wide text-white">
             {user ? (
               <>Welcome, <span className="text-highlight">{user.name}!</span></>
             ) : (
@@ -327,7 +327,7 @@ export default function HomePage() {
               <div className="bg-background p-8 md:p-12 rounded-xl shadow-xl transition-all duration-300 ease-in-out hover:shadow-2xl hover:shadow-primary/20 dark:hover:shadow-primary/30 hover:-translate-y-1 overflow-hidden">
                 <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
                   <div>
-                    <h2 className="font-headline text-3xl md:text-4xl font-bold mb-6 text-foreground">
+                    <h2 className="font-headline text-3xl md:text-4xl font-normal mb-6 tracking-wide text-foreground">
                       Built for <span className="text-highlight">Efficiency and Scale</span>
                     </h2>
                     <p className="text-muted-foreground mb-4 leading-relaxed text-lg">
@@ -366,7 +366,7 @@ export default function HomePage() {
               <Handshake className="w-16 h-16 text-primary mx-auto mb-6"/>
             </ScrollReveal>
             <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
-              <h2 className="font-headline text-3xl md:text-5xl font-bold mb-6 text-foreground">
+              <h2 className="font-headline text-3xl md:text-5xl font-normal mb-6 tracking-wide text-foreground">
                 Ready to Experience <span className="text-highlight">Streamlined Support</span>?
               </h2>
             </ScrollReveal>
@@ -388,5 +388,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

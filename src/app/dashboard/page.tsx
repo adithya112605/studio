@@ -72,7 +72,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
     <div className="space-y-6">
       <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
         <div className="flex justify-between items-center">
-          <h1 className="font-headline text-3xl font-bold">My Dashboard</h1>
+          <h1 className="font-headline text-3xl font-normal tracking-wide">My Dashboard</h1>
         </div>
       </ScrollReveal>
       <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={100}>
@@ -94,7 +94,7 @@ const EmployeeDashboard = ({ user }: { user: Employee }) => {
 
       <ScrollReveal animationInClass="animate-fadeInUp" once={false} delayIn={200}>
         <div className="flex justify-between items-center mt-6">
-          <h2 className="font-headline text-2xl font-bold">My Tickets</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide">My Tickets</h2>
           <Button asChild>
             <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
           </Button>
@@ -222,7 +222,7 @@ const SupervisorDashboard = ({ user }: { user: Supervisor }) => {
     <div className="space-y-8">
       <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
         <div className="flex justify-between items-center">
-            <h1 className="font-headline text-3xl font-bold">{user.title} Dashboard</h1>
+            <h1 className="font-headline text-3xl font-normal tracking-wide">{user.title} Dashboard</h1>
              <Button asChild>
                 <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
             </Button>

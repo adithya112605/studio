@@ -99,7 +99,7 @@ const SettingsPage = () => {
     if (isLoading) {
         return (
             <div className="space-y-6">
-                 <h2 className="text-2xl font-semibold text-foreground">Public Profile</h2>
+                 <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Public Profile</h2>
                  <div className="p-6 border rounded-lg bg-card flex flex-col items-center justify-center">
                     <LoadingSpinner size="sm"/>
                     <p className="mt-2 text-muted-foreground">Loading profile details...</p>
@@ -110,7 +110,7 @@ const SettingsPage = () => {
 
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Public Profile</h2>
+        <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Public Profile</h2>
         <p className="text-muted-foreground">This information will be displayed publicly so be careful what you share.</p>
         <div className="space-y-4 p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,7 +154,7 @@ const SettingsPage = () => {
     if (currentUser.role === 'Employee') {
         return (
             <div className="space-y-6">
-                <h2 className="text-2xl font-semibold text-foreground">Password</h2>
+                <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Password</h2>
                 <p className="text-muted-foreground">For security, password changes must be approved by your supervisor.</p>
                 <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50 space-y-4">
                     <div className="flex items-start space-x-3">
@@ -185,7 +185,7 @@ const SettingsPage = () => {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-foreground">Password</h2>
+            <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Password</h2>
             <p className="text-muted-foreground">Update your password. Choose a strong and unique password.</p>
             <div className="space-y-4 p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
                 <div><Label htmlFor="current-password">Current Password</Label><Input id="current-password" type="password" placeholder="••••••••" onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} onClick={checkCapsLock} className="mt-1"/></div>
@@ -220,7 +220,7 @@ const SettingsPage = () => {
 
   const AppearanceSection = () => (
     <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Appearance</h2>
+        <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Appearance</h2>
         <p className="text-muted-foreground">Customize the look and feel of the application to your preference.</p>
         <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <AppearanceSettingItem title="Theme" description="Select your preferred light or dark mode."> <ThemeToggle /> </AppearanceSettingItem>
@@ -244,7 +244,7 @@ const SettingsPage = () => {
 
   const NotificationsSection = () => (
     <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Notifications</h2>
+        <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Notifications</h2>
         <p className="text-muted-foreground">Manage how you receive notifications from the helpdesk system.</p>
         <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <NotificationSettingItem title="Email Notifications" description="Receive updates via email for ticket activity." id="email-notif" checked={emailNotif} onCheckedChange={setEmailNotif} />
@@ -277,7 +277,7 @@ const SettingsPage = () => {
   
   const TicketSystemSection = () => (
     <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Ticket System Settings</h2>
+        <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Ticket System Settings</h2>
         <p className="text-muted-foreground">Configure ticket-related system parameters (Admin Access).</p>
         <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <SupervisorSettingItem title="Ticket ID Format" description="System-defined ticket identifier format."> <Input value="TKXXXXXXX (Alphanumeric)" readOnly className="w-[200px]"/> </SupervisorSettingItem>
@@ -289,7 +289,7 @@ const SettingsPage = () => {
 
   const AdministrativeSection = () => (
      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Administrative Settings</h2>
+        <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Administrative Settings</h2>
         <p className="text-muted-foreground">Manage core system security and operations (IC Head Access).</p>
         <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <SupervisorSettingItem title="System Email Address" description="Email for automated notifications."> <Input type="email" placeholder="notifications@lnthelpdesk.com" className="w-[240px]" onChange={(e) => handleGenericSave("Administrative", `System Email: ${e.target.value}`)} /> </SupervisorSettingItem>
@@ -302,7 +302,7 @@ const SettingsPage = () => {
 
   const FeedbackSection = () => (
     <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Feedback & Satisfaction</h2>
+        <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Feedback & Satisfaction</h2>
         <p className="text-muted-foreground">Manage feedback collection on ticket resolution (Admin Access).</p>
         <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
             <SupervisorSettingItem title="Enable Ticket Rating" description="Allow users to rate resolved tickets.">  <Switch checked={ticketRating} onCheckedChange={(checked) => {setTicketRating(checked); handleGenericSave("Feedback", `Ticket Rating ${checked ? 'Enabled' : 'Disabled'}`);}} /> </SupervisorSettingItem>
@@ -314,7 +314,7 @@ const SettingsPage = () => {
   
   const AccessibilitySection = () => (
     <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Accessibility</h2>
+        <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground">Accessibility</h2>
         <p className="text-muted-foreground">Adjust settings to improve your experience with the application.</p>
         <div className="p-6 border rounded-lg bg-card transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50">
              <AppearanceSettingItem title="High Contrast Mode" description="Increase text and UI element contrast."> <Switch onCheckedChange={(val) => handleGenericSave("Accessibility", `High Contrast ${val ? 'On' : 'Off'}`)} /> </AppearanceSettingItem>

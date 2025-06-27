@@ -28,7 +28,7 @@ export default function TermsOfServicePage() {
             you agree to be bound by these Terms.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">1. Use of the Service</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">1. Use of the Service</h2>
           <p>
             The Service is provided exclusively for Larsen & Toubro employees and authorized personnel
             for the purpose of raising, managing, and resolving work-related queries and issues.
@@ -36,7 +36,7 @@ export default function TermsOfServicePage() {
             applicable L&T policies and local laws.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">2. Account Responsibility</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">2. Account Responsibility</h2>
           <p>
             You are responsible for maintaining the confidentiality of your account credentials
             (PSN and password) and for all activities that occur under your account. You must
@@ -45,7 +45,7 @@ export default function TermsOfServicePage() {
             arising from your failure to comply with this section.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">3. Prohibited Conduct</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">3. Prohibited Conduct</h2>
           <p>
             In connection with your use of the Service, you agree not to:
           </p>
@@ -59,14 +59,14 @@ export default function TermsOfServicePage() {
             <li>Use the Service for any personal, non-work-related purposes.</li>
           </ul>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">4. Intellectual Property</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">4. Intellectual Property</h2>
           <p>
             The Service and its original content, features, and functionality are and will remain
             the exclusive property of Larsen & Toubro. The Service is protected by copyright,
             trademark, and other laws.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">5. Disclaimers and Limitation of Liability</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">5. Disclaimers and Limitation of Liability</h2>
           <p>
             The Service is provided on an "AS IS" and "AS AVAILABLE" basis. Larsen & Toubro makes
             no warranties, expressed or implied, and hereby disclaims and negates all other
@@ -82,18 +82,18 @@ export default function TermsOfServicePage() {
             or in writing of the possibility of such damage.
           </p>
           
-          <h2 className="text-2xl font-semibold text-foreground pt-4">6. Service Availability and Modifications</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">6. Service Availability and Modifications</h2>
           <p>
              Larsen & Toubro reserves the right to modify, suspend, or discontinue the Service (or any part or content thereof) at any time with or without notice. We will not be liable to you or to any third party for any modification, suspension, or discontinuance of the Service.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">7. Governing Law</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">7. Governing Law</h2>
           <p>
             These Terms shall be governed and construed in accordance with the laws of India,
             without regard to its conflict of law provisions and L&T internal policies.
           </p>
           
-          <h2 className="text-2xl font-semibold text-foreground pt-4">8. Changes to Terms</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">8. Changes to Terms</h2>
           <p>
             Larsen & Toubro reserves the right, at our sole discretion, to modify or replace
             these Terms at any time. If a revision is material, we will make reasonable efforts
@@ -102,7 +102,7 @@ export default function TermsOfServicePage() {
             Service after those revisions become effective, you agree to be bound by the revised terms.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">9. Contact Information</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">9. Contact Information</h2>
           <p>
             If you have any questions about these Terms, please contact the L&T HR department or your designated IT support contact.
           </p>

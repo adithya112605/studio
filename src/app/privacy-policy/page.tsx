@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
             internal helpdesk services (the "Service").
           </p>
           
-          <h2 className="text-2xl font-semibold text-foreground pt-4">1. Information We Collect</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">1. Information We Collect</h2>
           <p>
             We collect information you provide directly to us when you use the Service. This may include:
           </p>
@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
             <li><strong>Usage Information:</strong> We may log information about your access and use of the Service, such as IP address, browser type, and pages visited (for system improvement and security).</li>
           </ul>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">2. How We Use Your Information</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">2. How We Use Your Information</h2>
           <p>
             We use the information we collect to:
           </p>
@@ -52,7 +52,7 @@ export default function PrivacyPolicyPage() {
             <li>Comply with internal policies and legal obligations.</li>
           </ul>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">3. How We Share Your Information</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">3. How We Share Your Information</h2>
           <p>
             Your information is primarily used internally within Larsen & Toubro for the purposes of providing the Helpdesk Service. We may share information:
           </p>
@@ -63,21 +63,21 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p>We do not sell your personal information to third parties.</p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">4. Data Security</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">4. Data Security</h2>
           <p>
             We implement appropriate technical and organizational security measures designed to protect
             your personal information from unauthorized access, use, alteration, or disclosure.
             However, no internet-based site can be 100% secure, so we cannot guarantee absolute security.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">5. Data Retention</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">5. Data Retention</h2>
           <p>
             We retain your personal information for as long as necessary to fulfill the purposes
             outlined in this Privacy Policy, unless a longer retention period is required or permitted by law
             or L&T internal policies.
           </p>
           
-          <h2 className="text-2xl font-semibold text-foreground pt-4">6. Your Rights and Choices</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">6. Your Rights and Choices</h2>
           <p>
             You may have certain rights regarding your personal information, subject to L&T's internal policies and applicable laws. You can typically:
           </p>
@@ -87,14 +87,14 @@ export default function PrivacyPolicyPage() {
               <li>Manage your notification preferences within the Service settings.</li>
           </ul>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">7. Changes to This Privacy Policy</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">7. Changes to This Privacy Policy</h2>
           <p>
             We may update this Privacy Policy from time to time. We will notify you of any
             material changes by posting the new Privacy Policy on this page and/or through other
             communication channels within the Service.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">8. Contact Us</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">8. Contact Us</h2>
           <p>
             If you have any questions or concerns about this Privacy Policy or our data practices,
             please contact the L&T HR department or your designated IT support contact.

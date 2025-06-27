@@ -56,7 +56,7 @@ export default function EmployeeTicketsPage() {
             <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 space-y-6">
               <ScrollReveal animationInClass="animate-fadeInUp" once={false}>
                 <div className="flex justify-between items-center">
-                  <h1 className="font-headline text-3xl font-bold">All My Tickets</h1>
+                  <h1 className="font-headline text-3xl font-normal tracking-wide">All My Tickets</h1>
                   <Button asChild>
                       <Link href="/tickets/new"><PlusCircle className="mr-2 h-4 w-4" /> Raise New Ticket</Link>
                   </Button>

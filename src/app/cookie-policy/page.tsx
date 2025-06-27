@@ -26,13 +26,13 @@ export default function CookiePolicyPage() {
         </CardHeader>
         <CardContent className="space-y-6 text-muted-foreground prose prose-invert max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary hover:prose-a:text-primary/80">
           <p className="text-lg">
-            This Cookie Policy explains how Larsen & Toubro Helpdesk ("we", "us", or "our")
+            This Cookie Policy explains how Larsen & Toubro Helpdesk ("we", "us", "our")
             uses cookies and similar technologies to recognize you when you visit our website.
             It explains what these technologies are and why we use them, as well as your rights
             to control our use of them.
           </p>
           
-          <h2 className="text-2xl font-semibold text-foreground pt-4">1. What are cookies?</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">1. What are cookies?</h2>
           <p>
             Cookies are small data files that are placed on your computer or mobile device when
             you visit a website. Cookies are widely used by website owners in order to make
@@ -47,7 +47,7 @@ export default function CookiePolicyPage() {
             interactive content, and analytics).
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">2. Why do we use cookies?</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">2. Why do we use cookies?</h2>
           <p>
             We use first-party cookies for several reasons. Some cookies are required for
             technical reasons in order for our Website to operate, and we refer to these as
@@ -61,7 +61,7 @@ export default function CookiePolicyPage() {
             We do not currently use third-party cookies for advertising or extensive analytics on this internal helpdesk platform. Our focus is on operational functionality.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">3. Types of cookies we use</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">3. Types of cookies we use</h2>
           <ul>
             <li>
               <strong>Strictly Necessary Cookies:</strong> These cookies are essential to provide you with services available through our Website and to enable you to use some of its features. For example, they help to authenticate users and prevent fraudulent use of user accounts. Without these cookies, the services that you have asked for cannot be provided, and we only use these cookies to provide you with those services.
@@ -71,7 +71,7 @@ export default function CookiePolicyPage() {
             </li>
           </ul>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">4. Your choices regarding cookies</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">4. Your choices regarding cookies</h2>
           <p>
             You have the right to decide whether to accept or reject cookies.
           </p>
@@ -87,7 +87,7 @@ export default function CookiePolicyPage() {
             Please note that if you choose to block or delete cookies, some parts of our Service may not function properly.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">5. Changes to This Cookie Policy</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">5. Changes to This Cookie Policy</h2>
           <p>
             We may update this Cookie Policy from time to time in order to reflect, for example,
             changes to the cookies we use or for other operational, legal, or regulatory reasons.
@@ -95,7 +95,7 @@ export default function CookiePolicyPage() {
             of cookies and related technologies.
           </p>
 
-          <h2 className="text-2xl font-semibold text-foreground pt-4">6. Contact Us</h2>
+          <h2 className="font-headline text-2xl font-normal tracking-wide text-foreground pt-4">6. Contact Us</h2>
           <p>
             If you have any questions or concerns about our use of cookies,
             please contact the L&T HR department or your designated IT support contact.
