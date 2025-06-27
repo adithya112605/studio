@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -261,12 +260,12 @@ export default function HomePage() {
     <div className="text-foreground">
       <section className="h-screen w-full flex items-center justify-center sticky top-0">
         <Image
-          src="https://images.pexels.com/photos/380769/pexels-photo-380769.jpeg"
-          alt="Modern office building background"
-          data-ai-hint="modern office building"
+          src="https://storage.googleapis.com/project-spark-files/e334a173-9a74-42f5-9610-1845293a54b9"
+          alt="A team of people collaborating on a user interface project"
+          data-ai-hint="teamwork collaboration illustration"
           fill
           priority
-          className="object-cover -z-10"
+          className="object-contain -z-10 animate-zoom-in"
         />
         <div className="absolute inset-0 bg-black/60 -z-10" />
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative">
@@ -288,15 +287,15 @@ export default function HomePage() {
           )}
           <div className="space-y-4 sm:space-y-0 sm:space-x-4">
             {user ? (
-              <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto text-white">
+              <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 text-white">
                 <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-2 h-5 w-5"/></Link>
               </Button>
             ) : (
               <>
-                <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto text-white">
+                <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 text-white">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button asChild variant="shiny" size="lg" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 w-full sm:w-auto text-white">
+                <Button asChild variant="shiny" size="lg" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 text-white">
                   <Link href="/auth/signup">Get Started</Link>
                 </Button>
               </>

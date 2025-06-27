@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -111,7 +110,11 @@ export default {
         fadeOutDown: {
           '0%': { opacity: '1', transform: 'translateY(0px)' },
           '100%': { opacity: '0', transform: 'translateY(20px)' },
-        }
+        },
+        'zoom-in': {
+          '0%': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.1)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -119,6 +122,7 @@ export default {
         "caret-blink": "caret-blink 1.25s ease-out infinite",
         fadeInUp: 'fadeInUp 0.7s ease-out forwards',
         fadeOutDown: 'fadeOutDown 0.7s ease-out forwards',
+        'zoom-in': 'zoom-in 8s ease-in-out forwards',
       },
     },
   },
