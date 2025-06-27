@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -18,21 +19,21 @@ export default {
     extend: {
       fontFamily: {
         body: ['"Nunito Sans"', 'sans-serif'],
-        headline: ['"Roboto Slab"', 'serif'],
+        headline: ['"Alfa Slab One"', 'serif'],
         code: ['monospace'],
       },
       fontSize: {
         xs: '0.8rem',
-        sm: '0.925rem',
-        base: '1.05rem',
-        lg: '1.175rem',
-        xl: '1.3rem',
-        '2xl': '1.6rem',
-        '3xl': '2rem',
-        '4xl': '2.5rem',
-        '5xl': '3.25rem',
-        '6xl': '4rem',
-        '7xl': '5rem',
+        sm: '0.95rem',
+        base: '1.1rem',
+        lg: '1.25rem',
+        xl: '1.4rem',
+        '2xl': '1.7rem',
+        '3xl': '2.1rem',
+        '4xl': '2.6rem',
+        '5xl': '3.4rem',
+        '6xl': '4.2rem',
+        '7xl': '5.2rem',
       },
       colors: {
         background: 'hsl(var(--background))',

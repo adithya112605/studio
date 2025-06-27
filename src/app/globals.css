@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -96,6 +97,16 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom Selection Highlight Styles */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.7);
+    color: hsl(var(--primary-foreground));
+  }
+  .dark ::selection {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
   }
   
   /* === SHINY BUTTON STYLES (REFINED) === */
