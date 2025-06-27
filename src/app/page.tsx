@@ -209,7 +209,7 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
                         <div className="card-floating-icon is-stat">
                           {React.cloneElement(item.icon, { className: 'w-32 h-32' })}
                         </div>
-                        <p className="card-stat-value">{item.value}</p>
+                        <p className={cn("card-stat-value", "font-headline font-bold")}>{item.value}</p>
                         <p className="card-stat-label">{item.label}</p>
                     </div>
                   ) : (
@@ -218,7 +218,7 @@ const CardScroller = ({ items, title }: { items: any[], title: string }) => {
                         {React.cloneElement(item.icon, { className: 'w-40 h-40' })}
                       </div>
                       <div className="relative z-10">
-                        <h2 className="card-title">{item.title}</h2>
+                        <h2 className={cn("card-title", "font-headline font-normal tracking-wide")}>{item.title}</h2>
                         <p className="card-description">{item.description}</p>
                       </div>
                     </div>
