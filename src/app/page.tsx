@@ -260,15 +260,17 @@ export default function HomePage() {
   return (
     <div className="text-foreground">
       <section className="h-screen w-full flex items-center justify-center sticky top-0">
-        <Image
-          src="https://storage.googleapis.com/project-spark-files/e334a173-9a74-42f5-9610-1845293a54b9"
-          alt="A team of people collaborating on a user interface project"
-          data-ai-hint="teamwork collaboration illustration"
-          fill
-          priority
-          className="object-cover -z-10 animate-zoom-in"
-        />
-        <div className="absolute inset-0 bg-black/60 -z-10" />
+        <div className="absolute inset-0 -z-10">
+          <Image
+            src="https://storage.googleapis.com/project-spark-files/e334a173-9a74-42f5-9610-1845293a54b9"
+            alt="A team of people collaborating on a user interface project"
+            data-ai-hint="teamwork collaboration illustration"
+            fill
+            priority
+            className="object-cover animate-zoom-in"
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative">
           <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight text-white">
             {user ? (
@@ -386,3 +388,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
