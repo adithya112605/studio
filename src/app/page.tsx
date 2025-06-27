@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -265,7 +266,7 @@ export default function HomePage() {
           data-ai-hint="teamwork collaboration illustration"
           fill
           priority
-          className="object-contain -z-10 animate-zoom-in"
+          className="object-cover -z-10 animate-zoom-in"
         />
         <div className="absolute inset-0 bg-black/60 -z-10" />
         <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 relative">
