@@ -41,7 +41,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
-    "firebase": "^10.12.3",
+    "firebase": "10.12.3",
     "framer-motion": "^11.2.12",
     "genkit": "^1.8.0",
     "lucide-react": "^0.475.0",
