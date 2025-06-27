@@ -294,7 +294,7 @@ const Navbar = () => {
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button asChild variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 h-9 text-sm font-semibold rounded-full">
+                        <Button asChild variant="shiny" className="px-4 h-9 text-sm font-semibold rounded-full">
                             <Link href="/auth/signup">GET STARTED</Link>
                         </Button>
                     </TooltipTrigger>
