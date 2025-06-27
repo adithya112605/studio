@@ -280,19 +280,21 @@ export default function HomePage() {
             )}
           </h1>
           {user ? (
-            <p className="text-lg md:text-xl lg:text-2xl text-slate-300 max-w-3xl mx-auto mb-10">
+            <p className="text-lg md:text-xl lg:text-2xl text-slate-300 max-w-3xl mx-auto">
               Your personalized helpdesk dashboard awaits. Manage your tickets and access support efficiently.
             </p>
           ) : (
-            <p className="text-lg md:text-xl lg:text-2xl text-slate-300 max-w-3xl mx-auto mb-10">
+            <p className="text-lg md:text-xl lg:text-2xl text-slate-300 max-w-3xl mx-auto">
               <span className="text-highlight">Efficient</span>. <span className="text-highlight">Reliable</span>. Internal Support, <span className="text-highlight">Reimagined</span> for Larsen &amp; Toubro Employees.
             </p>
           )}
-          <div className="space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="mx-auto mt-10 grid max-w-xs grid-cols-1 gap-4 sm:max-w-md sm:grid-cols-2">
             {user ? (
-              <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 text-white">
-                <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-2 h-5 w-5"/></Link>
-              </Button>
+              <div className="sm:col-span-2">
+                <Button asChild size="lg" variant="shiny" className="w-full px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 text-white">
+                  <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-2 h-5 w-5"/></Link>
+                </Button>
+              </div>
             ) : (
               <>
                 <Button asChild size="lg" variant="shiny" className="px-10 py-6 rounded-full text-lg font-semibold shadow-lg transition-transform hover:scale-105 text-white">
