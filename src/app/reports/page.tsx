@@ -14,7 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import React, { useState, useMemo, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer, PieChart as RechartsPieChart, Pie } from 'recharts'; 
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend as RechartsLegend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts'; 
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 import ScrollReveal from "@/components/common/ScrollReveal";
@@ -142,11 +142,14 @@ export default function ReportsPage() {
     if (currentUser.functionalRole === 'IC Head') {
         tickets = allTickets;
     } else if (currentUser.functionalRole === 'DH') {
-        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn);
+        const managedEmployeePsns = new Set(allEmployees.filter(e => e.dhPSN === currentUser.psn).map(e => e.psn));
+        tickets = allTickets.filter(ticket => managedEmployeePsns.has(ticket.psn));
     } else if (currentUser.functionalRole === 'NS') {
-        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn);
+        const managedEmployeePsns = new Set(allEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn));
+        tickets = allTickets.filter(ticket => managedEmployeePsns.has(ticket.psn));
     } else if (currentUser.functionalRole === 'IS') {
-         tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn);
+        const managedEmployeePsns = new Set(allEmployees.filter(e => e.isPSN === currentUser.psn).map(e => e.psn));
+        tickets = allTickets.filter(ticket => managedEmployeePsns.has(ticket.psn));
     }
     
     return tickets.filter(ticket => {
@@ -213,7 +216,11 @@ export default function ReportsPage() {
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RechartsPieChart>
                                             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                                            <Pie data={ticketsByStatusData} dataKey="tickets" nameKey="name" labelLine={false} label={({ name, percent }) => `${ticketsByStatusChartConfig[name as keyof typeof ticketsByStatusChartConfig]?.label || name}: ${(percent * 100).toFixed(0)}%`}/>
+                                            <Pie data={ticketsByStatusData} dataKey="tickets" nameKey="name" labelLine={false} label={({ name, percent }) => `${ticketsByStatusChartConfig[name as keyof typeof ticketsByStatusChartConfig]?.label || name}: ${(percent * 100).toFixed(0)}%`}>
+                                                {ticketsByStatusData.map((entry) => (
+                                                  <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                                ))}
+                                            </Pie>
                                             <ChartLegend content={<ChartLegendContent nameKey="name" formatter={(value) => ticketsByStatusChartConfig[value as keyof typeof ticketsByStatusChartConfig]?.label || value}/>} />
                                         </RechartsPieChart>
                                     </ResponsiveContainer>
@@ -237,10 +244,10 @@ export default function ReportsPage() {
                                             <XAxis type="number" />
                                             <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} strokeWidth={0} width={80} 
                                                    tickFormatter={(value) => ticketsByPriorityChartConfig[value as keyof typeof ticketsByPriorityChartConfig]?.label || value } />
-                                            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" nameKey="name" formatter={(value, name) => [(value), ticketsByPriorityChartConfig[name as keyof typeof ticketsByPriorityChartConfig]?.label || name]} />} />
-                                            <Bar dataKey="tickets" radius={5} background={{ fillOpacity: 0.1, radius: 5 }}>
-                                                {ticketsByPriorityData.map((entry, index) => (
-                                                    <div key={`cell-${index}`} style={{backgroundColor: entry.fill}} />
+                                            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" nameKey="name" formatter={(value, name) => [(value as number), ticketsByPriorityChartConfig[name as keyof typeof ticketsByPriorityChartConfig]?.label || name]} />} />
+                                            <Bar dataKey="tickets" radius={5}>
+                                                {ticketsByPriorityData.map((entry) => (
+                                                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
                                             </Bar>
                                         </RechartsBarChart>

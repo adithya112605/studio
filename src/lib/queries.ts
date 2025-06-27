@@ -1,7 +1,7 @@
 
 import { getFirestoreInstance } from './firebase';
 import type { User, Employee, Supervisor, Ticket, Project, JobCode, AddEmployeeFormData, AddSupervisorFormData, TicketAttachment } from '@/types';
-import { collection, doc, getDoc, getDocs, setDoc, query, where, addDoc, writeBatch } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc, query, where, addDoc, writeBatch, updateDoc } from "firebase/firestore";
 import { format } from 'date-fns';
 
 function getDb() {
@@ -210,9 +210,8 @@ export async function addSupervisor(data: AddSupervisorFormData) {
 
 export async function createTicket(ticketData: Omit<Ticket, 'id' | 'attachments'>) {
     const firestore = getDb();
-    const ticketsCollection = collection(firestore, 'tickets');
-    const docRef = await addDoc(ticketsCollection, ticketData);
-    await setDoc(docRef, { id: docRef.id }, { merge: true });
+    const docRef = await addDoc(collection(firestore, 'tickets'), ticketData);
+    await updateDoc(docRef, { id: docRef.id });
     return docRef.id;
 }
 
@@ -225,7 +224,7 @@ export async function updateTicket(ticketId: string, data: Partial<Ticket>) {
     const { attachments, ...updateData } = data;
 
     const ticketRef = doc(firestore, 'tickets', ticketId);
-    await setDoc(ticketRef, updateData, { merge: true });
+    await updateDoc(ticketRef, updateData);
 }
 
 export async function addTicketAttachments(ticketId: string, attachments: File[]) {

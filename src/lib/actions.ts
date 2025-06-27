@@ -2,11 +2,6 @@
 'use server';
 
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
-import { getAuthInstance } from '@/lib/firebase';
-import {
   getUserByPsn as getUserByPsnQuery,
   getAllEmployees as getAllEmployeesQuery,
   getAllSupervisors as getAllSupervisorsQuery,

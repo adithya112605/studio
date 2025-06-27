@@ -20,7 +20,7 @@ const getStatusBadgeVariant = (status: Ticket['status']): "default" | "secondary
     case 'In Progress': return 'default'; 
     case 'Pending': return 'outline'; 
     case 'Resolved': case 'Closed': return 'secondary';
-    case 'Escalated': return 'default'; 
+    case 'Escalated to NS': case 'Escalated to DH': case 'Escalated to IC Head': return 'default'; 
     default: return 'outline';
   }
 };
@@ -30,7 +30,7 @@ export default function EmployeeTicketsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <ProtectedPage allowedRoles={['Employee']}>
+    <ProtectedPage allowedRoles={['Employee', 'IS', 'NS', 'DH', 'IC Head']}>
       {(currentUser: User) => {
           const currentEmployeeUser = currentUser as Employee;
           

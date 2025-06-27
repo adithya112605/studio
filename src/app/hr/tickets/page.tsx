@@ -53,11 +53,14 @@ const SupervisorTicketsPageContent: React.FC<SupervisorTicketsPageContentProps> 
     if (currentUser.functionalRole === 'IC Head') {
         tickets = allTickets;
     } else if (currentUser.functionalRole === 'DH') {
-        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.dhPSN === currentUser.psn);
+        const managedEmployeePsns = new Set(allEmployees.filter(e => e.dhPSN === currentUser.psn).map(e => e.psn));
+        tickets = allTickets.filter(ticket => managedEmployeePsns.has(ticket.psn));
     } else if (currentUser.functionalRole === 'NS') {
-        tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.nsPSN === currentUser.psn);
+        const managedEmployeePsns = new Set(allEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn));
+        tickets = allTickets.filter(ticket => managedEmployeePsns.has(ticket.psn));
     } else if (currentUser.functionalRole === 'IS') {
-         tickets = allTickets.filter(ticket => allEmployees.find(e => e.psn === ticket.psn)?.isPSN === currentUser.psn);
+        const managedEmployeePsns = new Set(allEmployees.filter(e => e.isPSN === currentUser.psn).map(e => e.psn));
+        tickets = allTickets.filter(ticket => managedEmployeePsns.has(ticket.psn));
     }
 
     return tickets.filter(ticket => {
