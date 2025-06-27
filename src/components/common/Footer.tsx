@@ -74,7 +74,7 @@ const Footer = () => {
         {/* Link Columns Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           <div className="space-y-4">
-            <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">Portal</h5>
+            <h5 className="font-headline text-lg font-normal tracking-wide text-primary text-center md:text-left mb-3">Portal</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
               {portalLinks.map(link => (
                 <li key={link.label}>
@@ -87,7 +87,7 @@ const Footer = () => {
           </div>
 
            <div className="space-y-4">
-            <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">L&T Official</h5>
+            <h5 className="font-headline text-lg font-normal tracking-wide text-primary text-center md:text-left mb-3">L&T Official</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
               {ltOfficialLinks.map(link => (
                 <li key={link.label}>
@@ -101,7 +101,7 @@ const Footer = () => {
           </div>
 
           <div className="space-y-4">
-            <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">Resources</h5>
+            <h5 className="font-headline text-lg font-normal tracking-wide text-primary text-center md:text-left mb-3">Resources</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
               {resourcesLinks.map(link => (
                 <li key={link.label}>
@@ -115,7 +115,7 @@ const Footer = () => {
           </div>
 
           <div className="space-y-4">
-            <h5 className="font-headline text-lg font-semibold text-primary text-center md:text-left mb-3">Support</h5>
+            <h5 className="font-headline text-lg font-normal tracking-wide text-primary text-center md:text-left mb-3">Support</h5>
             <ul className="space-y-2 text-sm text-center md:text-left">
               {supportContacts.map(contact => (
                 <li key={contact.text}>
