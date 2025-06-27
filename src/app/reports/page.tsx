@@ -2,7 +2,7 @@
 "use client"
 
 import ProtectedPage from "@/components/common/ProtectedPage";
-import type { Supervisor, User, Ticket, Employee } from "@/types";
+import type { Supervisor, User, Ticket, Employee, Project } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Filter, PlusCircle, User as UserIcon, Users, Paperclip, CalendarDays, BarChartHorizontal, MessageSquare, ArrowUpNarrowWide, Star, Database, CheckCircle, Tag, UsersRound, Briefcase, TrendingUp, AlertCircle, PieChart, XCircle } from "lucide-react";
@@ -19,7 +19,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLe
 import type { ChartConfig } from "@/components/ui/chart";
 import ScrollReveal from "@/components/common/ScrollReveal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { getAllTicketsAction, getAllEmployeesAction } from "@/lib/actions";
+import { getAllTicketsAction, getAllEmployeesAction, getAllSupervisorsAction, getAllProjectsAction } from "@/lib/actions";
 
 const filterOptions = [
   { label: "Agent (Supervisor)", value: "agent", icon: <UserIcon className="mr-2 h-4 w-4" /> },
@@ -69,18 +69,24 @@ export default function ReportsPage() {
   const [activeFilters, setActiveFilters] = useState(initialFilterState);
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [allSupervisors, setAllSupervisors] = useState<Supervisor[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [tickets, employees] = await Promise.all([
+            const [tickets, employees, supervisors, projects] = await Promise.all([
                 getAllTicketsAction(),
-                getAllEmployeesAction()
+                getAllEmployeesAction(),
+                getAllSupervisorsAction(),
+                getAllProjectsAction(),
             ]);
             setAllTickets(tickets);
             setAllEmployees(employees);
+            setAllSupervisors(supervisors);
+            setAllProjects(projects);
         } catch (e) {
             toast({ title: "Error", description: "Could not load report data.", variant: "destructive" });
         } finally {
@@ -100,8 +106,8 @@ export default function ReportsPage() {
 
   const handleApplyFilters = () => {
     toast({
-      title: "Filters Applied (Mock)",
-      description: "Report data preview and charts would be refreshed based on the selected filters. Actual filtering logic for charts is simplified for this demo.",
+      title: "Filters Applied",
+      description: "Report data preview and charts have been refreshed based on the selected filters.",
     });
   };
 
@@ -114,31 +120,85 @@ export default function ReportsPage() {
   };
 
   const handleDownloadReport = (currentUser: Supervisor, filtered: boolean) => {
-     let reportScope = "their resolved/assigned tickets";
-     if (currentUser.functionalRole === 'DH') reportScope = "tickets for their assigned cities/department";
-     if (currentUser.functionalRole === 'IC Head') reportScope = "all tickets across all cities";
+    const getScopedTickets = () => {
+        if (currentUser.functionalRole === 'IC Head') return allTickets;
+        
+        let managedEmployeePsns: Set<number>;
+        if (currentUser.functionalRole === 'DH') {
+            managedEmployeePsns = new Set(allEmployees.filter(e => e.dhPSN === currentUser.psn).map(e => e.psn));
+        } else if (currentUser.functionalRole === 'NS') {
+            managedEmployeePsns = new Set(allEmployees.filter(e => e.nsPSN === currentUser.psn).map(e => e.psn));
+        } else { // IS
+            managedEmployeePsns = new Set(allEmployees.filter(e => e.isPSN === currentUser.psn).map(e => e.psn));
+        }
+        return allTickets.filter(ticket => managedEmployeePsns.has(ticket.psn));
+    };
 
-     let filterDescription = "";
-     if (filtered) {
-         const applied = Object.entries(activeFilters)
-            .filter(([key, value]) => value !== 'all' && (key !== 'creationDate' || value !== initialFilterState.creationDate) && value !== '')
-            .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${key === 'creationDate' ? new Date(value as Date).toLocaleDateString() : value}`)
-            .join(', ');
-        filterDescription = applied ? ` (Filters: ${applied})` : " (No active filters applied)";
-     }
+    const ticketsForReport = filtered ? getFilteredTicketsForCharts(currentUser) : getScopedTickets();
+    
+    if (ticketsForReport.length === 0) {
+        toast({ title: "No Data", description: "There is no data to export for the current selection." });
+        return;
+    }
 
+    const headers = [
+        "Ticket ID", "Employee PSN", "Employee Name", "Query", "Priority", "Status", 
+        "Date Raised", "Date of Last Response", "Project Name", "Project City", 
+        "Assigned Supervisor PSN", "Assigned Supervisor Name", "Actions Log"
+    ];
+
+    const csvRows = ticketsForReport.map(ticket => {
+        const project = allProjects.find(p => p.id === ticket.project);
+        const assignee = allSupervisors.find(s => s.psn === ticket.currentAssigneePSN);
+
+        const escapeCsvField = (field: any): string => {
+            const str = String(field ?? '');
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        return [
+            escapeCsvField(ticket.id),
+            escapeCsvField(ticket.psn),
+            escapeCsvField(ticket.employeeName),
+            escapeCsvField(ticket.query),
+            escapeCsvField(ticket.priority),
+            escapeCsvField(ticket.status),
+            escapeCsvField(ticket.dateOfQuery ? new Date(ticket.dateOfQuery).toLocaleString() : 'N/A'),
+            escapeCsvField(ticket.dateOfResponse ? new Date(ticket.dateOfResponse).toLocaleString() : 'N/A'),
+            escapeCsvField(project?.name),
+            escapeCsvField(project?.city),
+            escapeCsvField(assignee?.psn),
+            escapeCsvField(assignee?.name),
+            escapeCsvField(ticket.actionPerformed),
+        ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
+
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    const fileName = filtered ? `LNT-Report-Filtered-${new Date().toISOString().split('T')[0]}.csv` : `LNT-Report-Full-${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute("download", fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
     toast({
-      title: "Download Report Initiated (Mock)",
-      description: `Report download as .xlsx for ${reportScope}${filterDescription} would start. The Excel file would notionally include relevant data and charts. Actual file generation is a backend feature.`,
-      duration: 5000,
+        title: "Report Download Started",
+        description: `Your report '${fileName}' is being downloaded.`,
     });
   };
   
   const getFilteredTicketsForCharts = (currentUser: Supervisor) => {
     let tickets: Ticket[] = [];
     
-    // Correctly filter tickets based on the supervisor's scope of management
     if (currentUser.functionalRole === 'IC Head') {
         tickets = allTickets;
     } else if (currentUser.functionalRole === 'DH') {
@@ -359,10 +419,10 @@ export default function ReportsPage() {
                     <div>
                         <h3 className="font-semibold mb-2 text-lg">Report Preview (Example Attributes)</h3>
                         <p className="text-sm text-muted-foreground mb-2">
-                            Reports would include fields like: Ticket ID, Employee PSN, Employee Name, Query, Priority, Status, Date Raised, Project, Assigned Supervisor, Resolution Steps, etc. Actual file generation is mocked.
+                            A downloadable CSV report will be generated with detailed columns including Ticket ID, Employee Details, Query, Status, Dates, Project, and Supervisor Info.
                         </p>
                         <div className="border rounded-md p-4 bg-background h-48 overflow-auto">
-                            <p className="italic text-muted-foreground">Filtered report data preview would appear here based on mock logic...</p>
+                            <p className="italic text-muted-foreground">Clicking a download button below will generate and download a CSV file with the current data scope.</p>
                         </div>
                     </div>
                     </ScrollReveal>
@@ -372,19 +432,14 @@ export default function ReportsPage() {
                         <Button className="w-full" onClick={() => handleDownloadReport(currentSupervisorUser, false)}
                                 disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || currentSupervisorUser.functionalRole === 'DH' || currentSupervisorUser.functionalRole === 'IC Head')} >
                         <Download className="mr-2 h-4 w-4" />
-                        Download Full Report (.xlsx)
-                        {currentSupervisorUser.functionalRole === 'IS' && " (My Resolved/Assigned)"}
-                        {currentSupervisorUser.functionalRole === 'NS' && " (My Resolved/Assigned)"}
-                        {currentSupervisorUser.functionalRole === 'DH' && " (My City/Dept Scope)"}
-                        {currentSupervisorUser.functionalRole === 'IC Head' && " (All Tickets Scope)"}
+                        Download Full Report (.csv)
                         </Button>
                          <Button className="w-full" variant="outline" onClick={() => handleDownloadReport(currentSupervisorUser, true)}
                                 disabled={!(currentSupervisorUser.functionalRole === 'IS' || currentSupervisorUser.functionalRole === 'NS' || currentSupervisorUser.functionalRole === 'DH' || currentSupervisorUser.functionalRole === 'IC Head')} >
                         <Download className="mr-2 h-4 w-4" />
-                        Download Filtered Report (.xlsx)
+                        Download Filtered Report (.csv)
                         </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground text-center">Note: Excel generation with embedded charts is a backend feature and is only mocked here. Downloads will trigger a notification.</p>
                     </ScrollReveal>
                 </CardContent>
                 </Card>
